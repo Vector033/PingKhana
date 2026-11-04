@@ -4,6 +4,7 @@
   "accuracy": 1.0,
   "correct": 34,
   "total": 34,
+  "answered_by": {},
   "by_kind": {
     "holdout": {
       "correct": 34,

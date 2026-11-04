@@ -35,11 +35,22 @@ PROMPT = """คุณช่วยสรุปประกาศจากเว�
 """
 
 
+RETRY_STATUS = (429, 500, 502, 503, 504)
+
+
 class GeminiExtractor:
-    def __init__(self, api_key: str, model: str, client: httpx.AsyncClient | None = None):
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        client: httpx.AsyncClient | None = None,
+        fallback_models: tuple[str, ...] = (),
+    ):
         self.api_key = api_key
         self.model = model
-        self.client = client or httpx.AsyncClient(timeout=60)
+        # Tried in order when the main model stays overloaded (503) or is retired (404).
+        self.models = (model, *(m for m in fallback_models if m != model))
+        self.client = client or httpx.AsyncClient(timeout=120)
 
     async def extract(self, title: str, body: str, ref: date) -> Extracted:
         prompt = PROMPT.format(
@@ -57,29 +68,46 @@ class GeminiExtractor:
                 "responseSchema": GEMINI_RESPONSE_SCHEMA,
             },
         }
-        data = await self._post(payload)
+        model, data = await self._post(payload)
         text = data["candidates"][0]["content"]["parts"][0]["text"]
         raw = json.loads(text)
-        result = Extracted.model_validate({**raw, "method": f"gemini:{self.model}"})
+        result = Extracted.model_validate({**raw, "method": f"gemini:{model}"})
         return _sanity(result, ref)
 
-    async def _post(self, payload: dict) -> dict:
-        delay = 2.0
-        for attempt in range(4):
-            resp = await self.client.post(
-                API.format(model=self.model),
-                headers={"x-goog-api-key": self.api_key},
-                json=payload,
-            )
-            if resp.status_code == 200:
-                return resp.json()
-            if resp.status_code in (429, 500, 502, 503, 504) and attempt < 3:
-                log.warning("gemini %s, retrying in %.0fs", resp.status_code, delay)
-                await asyncio.sleep(delay)
-                delay *= 2
-                continue
-            resp.raise_for_status()
-        raise RuntimeError("unreachable")
+    async def _post(self, payload: dict) -> tuple[str, dict]:
+        last: Exception | None = None
+        for i, model in enumerate(self.models):
+            last_model = i == len(self.models) - 1
+            delay = 2.0
+            attempts = 4 if last_model else 2
+            for attempt in range(attempts):
+                try:
+                    resp = await self.client.post(
+                        API.format(model=model),
+                        headers={"x-goog-api-key": self.api_key},
+                        json=payload,
+                    )
+                except httpx.TransportError as e:  # includes timeouts
+                    last = e
+                    log.warning("gemini %s: %r, retrying in %.0fs", model, e, delay)
+                else:
+                    if resp.status_code == 200:
+                        return model, resp.json()
+                    last = httpx.HTTPStatusError(
+                        f"gemini {model} {resp.status_code}", request=resp.request, response=resp
+                    )
+                    if resp.status_code == 404:
+                        break
+                    if resp.status_code not in RETRY_STATUS:
+                        raise last
+                    log.warning("gemini %s %s, retrying in %.0fs", model, resp.status_code, delay)
+                if attempt < attempts - 1:
+                    await asyncio.sleep(delay)
+                    delay *= 2
+            if not last_model:
+                log.warning("gemini %s unavailable, trying %s", model, self.models[i + 1])
+        assert last is not None
+        raise last
 
 
 def _sanity(r: Extracted, ref: date) -> Extracted:

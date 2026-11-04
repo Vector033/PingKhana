@@ -2,6 +2,7 @@ import logging
 from datetime import date
 from decimal import Decimal
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +19,9 @@ async def extract_one(title: str, body: str, ref: date) -> Extracted:
     s = get_settings()
     if s.gemini_api_key:
         try:
-            return await GeminiExtractor(s.gemini_api_key, s.gemini_model).extract(title, body, ref)
+            async with httpx.AsyncClient(timeout=120) as client:
+                ex = GeminiExtractor(s.gemini_api_key, s.gemini_model, client, s.gemini_fallbacks)
+                return await ex.extract(title, body, ref)
         except Exception:  # noqa: BLE001 - any LLM failure falls back to rules
             log.exception("gemini extraction failed, falling back to rules")
     return rules.extract(title, body, ref)

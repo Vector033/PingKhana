@@ -1,9 +1,30 @@
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BANGKOK = ZoneInfo("Asia/Bangkok")
+
+
+def asyncpg_url(url: str) -> str:
+    """Accept the plain connection strings hosts hand out (Neon, Render, Supabase).
+
+    asyncpg wants the `postgresql+asyncpg` scheme and `ssl=` instead of libpq's `sslmode=`,
+    and it rejects libpq-only options such as `channel_binding`.
+    """
+    parts = urlsplit(url)
+    scheme = parts.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+    query = []
+    for key, value in parse_qsl(parts.query):
+        if key == "sslmode":
+            query.append(("ssl", value))
+        elif key != "channel_binding":
+            query.append((key, value))
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 class Settings(BaseSettings):
@@ -26,6 +47,8 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
     gemini_model: str = "gemini-flash-latest"
+    # Comma-separated; used when the main model answers 503 "high demand" or has been retired.
+    gemini_fallback_models: str = "gemini-3.6-flash,gemini-flash-lite-latest"
 
     user_agent: str = "PingKhanaBot/0.1 (+https://github.com/Vector033/PingKhana)"
     # Never fetch the same source more often than this, whatever the scheduler does.
@@ -35,6 +58,15 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     # Token required by the /jobs/* endpoints that the scheduler calls.
     jobs_token: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def _asyncpg_url(cls, v: str) -> str:
+        return asyncpg_url(v)
+
+    @property
+    def gemini_fallbacks(self) -> tuple[str, ...]:
+        return tuple(m.strip() for m in self.gemini_fallback_models.split(",") if m.strip())
 
     @property
     def line_dry_run(self) -> bool:

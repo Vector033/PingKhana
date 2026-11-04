@@ -55,13 +55,20 @@ async def run(method: str, case_set: str = "dev") -> dict:
         s = get_settings()
         if not s.gemini_api_key:
             sys.exit("GEMINI_API_KEY is not set")
-        extractor = GeminiExtractor(s.gemini_api_key, s.gemini_model)
+        extractor = GeminiExtractor(
+            s.gemini_api_key, s.gemini_model, fallback_models=s.gemini_fallbacks
+        )
 
     per_kind: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     rows = []
+    models: dict[str, int] = defaultdict(int)
     for c in cases:
         if extractor:
-            got = (await extractor.extract(c["title"], c["text"], c["ref"])).deadline
+            try:
+                r = await extractor.extract(c["title"], c["text"], c["ref"])
+                got, models[r.method] = r.deadline, models[r.method] + 1
+            except Exception as e:  # noqa: BLE001 - an API error counts as a miss, not a crash
+                got = f"error: {e!r}"[:120]
         else:
             got = rules.extract(c["title"], c["text"], c["ref"]).deadline
         ok = got == c["expected"]
@@ -79,6 +86,7 @@ async def run(method: str, case_set: str = "dev") -> dict:
         "accuracy": round(correct / total, 3),
         "correct": correct,
         "total": total,
+        "answered_by": dict(models),
         "by_kind": {
             k: {"correct": v[0], "total": v[1], "accuracy": round(v[0] / v[1], 3)}
             for k, v in per_kind.items()
@@ -100,6 +108,8 @@ def main() -> None:
     a = p.parse_args()
     s = asyncio.run(run("gemini" if a.gemini else "rules", a.set))
     print(f"{s['method']} on {s['set']}: {s['correct']}/{s['total']} = {s['accuracy']:.1%}")
+    if s["answered_by"]:
+        print(f"  answered by {s['answered_by']}")
     for k, v in s["by_kind"].items():
         print(f"  {k:<10} {v['correct']}/{v['total']} = {v['accuracy']:.1%}")
     for f in s["failures"]:
