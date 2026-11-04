@@ -1,7 +1,7 @@
 # PingKhana: LINE bot แจ้งเตือนประกาศทุน สหกิจ และกำหนดส่งจากเว็บคณะ
 
 > สถานะ (2026-11-04): milestone 1–3 กับหน้าเว็บของ milestone 4 ทำงานได้บนเครื่อง local แล้ว (โหมด dry run ยังไม่ได้ต่อ LINE จริง) · ยังเหลือ: ต่อ LINE channel จริง, ทดสอบด้วย GEMINI_API_KEY, deploy, ชวนผู้ใช้จริง · ดู README.md และ docs/line-setup.md
-> Stack ที่เลือกแล้ว: FastAPI + Postgres (Docker port 54532, SQLAlchemy/Alembic) + Next.js 16 ใน `web/` · แหล่งข้อมูล 5 เว็บอยู่ใน `backend/app/collector/sources.yaml` (รอผู้ใช้อนุมัติ)
+> Stack ที่เลือกแล้ว: FastAPI + Postgres (Docker port 54532, SQLAlchemy/Alembic) + Next.js 16 ใน `web/` · แหล่งข้อมูล 5 เว็บอยู่ใน `backend/app/collector/sources.yaml` (ผู้ใช้อนุมัติครบทั้ง 5 เว็บแล้วเมื่อ 2026-11-04)
 > สร้างเมื่อ 2026-11-04 · ลำดับ: ทำเมื่อไรก็ได้ (โปรเจกต์ขนาดเล็กถึงกลาง)
 > ชื่อมาจาก Ping (แจ้งเตือน) + Khana (คณะ)
 

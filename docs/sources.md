@@ -4,7 +4,9 @@ Survey done with curl, UA `PingKhanaBot/0.1 (+https://github.com/Vector033/PingK
 No host in this survey has RSS/Atom (no `<link rel="alternate" type="application/rss+xml">` on any page checked), so every source is HTML.
 Fixtures are in `backend/tests/fixtures/html/`, saved byte-for-byte as served (`<id>_list.html`, `<id>_detail_1.html`, `<id>_detail_2.html`).
 
-## Candidate sources
+## Sources in use
+
+All 5 were approved by the project owner on 2026-11-04.
 
 | id | name | list URL | type | robots.txt | charset | approx. new posts |
 |----|------|----------|------|------------|---------|-------------------|
