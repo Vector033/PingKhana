@@ -33,9 +33,9 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check app tests eval scripts
       - run: ruff format --check app tests eval scripts
-      - run: pytest -q
-      - name: Migrations apply cleanly
+      - name: Migrations apply cleanly (before tests, which recreate tables themselves)
         run: alembic upgrade head
+      - run: pytest -q
       - name: Deadline extraction eval (rules)
         run: |
           python -m eval.run_deadline_eval
