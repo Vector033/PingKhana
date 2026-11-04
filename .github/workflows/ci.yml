@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: pingkhana
+          POSTGRES_PASSWORD: pingkhana
+          POSTGRES_DB: pingkhana_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pingkhana" --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://pingkhana:pingkhana@localhost:5432/pingkhana_test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - run: pip install -e ".[dev]"
+      - run: ruff check app tests eval scripts
+      - run: ruff format --check app tests eval scripts
+      - run: pytest -q
+      - name: Migrations apply cleanly
+        run: alembic upgrade head
+      - name: Deadline extraction eval (rules)
+        run: |
+          python -m eval.run_deadline_eval
+          if [ -f eval/deadline_holdout.yaml ]; then python -m eval.run_deadline_eval --set holdout; fi
+
+  web:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: pingkhana
+          POSTGRES_PASSWORD: pingkhana
+          POSTGRES_DB: pingkhana
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pingkhana" --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://pingkhana:pingkhana@localhost:5432/pingkhana
+      NEXT_PUBLIC_API_URL: http://localhost:8100
+      CORS_ORIGINS: http://localhost:3005
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Start API with demo data
+        working-directory: backend
+        run: |
+          pip install -e .
+          alembic upgrade head
+          python -m scripts.seed_demo
+          nohup uvicorn app.main:app --port 8100 > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8100/health && break; sleep 1; done
+      - working-directory: web
+        run: npm ci
+      - working-directory: web
+        run: npm run lint
+      - working-directory: web
+        run: npx tsc --noEmit
+      - working-directory: web
+        run: npm run build
+      - working-directory: web
+        run: npx playwright install --with-deps chromium
+      - working-directory: web
+        run: npx playwright test
+      - if: failure()
+        run: cat backend/api.log

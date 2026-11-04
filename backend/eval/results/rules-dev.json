@@ -1,0 +1,25 @@
+{
+  "method": "rules",
+  "set": "dev",
+  "accuracy": 1.0,
+  "correct": 48,
+  "total": 48,
+  "by_kind": {
+    "real": {
+      "correct": 26,
+      "total": 26,
+      "accuracy": 1.0
+    },
+    "page": {
+      "correct": 10,
+      "total": 10,
+      "accuracy": 1.0
+    },
+    "synthetic": {
+      "correct": 12,
+      "total": 12,
+      "accuracy": 1.0
+    }
+  },
+  "failures": []
+}

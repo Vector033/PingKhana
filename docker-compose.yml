@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: pingkhana_db
+    environment:
+      POSTGRES_USER: pingkhana
+      POSTGRES_PASSWORD: pingkhana
+      POSTGRES_DB: pingkhana
+    ports:
+      - "54532:5432"
+    volumes:
+      - pingkhana_pg:/var/lib/postgresql/data
+      - ./backend/scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pingkhana"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pingkhana_pg:

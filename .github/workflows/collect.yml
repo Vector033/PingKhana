@@ -1,0 +1,20 @@
+name: Collect and notify
+
+# Calls the deployed API's job endpoint once an hour. The API itself refuses to fetch a source
+# more often than MIN_FETCH_INTERVAL_MINUTES, so a manual extra run cannot hammer the sites.
+# Needs repository variable API_URL and secret JOBS_TOKEN; does nothing until they exist.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    if: ${{ vars.API_URL != '' }}
+    steps:
+      - name: POST /jobs/run
+        run: |
+          curl -sS --fail-with-body -X POST "${{ vars.API_URL }}/jobs/run" \
+            -H "Authorization: Bearer ${{ secrets.JOBS_TOKEN }}" --max-time 600

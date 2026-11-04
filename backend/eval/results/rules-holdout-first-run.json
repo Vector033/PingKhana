@@ -1,0 +1,30 @@
+{
+  "method": "rules",
+  "set": "holdout",
+  "accuracy": 0.941,
+  "correct": 32,
+  "total": 34,
+  "by_kind": {
+    "holdout": {
+      "correct": 32,
+      "total": 34,
+      "accuracy": 0.941
+    }
+  },
+  "failures": [
+    {
+      "id": "h17",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-06-23",
+      "ok": false
+    },
+    {
+      "id": "h19",
+      "kind": "holdout",
+      "expected": "2026-10-21",
+      "got": "2026-10-12",
+      "ok": false
+    }
+  ]
+}

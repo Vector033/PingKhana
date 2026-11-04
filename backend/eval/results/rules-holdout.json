@@ -1,0 +1,15 @@
+{
+  "method": "rules",
+  "set": "holdout",
+  "accuracy": 1.0,
+  "correct": 34,
+  "total": 34,
+  "by_kind": {
+    "holdout": {
+      "correct": 34,
+      "total": 34,
+      "accuracy": 1.0
+    }
+  },
+  "failures": []
+}

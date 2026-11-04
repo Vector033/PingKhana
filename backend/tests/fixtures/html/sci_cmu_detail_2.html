@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>
+            คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่ | Faculty of Science,CMU        </title>
+
+        <!-- CSS FILES -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+        <!--Load Custom Font from Google-->
+        <link rel="preconnect" href="https://fonts.googleapis.com"> 
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400&family=Sarabun:wght@400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap-icons.css" rel="stylesheet">
+
+        <link rel="stylesheet" href="css/magnific-popup.css">
+
+        <link href="css/aos.css" rel="stylesheet">
+
+        <link href="css/templatemo-nomad-force.css" rel="stylesheet">
+        <link href="css/main_menu.css" rel="stylesheet">
+        <!-- MDB -->
+        <!--<link rel="stylesheet" href="css/bootstrap-mega-menu.min.css" />-->
+        
+        <style type="text/css">
+		
+		/* fb chat bottom */
+		.fb-chat {
+			bottom: 20px;
+			right: 23px;
+			position: fixed;
+            z-index: 2000;
+		}
+
+		.fb-chat a {
+			margin-right: 10px;
+		}
+
+		.fb-chat a :hover {
+			filter: drop-shadow(0.15rem 0.15rem 0.12rem rgba(0, 0, 0, 0.3));
+		}
+		/* fb chat bottom */
+	</style> 
+
+    </head>
+
+
+
+
+ <link rel="stylesheet" href="jscript/lightbox2/css/lightbox.css">
+<script type="text/javascript" src="jscript/jquery.js"></script>
+<script type="text/javascript" src="jscript/lightbox2/js/lightbox.js"></script>  
+<script language="javascript">
+$(document).ready(function() {
+	var track_load = 0; 
+	var loading  = false; 
+	var total_groups = 1; 
+	
+	$('#results').load("autoload_image.php", {'group_no':track_load,'pid':5799}, function() {track_load++;}); //load first group
+	
+	$(window).scroll(function() { 
+		if($(window).scrollTop() + $(window).height() == $(document).height())  {
+		 	if(track_load <= total_groups && loading==false){
+				loading = true; 
+				$('.animation_image').show(); 
+				$.post('autoload_image.php',{'group_no': track_load,'pid':5799}, function(data){		
+					$('.animation_image').delay(10000).hide(200);
+					$("#results").append(data).fadeIn(5000);
+					track_load++; 
+					loading = false; 
+				}).fail(function(xhr, ajaxOptions, thrownError) { //any errors?
+					//alert(thrownError); 
+					$('.animation_image').hide();
+					loading = false;
+				});
+			} 
+		}
+	});
+});
+</script>
+    <body>
+    
+        <main>
+        <section class="hero-wrap hero-wrap-2" style="background-image: url('images/head_news.png');">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row no-gutters slider-text align-items-center justify-content-center">
+            <div class="col-md-9 ftco-animate text-center">
+                <h1 class="mb-2 bread"><strong style="color:#6868ac;">ข่าวสาร</strong><strong class="text-header-thai"> คณะวิทยาศาสตร์</strong></h1>
+            </div>
+            </div>
+        </div>
+        </section>
+
+                       <!-- Start your project here-->
+            <style>
+                .dropdown-hover:hover>.dropdown-menu {
+                display: inline-block;
+                }
+
+                .dropdown-hover>.dropdown-toggle:active {
+                /*Without this, clicking will make it sticky*/
+                pointer-events: none;
+                }
+            </style>
+           <nav class="navbar navbar-expand-lg bg-light shadow-lg  text-thai">
+                <div class="container">
+                    <a class="navbar-brand" href="index.php">
+                    <img src="images/sub_logo.png" width="65" height="48"> <strong>Science CMU</strong>
+                    </a>
+
+                    <!-- Toggle button -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarExampleOnHover" aria-controls="navbarExampleOnHover" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse text-thai" id="navbarExampleOnHover">
+                        <ul class="navbar-nav me-auto ps-lg-0" style="padding-left: 0.15rem">
+                            <li class="nav-item">
+                                <a class="nav-link " href="index.php">หน้าแรก</a>
+                            </li>
+
+                            <!-- Navbar dropdown -->
+                            <li class="nav-item dropdown dropdown-hover position-static">
+                                
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-mdb-toggle="dropdown" aria-expanded="false">
+                                เกี่ยวกับเรา
+                                </a>
+                                <!-- Dropdown menu -->
+                                <div class="dropdown-menu w-auto mt-0" aria-labelledby="navbarDropdown" style="border-top-left-radius: 0;
+                                        border-top-right-radius: 0;
+                                    ">
+
+                                <div class="container">
+                                    <div class="row my-4">
+                                        <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                                            <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">ข้อมูลองค์กร</p>
+                                            <a href="about.php" class="list-group-item list-group-item-action">ประวัติคณะวิทยาศาสตร์</a>
+                                            <a href="scidean.php" class="list-group-item list-group-item-action">ทำเนียบคณบดี</a>
+                                            <a href="vision.php" class="list-group-item list-group-item-action">วิสัยทัศน์ พันธกิจ ค่านิยม</a>
+                                            <a href="organization_plan.php" class="list-group-item list-group-item-action">โครงสร้างองค์กร</a>
+                                            <a href="administrator.php" class="list-group-item list-group-item-action">แนะนำผู้บริหาร</a>
+                                            <a href="committee.php" class="list-group-item list-group-item-action">คณะกรรมการอำนวยการ</a>
+                                            <a href="head_department.php" class="list-group-item list-group-item-action">หัวหน้าภาควิชา/ศูนย์</a>
+                                            <a href="department.php" class="list-group-item list-group-item-action">ภาควิชา ศูนย์วิจัย</a>
+                                            <a href="scioffice.php" class="list-group-item list-group-item-action">สำนักงานคณะวิทยาศาสตร์</a>
+                                            <a href="https://epg.science.cmu.ac.th/sciemployment/" class="list-group-item list-group-item-action">บุคลากรคณะวิทยาศาสตร์</a>
+                                            <!-- <a href="scihalloffame.php" class="list-group-item list-group-item-action">Science Hall of Fame</a>-->
+                                            <!-- <a href="contactus.php" class="list-group-item list-group-item-action">ติดต่อเรา</a>-->
+                                            <a href="contactus.php" class="list-group-item list-group-item-action">เบอร์โทรศัพท์ภายใน</a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                                            <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">การสื่อสารองค์กร</p>
+                                            <a href="scibrand.php" class="list-group-item list-group-item-action">สัญลักษณ์ แบรนด์ แมสคอต</a>
+                                            <a href="scilogo.php" class="list-group-item list-group-item-action">อัตลักษณ์องค์กร</a>
+                                            <a href="https://www.science.cmu.ac.th/2022/news-detail.php?id=4634" class="list-group-item list-group-item-action">ตราสัญลักษณ์ในโอกาสเฉลิมฉลองครบรอบ 60 ปี</a>
+                                            <a href="visitscicmu.php" class="list-group-item list-group-item-action">Visit Sci CMU การเยี่ยมชมคณะวิทยาศาสตร์</a>
+                                            <a href="https://www.science.cmu.ac.th/prsci/" class="list-group-item list-group-item-action">เว็บไซต์ข่าวประชาสัมพันธ์</a>
+                                            <a href="scibrochure.php" class="list-group-item list-group-item-action">แผ่นพับแนะนำคณะวิทยาศาสตร์</a>
+                                            <a href="scimailinglist.php" class="list-group-item list-group-item-action">ระบบ Mailing List</a>
+                                            
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-3 mb-4 mb-md-0">
+                                            <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">ข้อมูลสาธารณะ</p>
+                                            <a href="https://science.cmu.ac.th/webthai/scioit/index.php" class="list-group-item list-group-item-action">การเปิดเผยข้อมูลสาธารณะ</a>
+                                            <a href="scireports.php" class="list-group-item list-group-item-action">รายงานประจำปี</a>
+                                            <!--<a href="Docs/report 1-5 yrs-additional 6 dec Complete.pdf" class="list-group-item list-group-item-action" target="reports">รายงานผลการดำเนินงานคณบดี(2021-2022)</a> -->
+                                            <a href="Docs/20260920-DRAFT2-Final-compress.pdf" class="list-group-item list-group-item-action" target="reports">รายงานผลการดำเนินงานคณบดี(2025-2026)</a>
+                                            <!--<a href="Docs/20240304_3yrs_evaluation-report.pdf" class="list-group-item list-group-item-action" target="reports">รายงานผลการดำเนินงานครบรอบ 3 ปี</a>-->
+                                            <a href="https://www.cmu.ac.th/th/privacy" class="list-group-item list-group-item-action">นโยบายคุ้มครองข้อมูลส่วนบุคคล</a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-lg-3">
+                                            <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">การพัฒนาคณะวิทยาศาสตร์</p>
+                                            <a href="https://fund.science.cmu.ac.th/Main/Home/index" class="list-group-item list-group-item-action">กองทุนคณะวิทยาศาสตร์</a>
+                                            <a href="https://fund.science.cmu.ac.th/Main/Home/index" class="list-group-item list-group-item-action">E-Donation</a>
+                                            <a href="https://epg.science.cmu.ac.th/portal/" class="list-group-item list-group-item-action">Science Portal</a>
+                                            <a href="http://alumni.science.cmu.ac.th/" class="list-group-item list-group-item-action">สมาคมนักศึกษาเก่าคณะวิทยาศาสตร์</a>
+                                            <a href="https://www.science.cmu.ac.th/webthai/sci-alumni.php" class="list-group-item list-group-item-action">ศิษย์เก่าดีเด่นคณะวิทยาศาสตร์</a>
+                                            <a href="https://www.science.cmu.ac.th/webthai/cmu-alumni.php" class="list-group-item list-group-item-action">ศิษย์เก่าดีเด่น มหาวิทยาลัยเชียงใหม่</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </li> <!--End of Navbar dropdown -->
+
+                            <!-- Navbar dropdown -->
+                            <li class="nav-item dropdown dropdown-hover position-static">
+                                
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-mdb-toggle="dropdown" aria-expanded="false">
+                                ข่าวสาร
+                                </a>
+                                <!-- Dropdown menu -->
+                                <div class="dropdown-menu w-auto mt-0" aria-labelledby="navbarDropdown" style="border-top-left-radius: 0;
+                                        border-top-right-radius: 0;
+                                    ">
+                                <div class="container">
+                                    <div class="row my-4">
+                                    <div class="col-md-6 col-lg-12 mb-4 mb-lg-0">
+                                        <div class="list-group list-group-flush">
+                                            <a href="scinewsall.php" class="list-group-item list-group-item-action">ข่าวประชาสัมพันธ์ล่าสุด</a>
+                                            <a href="#" onclick="sendPostForm(8);" class="list-group-item list-group-item-action">บุคลากร/นักศึกษาได้รับเชิดชูเกียรติ</a>
+                                            <a href="#" onclick="sendPostForm(5);" class="list-group-item list-group-item-action">ด้านการผลิตบัณฑิต</a>
+                                            <a href="#" onclick="sendPostForm(4);" class="list-group-item list-group-item-action">ด้านงานวิจัย</a>
+                                            <a href="#" onclick="sendPostForm(3);" class="list-group-item list-group-item-action">พัฒนาบุคลากร</a>
+                                            <a href="#" onclick="sendPostForm(1);" class="list-group-item list-group-item-action">แขกเยี่ยมชม/ความร่วมมือทางวิชาการ</a>
+                                            <a href="#" onclick="sendPostForm(6);" class="list-group-item list-group-item-action">ทำนุบำรุงศิลปะและสิ่งแวดล้อม</a>
+                                            <a href="#" onclick="sendPostForm(7);" class="list-group-item list-group-item-action">บริการวิชาการแก่ชุมชน</a>
+                                            <a href="#" onclick="sendPostForm(2);" class="list-group-item list-group-item-action">การประกันคุณภาพ</a>
+                                            <a href="https://www.science.cmu.ac.th/prsci/all-price.php" class="list-group-item list-group-item-action">ประกวดราคา/จัดซื้อจัดจ้าง</a>
+                                            <a href="https://www.science.cmu.ac.th/prsci/all-sprice.php" class="list-group-item list-group-item-action">ประกาศราคากลาง/อ้างอิง</a>
+                                            <a href="https://www.science.cmu.ac.th/webthai/all-job.php" class="list-group-item list-group-item-action">ประกาศรับสมัครงาน</a>
+                                            <a href="#" onclick="sendPostForm(13);" class="list-group-item list-group-item-action">Science CMU Focus วารสารรายเดือน - ราย 3 เดือน</a>
+                                            <a href="https://web.science.cmu.ac.th/Main/Home/home?pageid=blQ5Z01LamtCTj09" class="list-group-item list-group-item-action">ข่าวสารสำหรับบุคลากรภายใน</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </li> <!--End of Navbar dropdown -->
+
+                            <!-- Navbar dropdown -->
+                            <li class="nav-item dropdown dropdown-hover position-static">
+                                
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-mdb-toggle="dropdown" aria-expanded="false">
+                                วิจัยและบริการวิชาการ
+                                </a>
+                                <!-- Dropdown menu -->
+                                <div class="dropdown-menu w-auto mt-0" aria-labelledby="navbarDropdown" style="border-top-left-radius: 0;
+                                        border-top-right-radius: 0;">
+
+                                <div class="container">
+                                    <div class="row my-4">
+                                    <div class="col-md-6 col-lg-4 mb-4 mb-lg-0">
+                                        <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">ข้อมูลการวิจัย</p>
+                                            <a href="#" class="list-group-item list-group-item-action">Research @Science</a>
+                                            <a href="department.php#researchcenter" class="list-group-item list-group-item-action">ศูนย์วิจัย</a>
+                                            <a href="#" class="list-group-item list-group-item-action">กลุ่มวิจัย - ศูนย์ความเป็นเลิศ</a>
+                                            <a href="https://www.science.cmu.ac.th/webthai/international_cooperation.php" class="list-group-item list-group-item-action">ความร่วมมือกับหน่วยงานต่าง ๆ</a>
+                                            <a href="https://rsc.science.cmu.ac.th" class="list-group-item list-group-item-action">Science Scholars</a>
+                                            <a href="https://epg.science.cmu.ac.th/ejournal/" class="list-group-item list-group-item-action">Chiang Mai Science Journal</a>
+                                            <a href="#" class="list-group-item list-group-item-action">Science Research Focus</a>
+                                            <a href="#" class="list-group-item list-group-item-action">Science Transformation</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4 mb-4 mb-md-0">
+                                        <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">บริการด้านวิทยาศาสตร์</p>
+                                            <a href="https://asci.science.cmu.ac.th/" class="list-group-item list-group-item-action">หน่วยเครื่องมือวิทยาศาสตร์ขั้นสูง คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่</a>
+                                            <a href="http://www.stsc.science.cmu.ac.th/thai/" class="list-group-item list-group-item-action">ศวท.มช.</a>
+                                            <a href="https://web.science.cmu.ac.th/Main/Home/home?pageid=blQ5Z01LamtBaj09&fbclid=IwAR3CANMgelonuTKeMfMXj-f8nTlnShlB33srPyrnM9DbyyNfivJznjbQ33k" class="list-group-item list-group-item-action">หน่วยพิมพ์เอกสาร</a>
+                                            
+                                            
+                                            <a href="https://doisuthep.science.cmu.ac.th" class="list-group-item list-group-item-action">ศูนย์ธรรมชาติวิทยาดอยสุเทพเฉลิมพระเกียรติฯ</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="list-group list-group-flush">
+                                            <p  class="list-group-item text-uppercase font-weight-bold">กิจกรรมบริการวิชาการและโครงการพิเศษ</p>
+                                            <a href="http://olympic.science.cmu.ac.th" class="list-group-item list-group-item-action">โอลิมปิกวิชาการ</a>
+                                            <a href="http://reg.science.cmu.ac.th/stud_befor/index.html" class="list-group-item list-group-item-action">โครงการเรียนล่วงหน้า</a>
+                                            <a href="http://www.dpst.science.cmu.ac.th" class="list-group-item list-group-item-action">โครงการ พสวท.</a>
+                                            <a href="#" class="list-group-item list-group-item-action">ทุนเรียนดีวิทยาศาสตร์แห่งประเทศไทย</a>
+                                            <a href="https://acair.cmu.ac.th/?page_id=1166" class="list-group-item list-group-item-action">ต้นกล้าท้าหมอกควัน</a>
+                                            <a href="http://scicamp.science.cmu.ac.th" class="list-group-item list-group-item-action">CMU Science Camp</a>
+                                            <a href="http://winterscicamp.science.cmu.ac.th" class="list-group-item list-group-item-action">CMU Winter Science Camp</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </li> <!--End of Navbar dropdown -->
+
+                            <!-- Navbar dropdown -->
+                            <li class="nav-item dropdown dropdown-hover position-static">
+                                
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-mdb-toggle="dropdown" aria-expanded="false">
+                                การเรียนการสอน
+                                </a>
+                                <!-- Dropdown menu -->
+                                <div class="dropdown-menu w-auto mt-0" aria-labelledby="navbarDropdown" style="border-top-left-radius: 0;
+                                        border-top-right-radius: 0;
+                                    ">
+                                <div class="container">
+                                    <div class="row my-4">
+                                    <div class="col-md-6 col-lg-6 mb-3 mb-lg-0">
+                                        <div class="list-group list-group-flush">
+                                            <p class="list-group-item text-uppercase font-weight-bold">หลักสูตรปริญญาตรี</p>
+                                            <a href="bachelor.php" class="list-group-item list-group-item-action">หลักสูตรปริญญาตรี</a>
+                                            <a href="https://coop.science.cmu.ac.th" class="list-group-item list-group-item-action">การฝึกงานและสหกิจศึกษา</a>
+                                            <a href="student.php" class="list-group-item list-group-item-action">ระบบสารสนเทศระดับ ป.ตรี</a>
+                                            <a href="https://tcas.science.cmu.ac.th" class="list-group-item list-group-item-action">Sci TCAS & IPAS</a>
+                                            <a href="http://lifelong.science.cmu.ac.th" class="list-group-item list-group-item-action">หลักสูตรการศึกษาตลอดชีวิต</a>
+                                            <a href="https://www.youtube.com/playlist?list=PL_0sE63VHgRrpSjW3VT7JO76qwLaeJPpf" target="youtube" class="list-group-item list-group-item-action">TALK with TEACHer</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-6">
+                                        <div class="list-group list-group-flush">
+                                        <p  class="list-group-item text-uppercase font-weight-bold">หลักสูตรบัณฑิตศึกษา</p>
+                                        <a href="master.php" class="list-group-item list-group-item-action">หลักสูตรปริญญาโท</a>
+                                        <a href="doctor.php" class="list-group-item list-group-item-action">หลักสูตรปริญญาเอก</a>
+                                        <a href="#" class="list-group-item list-group-item-action">ระบบสารสนเทศระดับบัณฑิตศึกษา</a>
+                                        <a href="https://epg.science.cmu.ac.th/tqf7/index.php" class="list-group-item list-group-item-action">ข้อมูลสำหรับ มคอ.7</a>
+                                        <a href="rules.php" class="list-group-item list-group-item-action">กฎ ระเบียบ ข้อมูลที่เกี่ยวข้อง</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </li> <!--End of Navbar dropdown -->
+
+                             <!-- Navbar dropdown -->
+                             <li class="nav-item dropdown dropdown-hover position-static">
+                                
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-mdb-toggle="dropdown" aria-expanded="false">
+                                ติดต่อเรา
+                                </a>
+                                <!-- Dropdown menu -->
+                                <div class="dropdown-menu w-auto mt-0" aria-labelledby="navbarDropdown" style="border-top-left-radius: 0;
+                                        border-top-right-radius: 0;
+                                    ">
+                                <div class="container">
+                                    <div class="row my-4">
+                                    <div class="col-md-6 col-lg-12 mb-4 mb-lg-0">
+                                        <div class="list-group list-group-flush">
+                                        <a href="contactus.php" class="list-group-item list-group-item-action">Google Map</a>
+                                        <a href="contactus.php" class="list-group-item list-group-item-action">ข้อมูลที่อยู่/อีเมล</a>
+                                        <a href="https://www.science.cmu.ac.th/webthai/_contact.php" class="list-group-item list-group-item-action">ติดต่อเรา</a>
+                                        <a href="https://www.science.cmu.ac.th/webthai/_complaint_other.php" class="list-group-item list-group-item-action">ร้องเรียนเรื่องทั่วไป</a>
+                                        <a href="https://www.science.cmu.ac.th/webthai/_complaint.php" class="list-group-item list-group-item-action">ร้องเรียนการทุจริต</a>
+                                        <a href="https://www.science.cmu.ac.th/webthai/index.php" class="list-group-item list-group-item-action">เว็บไซต์สำหรับบุคลากรภายใน</a>
+                                        <a href="https://www.facebook.com/science.cmu" class="list-group-item list-group-item-action">Facebook</a>
+                                        <a href="https://line.me/R/ti/p/%40frs4809m" class="list-group-item list-group-item-action">Line @SCI CMU Info. Center</a>
+                                        <a href="https://twitter.com/sci_cmu" class="list-group-item list-group-item-action">Twitter</a>
+                                        <a href="https://www.youtube.com/channel/UC9cAYPrEF48hAsrYnm-gqFA" class="list-group-item list-group-item-action">YouTube</a>
+                                        <a href="https://www.instagram.com/sci_cmu" class="list-group-item list-group-item-action">Instagram</a>
+					<a href="https://www.tiktok.com/@sci_cmu" class="list-group-item list-group-item-action">TikTok</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </li> <!--End of Navbar dropdown -->
+
+                        </ul>
+                    </div>
+                    <div align="left" ><a href="index.php"><img src="images/th.png" class="social-icon-link" border="0" alt="เว็บไซต์คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่" title="เว็บไซต์คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่"></a> <a href="https://www.science.cmu.ac.th/2020/index.php"><img src="images/en.png" class="social-icon-link" border="0" alt="English Website of Faculty of science, Chiang Mai University" title="English Website of Faculty of science, Chiang Mai University"></a></div>
+                </div>
+                
+            </nav>
+            <!-- MDB -->
+           <script type="text/javascript" src="js/mdb.min.js"></script>
+            <script>
+            function sendPostForm(ccid) {
+                let form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'scinewsall.php';
+
+                let input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ccid';
+                input.value = ccid;
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+            </script>
+            <section class="news-detail section-padding">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-8 col-10 mx-auto">
+                            <h2 class="mb-3 text-yellow" data-aos="fade-up">คณะวิทยาศาสตร์ มช. ขอเชิญชวนร่วมบริจาคเงินสนับสนุนทุนการศึกษาผ่านระบบ SCI e-Donation (ลดหย่อนภาษี 2 เท่า)</h2>
+
+                            <p data-aos="fade-up"><img src="https://www.science.cmu.ac.th/epg-images/sciadv/modules/publication/upload/images/26-11-02-:-29-29-ab88b15733.png" width="100%"></p>
+							
+							<p data-aos="fade-up"><div style="text-align: justify;">&nbsp; &nbsp; <strong>&nbsp; &nbsp; &nbsp;</strong> คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่ ขอเชิญชวนทุกท่าน ร่วมเป็นส่วนหนึ่งในการแบ่งปันน้ำใจและสร้างโอกาสทางการศึกษาให้กับนักศึกษา และร่วมสนับสนุนคณะวิทยาศาสตร์ ผ่านระบบบริจาคออนไลน์ SCI e-Donation&nbsp;ผู้บริจาคสามารถดำเนินการได้สะดวก รวดเร็ว และ<strong>สามารถนำยอดบริจาคไปใช้สิทธิลดหย่อนภาษีได้ 2 เท่า ตามเงื่อนไขของกรมสรรพากร&nbsp;<br />
+</strong> <br />
+<strong>ข้อแนะนำเพื่อประโยชน์ในการลดหย่อนภาษี&nbsp;</strong></div>
+<div style="text-align: left;">กรุณาใช้บัญชีอิเล็กทรอนิกส์ของตัวท่านเอง ในการทำรายการโอนเงินบริจาค และผู้บริจาคต้องยินยอมเปิดเผยข้อมูลให้แก่กรมสรรพากรเท่านั้น&nbsp;</div>
+<div style="text-align: left;">&nbsp;</div>
+<div style="text-align: justify;">ผู้บริจาคสามารถทำรายการบริจาคผ่านช่องทางออนไลน์ได้ที่เว็บไซต์ <a href="https://fund.science.cmu.ac.th ">https://fund.science.cmu.ac.th&nbsp;</a><br />
+<br />
+<strong>รายละเอียดการติดต่อสอบถามเพิ่มเติม</strong> <br />
+<strong>ผู้ประสานงาน</strong> น.ส.อังคณา ศิริบูรณ์&nbsp; สถานที่ติดต่อ: ห้องการเงิน ชั้น 2 อาคาร 40 ปี คณะวิทยาศาสตร์ มหาวิทยาลัยเชียงใหม่&nbsp; <br />
+หมายเลขโทรศัพท์&nbsp; 053-943460&nbsp; <br />
+ระบบบริจาคออนไลน์ <a href="https://fund.science.cmu.ac.th">https://fund.science.cmu.ac.th</a></div></p>
+
+                            <div class="social-share d-flex mt-5">
+                                <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+                                    <a class="addthis_button_preferred_1"></a>
+                                    <a class="addthis_button_preferred_2"></a>
+                                    <a class="addthis_button_preferred_3"></a>
+                                    <a class="addthis_button_preferred_4"></a>
+                                    <a class="addthis_button_preferred_5"></a>
+                                    <a class="addthis_button_compact"></a>
+                                    <a class="addthis_counter addthis_bubble_style"></a>
+                                    </div>
+                                    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+                                    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-52ca1956751a4285"></script>
+                                    <!-- AddThis Button END -->                  
+                                    <br /> <br />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+           <section class="related-news section-padding">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12 col-12 mx-auto text-center">
+							
+							<div id="results"></div>
+							<br />
+								<div class="row col-md-12">
+									<div class="animation_image" style="display:none" align="center"><br /><br /><img src="images/ajax-loader.gif"><br /><br /><br /></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+               <footer class="site-footer">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-12">
+                        <h5 class="text-white">
+                            <i class="bi-geo-alt-fill me-2"></i>
+                            Faculty of Science, Chiang Mai University<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chiang Mai , Thailand
+                        </h5>
+                        <!--<a href="mailto:sci@cmu.ac.th" class="custom-link mt-3 mb-5">
+                            sci@cmu.ac.th
+                        </a>-->
+                        <p class="copyright-text text-thai">239 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200 โทรศัพท์ 0 5394 1979<br /> Email: sci@cmu.ac.th</p>
+                    </div>
+
+                    <div class="col-6">
+                        <p class="copyright-text mb-0">Copyright © Faculty of Science,CMU 2022 
+                        
+                    
+                    </p>
+                    
+                    </div>
+
+                    <div class="col-lg-3 col-5 ms-auto">
+                        <ul class="social-icon">
+                            <li><a href="https://www.facebook.com/science.cmu" target="social" class="social-icon-link bi-facebook"></a></li>
+
+                            <li><a href="https://twitter.com/sci_cmu" target="social" class="social-icon-link bi-twitter"></a></li>
+
+                            <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
+
+                            <li><a href="https://www.instagram.com/sci_cmu/" target="social" class="social-icon-link bi-instagram"></a></li>
+
+                            <li><a href="https://www.youtube.com/c/ScienceCMUOfficial" target="social" class="social-icon-link bi-youtube"></a></li>
+
+                            <li><a href="https://www.tiktok.com/@sci_cmu" target="social" class="social-icon-link bi-tiktok"></a></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </section>
+        </footer>
+
+        <!-- JAVASCRIPT FILES -->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script src="js/jquery.sticky.js"></script>
+        <script src="js/aos.js"></script>
+        <script src="js/jquery.magnific-popup.min.js"></script>
+        <script src="js/magnific-popup-options.js"></script>
+        <script src="js/scrollspy.min.js"></script>
+        <script src="js/superfish.min.js"></script>	
+        <script src="js/custom.js"></script>
+        <script src="js/main_menu.js"></script>
+    </body>
+</html>

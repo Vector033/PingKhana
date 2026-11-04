@@ -1,0 +1,61 @@
+# Deadline extraction evaluation set.
+# kind: real      = sentence copied from a public CMU page (survey 2026-11-04, see docs/sources.md)
+#       page      = a whole saved detail page from backend/tests/fixtures/html
+#       synthetic = written by hand to cover formats not seen in the real pages yet
+# expected: ISO date (CE) of the application/submission deadline, or null when there is none.
+# ref: publish date used to resolve 2-digit or missing years (defaults to 2026-11-04).
+
+cases:
+  # ---- real sentences ----
+  - {id: r01, kind: real, expected: 2026-10-08, text: "📅 กำหนดการรับสมัครออนไลน์: เปิดรับสมัครตั้งแต่วันนี้ ถึง 8 ตุลาคม 2569", ref: 2026-08-03}
+  - {id: r02, kind: real, expected: 2026-10-08, text: "📅 Online Application Period: Until October 8, 2026", ref: 2026-08-03}
+  - {id: r03, kind: real, expected: null, text: "ระดับปริญญาโท (แบบ 1): สอบวันพุธที่ 21 ตุลาคม 2569 เวลา 13.00 น. เป็นต้นไป", ref: 2026-08-03}
+  - {id: r04, kind: real, expected: 2026-07-12, text: "เปิดรับสมัคร: วันนี้ – 12 กรกฎาคม 2569 (เวลาจำกัด รีบเลย!)", ref: 2026-07-01}
+  - {id: r05, kind: real, expected: null, text: "วันแข่งขันรอบภูมิภาค: 19 กรกฎาคม 2569", ref: 2026-07-01}
+  - {id: r06, kind: real, expected: 2026-10-29, text: "ทั้งนี้ หลังจากทำบุญเรียบร้อยแล้ว ขอความร่วมมือแจ้งยอดและแนบสลิปผ่านแบบฟอร์ม https://cmu.to/scikatin ภายในวันพฤหัสบดีที่ ๒๙ ตุลาคม ๒๕๖๙ เพื่อรวบรวมยอดเงินบุญในภาพรวมของคณะวิทยาศาสตร์ต่อไป", ref: 2026-10-20}
+  - {id: r07, kind: real, expected: null, text: "ร่วมสืบสานประเพณีอันดีงามในพิธีทอดกฐินมหาวิทยาลัยเชียงใหม่ ประจำปี ๒๕๖๙ ณ วัดฝายหิน ในวันศุกร์ที่ ๓๐ ตุลาคม ๒๕๖๙", ref: 2026-10-20}
+  - {id: r08, kind: real, expected: 2024-04-12, text: "กรอกแบบฟอร์มสมัครทุนการศึกษา ทางลิงก์ htps://sis.cmu.ac.th/scholarship ตั้งแต่วันที่ 9 มีนาคม - 12 เมษายน 2567", ref: 2024-03-01}
+  - {id: r09, kind: real, expected: 2025-06-27, text: "ดังนั้น จึงขอให้นักศึกษาที่ได้รับทุนการศึกษาดังกล่าว รายงานตัวเพื่อยืนยันสิทธิ์รับทุนการศึกษาฯ ด้วยตนเอง ณ ฝ่ายเลขานุการ คณะกรรมการส่งเสริมมหาวิทยาลัยเชียงใหม่ ชั้น 3 อาคารกองพัฒนานักศึกษา มหาวิทยาลัยเชียงใหม่ ภายในวันศุกร์ที่ 27 มิถุนายน 2568 มิฉะนั้นจะถือว่าสละสิทธิ์รับทุนการศึกษา", ref: 2025-06-01}
+  - {id: r10, kind: real, expected: null, text: "กำหนดการสัมภาษณ์ : ภายใน 1 เดือน หลังจากวันที่ปิดรับสมัคร"}
+  - {id: r11, kind: real, expected: null, text: "กำหนดการรับสมัคร : ตั้งแต่ภาคเรียนที่ 2 เป็นต้นไป"}
+  - {id: r12, kind: real, expected: 2026-11-30, text: "เปิดรับสมัคร ตั้งแต่บัดนี้เป็นต้นไป จนถึงวันที่ 30 พฤศจิกายน 2569", ref: 2026-11-02}
+  - {id: r13, kind: real, expected: null, text: "ประกาศรายชื่อผู้มีสิทธิ์เข้ารับการคัดเลือก วันที่ 4 ธันวาคม 2569", ref: 2026-11-02}
+  - {id: r14, kind: real, expected: 2026-11-16, text: "ตั้งแต่บัดนี้เป็นต้นไป จนถึงวันที่ 16 พฤศจิกายน 2569 ผ่านระบบรับสมัครงานออนไลน์ https://hr.oop.cmu.ac.th/recruitment (ระบบปิดรับสมัครเวลา 16.30 น.)", ref: 2026-11-03}
+  - {id: r15, kind: real, expected: null, text: "ประกาศรายชื่อผู้มีสิทธิ์เข้ารับการคัดเลือก วันที่ 20 พฤศจิกายน 2569", ref: 2026-11-03}
+  - {id: r16, kind: real, expected: 2026-11-30, text: "เปิดรับสมัคร ตั้งแต่บัดนี้เป็นต้นไป จนถึงวันที่ 30 พฤศจิกายน 2569", ref: 2026-11-02}
+  - {id: r17, kind: real, expected: 2026-11-13, text: "รับสมัครตั้งแต่บัดนี้ ถึง 13 พฤศจิกายน 2569", ref: 2026-10-30}
+  - {id: r18, kind: real, expected: 2026-11-11, text: "เปิดรับสมัครตั้งแต่บัดนี้ – 11 พฤศจิกายน 2569", ref: 2026-10-30}
+  - {id: r19, kind: real, expected: 2026-11-16, text: "เปิดรับสมัครตั้งแต่วันที่ประกาศ ถึงวันที่ 16 พฤศจิกายน 2569 เวลา 16.30 น.", ref: 2026-10-29}
+  - {id: r20, kind: real, expected: null, text: "คณะฯ จะประกาศรายชื่อผู้มีสิทธิ์สอบข้อเขียนและสอบสัมภาษณ์ในวันที่ 19 พฤศจิกายน 2569 และกำหนดสอบข้อเขียน–สอบสัมภาษณ์ในวันที่ 24 พฤศจิกายน 2569", ref: 2026-10-29}
+  - {id: r21, kind: real, expected: 2026-10-30, text: "รับสมัครตั้งแต่บัดนี้ถึง 30 ตุลาคม 2569", ref: 2026-10-20}
+  - {id: r22, kind: real, expected: 2026-11-30, text: "กำหนดการรับสมัคร: เปิดรับผู้สนใจร่วมออกบูธตั้งแต่วันนี้ถึงวันที่ 30 พฤศจิกายน 2569", ref: 2026-10-12}
+  - {id: r23, kind: real, expected: null, text: "วันจัดกิจกรรม: วันจันทร์ที่ 14 ธันวาคม 2569 เวลา: 09.00–12.00 น.", ref: 2026-10-12}
+  - {id: r24, kind: real, expected: null, text: "วันพฤหัสบดีที่ 19 พฤศจิกายน 2569 เวลา 13.00-15.00 น. … ผู้สนใจสามารถสแกน QR Code ในโปสเตอร์เพื่อลงทะเบียนเข้าร่วมกิจกรรม หรือ คลิกที่นี่ https://cmu.to/jPxCp", ref: 2026-10-30}
+  - {id: r25, kind: real, expected: null, text: "คณะแพทยศาสตร์ มหาวิทยาลัยเชียงใหม่ รับสมัครบุคคลสอบคัดเลือกเพื่อจ้างเป็นพนักงานมหาวิทยาลัย ตำแหน่งนักจัดการงานทั่วไป … โดยมีรายละเอียดดังเอกสารดังแนบมาพร้อมนี้"}
+  - {id: r26, kind: real, expected: null, text: "ภาพกิจกรรมการนำเสนอโปสเตอร์ของนักศึกษา ประจำปีการศึกษา 2566 เมื่อวันที่ 28 กุมภาพันธ์ 2567", ref: 2024-03-01}
+
+  # ---- whole saved pages (title + body as the collector stores them) ----
+  - {id: p01, kind: page, expected: 2026-10-08, page: cs_cmu_detail_1, source: cs_cmu, ref: 2026-08-03}
+  - {id: p02, kind: page, expected: 2026-07-12, page: cs_cmu_detail_2, source: cs_cmu, ref: 2026-07-01}
+  - {id: p03, kind: page, expected: 2026-10-29, page: sci_cmu_detail_1, source: sci_cmu, ref: 2026-10-20}
+  - {id: p04, kind: page, expected: null, page: sci_cmu_detail_2, source: sci_cmu, ref: 2026-11-02}
+  - {id: p05, kind: page, expected: 2024-04-12, page: sdd_cmu_detail_1, source: sdd_cmu, ref: 2024-03-01}
+  - {id: p06, kind: page, expected: null, page: sdd_cmu_detail_2, source: sdd_cmu, ref: 2025-08-20}
+  - {id: p07, kind: page, expected: 2026-11-30, page: cmu_jobs_detail_1, source: cmu_jobs}
+  - {id: p08, kind: page, expected: 2026-11-16, page: cmu_jobs_detail_2, source: cmu_jobs}
+  - {id: p09, kind: page, expected: 2026-11-30, page: cmu_events_detail_1, source: cmu_events}
+  - {id: p10, kind: page, expected: null, page: cmu_events_detail_2, source: cmu_events}
+
+  # ---- synthetic (formats from other Thai university notices) ----
+  - {id: s01, kind: synthetic, expected: 2026-11-20, text: "ผู้สนใจสมัครทุนส่งเอกสารได้ที่งานบริการการศึกษา ภายใน 20 พ.ย. 69"}
+  - {id: s02, kind: synthetic, expected: 2026-12-15, text: "หมดเขตรับสมัคร 15/12/2569"}
+  - {id: s03, kind: synthetic, expected: 2026-12-01, text: "Deadline for application: 1 December 2026"}
+  - {id: s04, kind: synthetic, expected: 2026-11-25, text: "ส่งใบสมัครภายในวันที่ 25 พฤศจิกายน พ.ศ. 2569 ณ ห้อง SCB1100 สัมภาษณ์วันที่ 30 พฤศจิกายน 2569"}
+  - {id: s05, kind: synthetic, expected: 2027-01-10, text: "เปิดรับสมัครนักศึกษาสหกิจศึกษา ภาคเรียนที่ 2/2569 ระหว่างวันที่ 1 ธ.ค. 2569 – 10 ม.ค. 2570"}
+  - {id: s06, kind: synthetic, expected: 2026-11-18, text: "บริษัทเปิดรับนักศึกษาฝึกงาน สมัครได้ถึง 18 พ.ย. นี้", ref: 2026-11-01}
+  - {id: s07, kind: synthetic, expected: null, text: "ขอแสดงความยินดีกับนักศึกษาที่ได้รับทุน ประกาศ ณ วันที่ 3 พฤศจิกายน 2569"}
+  - {id: s08, kind: synthetic, expected: 2026-12-04, text: "Please submit the form no later than Dec 4, 2026. Interviews will take place on December 10, 2026."}
+  - {id: s09, kind: synthetic, expected: 2026-11-27, text: "ประกาศ ณ วันที่ 4 พฤศจิกายน 2569\nคุณสมบัติ: นักศึกษาชั้นปีที่ 3 GPAX ไม่ต่ำกว่า 2.75\nกำหนดส่งเอกสาร 27 พ.ย. 2569"}
+  - {id: s10, kind: synthetic, expected: null, text: "กิจกรรม CS Open House จัดขึ้นวันที่ 21 พฤศจิกายน 2569 ณ อาคาร 30 ปี"}
+  - {id: s11, kind: synthetic, expected: 2026-11-15, text: "ลงทะเบียนเข้าร่วม Workshop ได้ถึงวันที่ 15 พฤศจิกายน 2569 (รับจำนวนจำกัด) กิจกรรมจัดวันที่ 22 พฤศจิกายน 2569"}
+  - {id: s12, kind: synthetic, expected: 2026-11-09, text: "สมัครภายในวันจันทร์ที่ ๙ พ.ย. ๖๙ เวลา ๑๖.๓๐ น."}

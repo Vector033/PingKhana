@@ -1,0 +1,68 @@
+# Announcement sources. Survey notes and rejected candidates: docs/sources.md
+# Rules: public pages only, robots.txt obeyed, no login, each source fetched at most once per
+# MIN_FETCH_INTERVAL_MINUTES (default 60). Set `enabled: false` to pause a source.
+
+sources:
+  - id: cs_cmu
+    name: ภาควิชาวิทยาการคอมพิวเตอร์ มช.
+    url: https://www.cs.science.cmu.ac.th/
+    listing:
+      item: article.eael-grid-post
+      link: h2.eael-entry-title a
+    detail:
+      content: div.colibri-post-content
+      title: title
+    date_from_url: /(?P<y>\d{4})/(?P<m>\d{2})/(?P<d>\d{2})/
+    title_strip_suffix: "– Computer Science"
+    link_must_contain: [cs.science.cmu.ac.th/20]
+
+  - id: sci_cmu
+    name: คณะวิทยาศาสตร์ มช.
+    url: https://www.science.cmu.ac.th/2022/
+    listing:
+      item: div.member
+      link: div.member-info h4 a
+      date: div.member-info > span:last-of-type
+    detail:
+      content: section.news-detail div.col-lg-8
+      title: section.news-detail h2
+      drop: [div.social-share]
+    link_must_contain: [news-detail.php]
+
+  - id: sdd_cmu
+    name: กองพัฒนานักศึกษา มช. (ประชาสัมพันธ์)
+    url: https://sdd.oop.cmu.ac.th/cmuNewsList/15
+    listing:
+      item: a.row[href*="/cmuNewsItem/"]
+      link: a
+      title: div.wrap-news p
+    detail:
+      content: div.mar-news + div.row
+      title: h3.cosdd
+    force_https: true
+
+  - id: cmu_jobs
+    name: มช. ข่าวรับสมัครงาน
+    url: https://www.cmu.ac.th/th/articlegroup/726e7707-60ca-497f-aff9-077a4f380b5d
+    listing:
+      item: div.masonry-item
+      link: a.link[id*="rptGalleryItem_hlHeader_"]
+      date: span[id*="rptGalleryItem_lbCreateDate_"]
+    detail:
+      content: "#cphPageContent_wucArticleView_lbContent"
+      title: "#cphPageContent_wucArticleView_lbHeader"
+      date: "#cphPageContent_wucArticleView_lbDate"
+    link_must_contain: [/th/article/]
+
+  - id: cmu_events
+    name: มช. ประชุมสัมมนา/กิจกรรม
+    url: https://www.cmu.ac.th/th/articlegroup/c902f832-5354-4579-83da-1ec08a468e68
+    listing:
+      item: div.masonry-item
+      link: a.link[id*="rptGalleryItem_hlHeader_"]
+      date: span[id*="rptGalleryItem_lbCreateDate_"]
+    detail:
+      content: "#cphPageContent_wucArticleView_lbContent"
+      title: "#cphPageContent_wucArticleView_lbHeader"
+      date: "#cphPageContent_wucArticleView_lbDate"
+    link_must_contain: [/th/article/]

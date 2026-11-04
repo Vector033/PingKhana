@@ -1,0 +1,157 @@
+import hashlib
+import re
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+from datetime import date
+from email.utils import parsedate_to_datetime
+from urllib.parse import urldefrag, urljoin
+
+from selectolax.lexbor import LexborHTMLParser as HTMLParser
+from selectolax.lexbor import LexborNode as Node
+
+from app.collector.sources import SourceConfig
+from app.extract.thaidate import find_dates
+
+
+class ParseError(Exception):
+    """The page no longer matches the configured selectors (site redesign?)."""
+
+
+@dataclass
+class ListItem:
+    url: str
+    title: str
+    published_on: date | None = None
+
+
+@dataclass
+class Detail:
+    title: str
+    text: str
+    published_on: date | None = None
+
+
+def clean_text(s: str) -> str:
+    s = s.replace("\xa0", " ").replace("​", "")
+    s = re.sub(r"[ \t\r\f\v]+", " ", s)
+    s = re.sub(r"\n\s*\n+", "\n", s)
+    return s.strip()
+
+
+def content_hash(title: str, text: str) -> str:
+    norm = re.sub(r"\s+", " ", f"{title}\n{text}").strip().lower()
+    return hashlib.sha256(norm.encode()).hexdigest()
+
+
+def _first_date(text: str, ref: date) -> date | None:
+    found = find_dates(text, ref)
+    return found[0].value if found else None
+
+
+def date_from_url(url: str, pattern: str) -> date | None:
+    m = re.search(pattern, url)
+    if not m:
+        return None
+    try:
+        return date(int(m.group("y")), int(m.group("m")), int(m.group("d")))
+    except ValueError:
+        return None
+
+
+def canonical_url(href: str, base: str) -> str:
+    url, _ = urldefrag(urljoin(base, href.strip()))
+    return url
+
+
+def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list[ListItem]:
+    if cfg.kind == "rss":
+        return parse_rss(html)
+    assert cfg.listing is not None
+    tree = HTMLParser(html)
+    items: list[ListItem] = []
+    seen: set[str] = set()
+    for node in tree.css(cfg.listing.item):
+        link = (
+            node
+            if node.tag == "a" and cfg.listing.link == "a"
+            else node.css_first(cfg.listing.link)
+        )
+        if link is None or not link.attributes.get("href"):
+            continue
+        url = canonical_url(link.attributes["href"] or "", base_url)
+        if cfg.force_https and url.startswith("http://"):
+            url = "https://" + url.removeprefix("http://")
+        if cfg.link_must_contain and not any(p in url for p in cfg.link_must_contain):
+            continue
+        if url in seen:
+            continue
+        title_node: Node | None = node.css_first(cfg.listing.title) if cfg.listing.title else link
+        title = clean_text((title_node or link).text(separator=" "))
+        if not title:
+            continue
+        published = None
+        if cfg.listing.date and (dn := node.css_first(cfg.listing.date)):
+            published = _first_date(dn.attributes.get("datetime") or dn.text(), today)
+        if published is None and cfg.date_from_url:
+            published = date_from_url(url, cfg.date_from_url)
+        seen.add(url)
+        items.append(ListItem(url, title, published))
+    if not items:
+        raise ParseError(f"no items matched {cfg.listing.item!r} on {base_url}")
+    return items
+
+
+def parse_rss(xml: str) -> list[ListItem]:
+    root = ET.fromstring(xml.encode() if isinstance(xml, str) else xml)
+    items: list[ListItem] = []
+    for it in root.iter("item"):
+        link = (it.findtext("link") or "").strip()
+        title = clean_text(it.findtext("title") or "")
+        pub = it.findtext("pubDate")
+        published = None
+        if pub:
+            try:
+                published = parsedate_to_datetime(pub).date()
+            except (TypeError, ValueError):
+                pass
+        if link and title:
+            items.append(ListItem(link, title, published))
+    atom = "{http://www.w3.org/2005/Atom}"
+    for entry in root.iter(f"{atom}entry"):
+        link_el = entry.find(f"{atom}link")
+        title = clean_text(entry.findtext(f"{atom}title") or "")
+        if link_el is not None and title:
+            items.append(ListItem(link_el.get("href", ""), title))
+    if not items:
+        raise ParseError("feed has no items")
+    return items
+
+
+def parse_detail(html: str, cfg: SourceConfig, fallback_title: str, today: date) -> Detail:
+    tree = HTMLParser(html)
+    sel = cfg.detail
+    content = tree.css_first(sel.content) if sel else None
+    if content is None:
+        # Fall back to common article containers before giving up.
+        for guess in ("article", "main", ".entry-content", "#content", "body"):
+            content = tree.css_first(guess)
+            if content is not None:
+                break
+    if content is None:
+        raise ParseError("detail page has no content")
+    for bad in ["script", "style", "noscript", "form", *(sel.drop if sel else [])]:
+        for n in content.css(bad):
+            n.decompose()
+    # Keep paragraph breaks: they help the deadline finder stay on the right line.
+    for n in content.css("br, p, li, div, h1, h2, h3, h4, tr"):
+        n.insert_after("\n")
+    text = clean_text(content.text(separator=" "))
+    title = fallback_title
+    if sel and sel.title and (tn := tree.css_first(sel.title)):
+        title = clean_text(tn.text()) or fallback_title
+    if cfg.title_strip_suffix and title.endswith(cfg.title_strip_suffix):
+        title = title.removesuffix(cfg.title_strip_suffix).strip()
+    published = None
+    if sel and sel.date and (dn := tree.css_first(sel.date)):
+        published = _first_date(dn.attributes.get("datetime") or dn.text(), today)
+    return Detail(title, text, published)
