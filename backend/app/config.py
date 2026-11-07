@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     # at most this many calls, 6 s apart; the rest get rule-based results that later runs upgrade.
     gemini_max_calls_per_run: int = 15
     gemini_min_interval_seconds: float = 6.0
+    # Stop starting new Gemini calls after this long, so /jobs/run ends well inside 10 minutes.
+    gemini_max_seconds_per_run: float = 240.0
 
     user_agent: str = "PingKhanaBot/0.1 (+https://github.com/Vector033/PingKhana)"
     # Never fetch the same source more often than this, whatever the scheduler does.

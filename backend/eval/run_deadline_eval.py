@@ -94,6 +94,12 @@ async def run(method: str, case_set: str = "dev", llm: str | None = None) -> dic
         else:
             got = rules.extract(c["title"], c["text"], c["ref"]).deadline
         ok = got == c["expected"]
+        if extractor:  # LLM runs take minutes on free tiers; show progress
+            print(
+                f"  {len(rows) + 1}/{len(cases)} {c['id']} {'ok' if ok else 'MISS'}",
+                file=sys.stderr,
+                flush=True,
+            )
         per_kind[c["kind"]][0] += ok
         per_kind[c["kind"]][1] += 1
         rows.append(

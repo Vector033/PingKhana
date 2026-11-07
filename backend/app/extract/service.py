@@ -32,15 +32,20 @@ RULES_GEMINI_FAILED = "rules:gemini-error"
 
 
 class GeminiBudget:
-    def __init__(self, calls: int, min_interval: float = 0.0):
+    def __init__(self, calls: int, min_interval: float = 0.0, max_seconds: float | None = None):
         self.left = max(0, calls)
         self.min_interval = min_interval
+        # Slow answers (the model retries 503s internally) must not push the run past the
+        # scheduler's 10-minute HTTP timeout.
+        self.deadline = time.monotonic() + max_seconds if max_seconds else None
         self.used = 0
         self.tripped = False
         self._last = 0.0
 
     @property
     def available(self) -> bool:
+        if self.deadline is not None and time.monotonic() >= self.deadline:
+            return False
         return self.left > 0 and not self.tripped
 
     async def take(self) -> bool:
@@ -63,7 +68,7 @@ class GeminiBudget:
 def new_budget() -> GeminiBudget:
     s = get_settings()
     calls = s.gemini_max_calls_per_run if s.gemini_api_key else 0
-    return GeminiBudget(calls, s.gemini_min_interval_seconds)
+    return GeminiBudget(calls, s.gemini_min_interval_seconds, s.gemini_max_seconds_per_run)
 
 
 async def _gemini(

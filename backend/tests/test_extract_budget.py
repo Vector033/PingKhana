@@ -112,3 +112,12 @@ async def test_spacing_between_calls(monkeypatch) -> None:
     b = GeminiBudget(3, min_interval=6.0)
     assert [await b.take() for _ in range(4)] == [True, True, True, False]
     assert len(waits) == 2 and all(5 < w <= 6 for w in waits)
+
+
+async def test_time_cap_stops_new_calls(monkeypatch) -> None:
+    b = GeminiBudget(10, max_seconds=240)
+    assert b.available
+    later = service.time.monotonic() + 241
+    monkeypatch.setattr(service.time, "monotonic", lambda: later)
+    assert not b.available
+    assert not await b.take()
