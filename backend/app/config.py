@@ -46,9 +46,10 @@ class Settings(BaseSettings):
     reminder_reserve_ratio: float = 0.5
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-flash-latest"
+    # gemini-flash-latest hung for >90 s on 2026-11-08 while these two answered in 1-2 s.
+    gemini_model: str = "gemini-3.6-flash"
     # Comma-separated; used when the main model answers 503 "high demand" or has been retired.
-    gemini_fallback_models: str = "gemini-3.6-flash,gemini-flash-lite-latest"
+    gemini_fallback_models: str = "gemini-flash-lite-latest,gemini-flash-latest"
     # Free tier is ~10 requests/minute and a few hundred a day. One collection run (hourly) spends
     # at most this many calls, 6 s apart; the rest get rule-based results that later runs upgrade.
     gemini_max_calls_per_run: int = 15

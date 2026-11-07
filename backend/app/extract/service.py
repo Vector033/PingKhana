@@ -30,6 +30,7 @@ RULES = "rules"
 # Gemini rejected this one for a non-quota reason; do not spend budget on it again.
 RULES_GEMINI_FAILED = "rules:gemini-error"
 CALL_TIMEOUT = 90.0
+REQUEST_TIMEOUT = 25.0
 
 
 class GeminiBudget:
@@ -132,7 +133,8 @@ async def extract_pending(
             .limit(limit)
         )
     ).all()
-    async with httpx.AsyncClient(timeout=120) as client:
+    # Short per-request timeout so a hanging model falls back instead of eating the budget.
+    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
         ex = _extractor(client)
         for a in rows:
             ref = _ref(a)
@@ -167,7 +169,8 @@ async def upgrade_rule_results(session: AsyncSession, budget: GeminiBudget, toda
         )
     ).all()
     upgraded = 0
-    async with httpx.AsyncClient(timeout=120) as client:
+    # Short per-request timeout so a hanging model falls back instead of eating the budget.
+    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
         ex = _extractor(client)
         for a in rows:
             r, failed = await _gemini(ex, budget, a, _ref(a))
