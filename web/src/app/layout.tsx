@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="th" className={`${plex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <header className="z-20 bg-bg/85 px-3 pt-3 backdrop-blur md:sticky md:top-0 md:px-4">
+        <header className="z-20 bg-bg px-3 pt-3 md:sticky md:top-0 md:px-4">
           <div className="mx-auto max-w-6xl">
             <div className="bar flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2 shadow-card sm:px-4">
               <Link

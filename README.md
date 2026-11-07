@@ -7,7 +7,9 @@
 
 **Live:** https://pingkhana.vercel.app · LINE bot `@524osura` (screenshots from the deployed site and the real bot, 2026-11-08)
 
-![Home page with live data](docs/screenshots/home-light.png)
+![Front page: closing-soon lead with posters from the source sites](docs/screenshots/home-light.png)
+
+![Poster grid with status, year and sort filters (dark mode)](docs/screenshots/grid-dark.png)
 
 | Quick preview drawer (dark) | Phone: bottom sheet with the LINE reminder button |
 |---|---|
