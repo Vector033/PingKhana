@@ -43,6 +43,8 @@ export type Stats = {
   followers: number | null;
   reminders_set: number;
   reminders_sent: number;
+  /** How announcements were read: "gemini", "rules", "rules:gemini-error". */
+  extraction?: Record<string, number>;
   sources: {
     id: string;
     name: string;

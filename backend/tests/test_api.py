@@ -80,3 +80,12 @@ async def test_jobs_endpoint_needs_token(client) -> None:
     assert (
         await client.post("/jobs/run", headers={"Authorization": "Bearer wrong"})
     ).status_code == 401
+
+
+async def test_stats_counts_extraction_methods(session, client) -> None:
+    for method in ("gemini:gemini-flash-latest", "gemini:gemini-flash-lite-latest", "rules"):
+        a = await f.announcement(session)
+        a.extraction_method = method
+    await session.commit()
+    r = (await client.get("/api/stats")).json()
+    assert r["extraction"] == {"gemini": 2, "rules": 1}

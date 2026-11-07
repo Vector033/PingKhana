@@ -219,6 +219,20 @@ async def meta(session: Session) -> dict:
     }
 
 
+async def _extraction_counts(session: AsyncSession) -> dict[str, int]:
+    q = visible().subquery()
+    rows = (
+        await session.execute(
+            select(q.c.extraction_method, func.count()).group_by(q.c.extraction_method)
+        )
+    ).all()
+    out: dict[str, int] = {}
+    for method, n in rows:
+        key = "gemini" if (method or "").startswith("gemini:") else (method or "unknown")
+        out[key] = out.get(key, 0) + n
+    return out
+
+
 @app.get("/api/stats")
 async def stats(session: Session) -> dict:
     sources = (await session.scalars(select(Source).order_by(Source.name))).all()
@@ -246,6 +260,9 @@ async def stats(session: Session) -> dict:
             .select_from(Delivery)
             .where(Delivery.kind.like("reminder%"), Delivery.status == "sent")
         ),
+        # How each visible announcement was read: "gemini" (any Gemini model), "rules",
+        # "rules:gemini-error". Shows the hourly runs replacing rule results with Gemini.
+        "extraction": await _extraction_counts(session),
         "sources": [
             {
                 "id": s.id,

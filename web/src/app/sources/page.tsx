@@ -68,50 +68,64 @@ async function SourceTable() {
     timeStyle: "short",
     timeZone: "Asia/Bangkok",
   });
+  const ex = stats.extraction ?? {};
+  const gemini = ex.gemini ?? 0;
+  const rules = (ex.rules ?? 0) + (ex["rules:gemini-error"] ?? 0);
   return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-line text-muted">
-          <tr>
-            <th className="px-4 py-2 font-medium">เว็บ</th>
-            <th className="px-4 py-2 font-medium">ดึงสำเร็จล่าสุด</th>
-            <th className="px-4 py-2 font-medium">สถานะ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stats.sources.map((s) => (
-            <tr key={s.id} className="border-b border-line last:border-0">
-              <td className="px-4 py-2">
-                <a
-                  href={s.url}
-                  className="hover:text-brand hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {s.name}
-                </a>
-              </td>
-              <td className="px-4 py-2 text-muted">
-                {s.last_success_at
-                  ? fmt.format(new Date(s.last_success_at))
-                  : "—"}
-              </td>
-              <td className="px-4 py-2">
-                {s.healthy ? (
-                  <span className="text-brand">ปกติ</span>
-                ) : (
-                  <span
-                    className="text-danger"
-                    title={s.last_error ?? undefined}
-                  >
-                    ดึงไม่สำเร็จ (เว็บอาจเปลี่ยนหน้าตา)
-                  </span>
-                )}
-              </td>
+    <>
+      {gemini + rules > 0 && (
+        <p className="mt-4 text-sm text-muted">
+          อ่านด้วย Gemini แล้ว{" "}
+          <span className="font-semibold text-fg tabular-nums">{gemini}</span>{" "}
+          ประกาศ · ใช้กฎสำรอง{" "}
+          <span className="font-semibold text-fg tabular-nums">{rules}</span>{" "}
+          ประกาศ (รอบถัดไปจะค่อยๆ อ่านซ้ำด้วย Gemini)
+        </p>
+      )}
+      <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-line text-muted">
+            <tr>
+              <th className="px-4 py-2 font-medium">เว็บ</th>
+              <th className="px-4 py-2 font-medium">ดึงสำเร็จล่าสุด</th>
+              <th className="px-4 py-2 font-medium">สถานะ</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {stats.sources.map((s) => (
+              <tr key={s.id} className="border-b border-line last:border-0">
+                <td className="px-4 py-2">
+                  <a
+                    href={s.url}
+                    className="hover:text-brand hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {s.name}
+                  </a>
+                </td>
+                <td className="px-4 py-2 text-muted">
+                  {s.last_success_at
+                    ? fmt.format(new Date(s.last_success_at))
+                    : "—"}
+                </td>
+                <td className="px-4 py-2">
+                  {s.healthy ? (
+                    <span className="text-brand">ปกติ</span>
+                  ) : (
+                    <span
+                      className="text-danger"
+                      title={s.last_error ?? undefined}
+                    >
+                      ดึงไม่สำเร็จ (เว็บอาจเปลี่ยนหน้าตา)
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
