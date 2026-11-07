@@ -3,10 +3,9 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryChip, DeadlineBadge } from "@/components/AnnouncementCard";
+import { RemindButton } from "@/components/RemindButton";
 import { getAnnouncement, getMeta } from "@/lib/api";
-import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
-
-const ADD_FRIEND_URL = process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL;
+import { DISCLAIMER, daysLeft, thDate, todayBangkok } from "@/lib/format";
 
 export default function AnnouncementPage({ params }: PageProps<"/a/[id]">) {
   return (
@@ -30,7 +29,10 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <article className="mx-auto max-w-2xl">
-      <Link href="/" className="text-sm text-muted hover:text-fg">
+      <Link
+        href="/"
+        className="-ml-2 inline-flex min-h-11 items-center px-2 text-sm text-muted hover:text-fg"
+      >
         ← ประกาศทั้งหมด
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -42,18 +44,20 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           </span>
         )}
       </div>
-      <h1 className="mt-3 text-2xl font-semibold leading-snug tracking-tight">
+      <h1 className="mt-3 text-2xl leading-snug font-semibold tracking-tight text-balance [overflow-wrap:anywhere]">
         {a.title}
       </h1>
 
       {a.summary_th && (
         <section className="mt-5">
           <h2 className="text-sm font-medium text-muted">สรุป</h2>
-          <p className="mt-1 leading-relaxed">{a.summary_th}</p>
+          <p className="mt-1 leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">
+            {a.summary_th}
+          </p>
         </section>
       )}
 
-      <dl className="mt-6 grid gap-x-6 gap-y-4 rounded-xl border border-line bg-surface p-5 text-sm sm:grid-cols-2">
+      <dl className="mt-6 grid gap-x-6 gap-y-4 rounded-xl border border-line bg-surface p-5 text-sm [overflow-wrap:anywhere] sm:grid-cols-2">
         <div>
           <dt className="text-muted">วันปิดรับ</dt>
           <dd className="mt-0.5">
@@ -93,23 +97,18 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </dl>
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        {a.deadline && daysLeft(a.deadline, today) >= 1 && (
+          <RemindButton id={a.id} />
+        )}
         <a
           href={a.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line-strong bg-surface px-5 font-medium hover:border-brand hover:text-brand"
         >
           เปิดประกาศต้นทาง ↗
         </a>
-        {ADD_FRIEND_URL && a.deadline && a.deadline >= today && (
-          <a
-            href={ADD_FRIEND_URL}
-            className="rounded-lg border border-line px-4 py-2 text-sm font-medium hover:border-brand"
-          >
-            ให้ LINE เตือนก่อนปิดรับ
-          </a>
-        )}
       </div>
       <p className="mt-6 text-xs leading-relaxed text-muted">{DISCLAIMER}</p>
     </article>

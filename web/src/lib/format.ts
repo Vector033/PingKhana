@@ -51,3 +51,8 @@ export const CATEGORY_STYLE: Record<string, string> = {
 
 export const DISCLAIMER =
   "PingKhana ไม่ใช่ช่องทางทางการของคณะหรือมหาวิทยาลัย ข้อมูลอ่านจากเว็บอัตโนมัติ โปรดตรวจสอบรายละเอียดที่ประกาศต้นทางทุกครั้ง";
+
+/** Whole minutes since an ISO timestamp (server render, per request). */
+export function minutesSince(iso: string, now: number = Date.now()): number {
+  return Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
+}

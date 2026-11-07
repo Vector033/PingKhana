@@ -84,6 +84,18 @@ async def test_remind_postback_creates_one_reminder(session) -> None:
     assert await session.scalar(select(func.count()).select_from(Reminder)) == 0
 
 
+async def test_remind_text_from_website_button(session) -> None:
+    a = await f.announcement(session, deadline=f.TODAY + timedelta(days=10))
+    await session.commit()
+    line = LineClient()
+    await handle_event(session, line, ev(text=f"เตือน {a.id}"), f.NOW)
+    assert await session.scalar(select(func.count()).select_from(Reminder)) == 1
+    assert "ตั้งเตือนแล้ว" in all_text(line.outbox[-1].messages)
+    # Bare "เตือน" still lists the user's reminders.
+    await handle_event(session, line, ev(text="เตือน"), f.NOW)
+    assert "ประกาศที่ให้เตือน" in all_text(line.outbox[-1].messages)
+
+
 async def test_remind_without_deadline_is_refused(session) -> None:
     a = await f.announcement(session, deadline=None)
     await session.commit()

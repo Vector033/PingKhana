@@ -1,6 +1,7 @@
 """Webhook event handling. Every answer is a reply message, which does not use the push quota."""
 
 import logging
+import re
 from datetime import datetime
 from urllib.parse import parse_qs
 
@@ -25,6 +26,9 @@ HELP = (
     "• ยกเลิก — ลบข้อมูลของคุณทั้งหมด\n\n"
     f"{msg.DISCLAIMER}"
 )
+
+
+REMIND_TEXT = re.compile(r"(?:เตือนฉัน|เตือน)\s*#?(\d{1,9})")
 
 
 def settings_link() -> str:
@@ -63,6 +67,10 @@ async def _list_reply(
 async def answer_text(session: AsyncSession, user: User, text: str, now: datetime) -> list[dict]:
     today = now.astimezone(BANGKOK).date()
     t = text.strip().lower()
+    # "เตือน 123" is what the website's reminder button pre-fills in LINE.
+    m = REMIND_TEXT.fullmatch(t)
+    if m:
+        return await handle_postback(session, user, f"action=remind&id={m.group(1)}", now)
     if t in ("ทุน", "ทุนที่เปิดอยู่", "ทุนเปิด"):
         return await _list_reply(
             session,

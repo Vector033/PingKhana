@@ -57,6 +57,7 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://pingkhana:pingkhana@localhost:5432/pingkhana
       NEXT_PUBLIC_API_URL: http://localhost:8100
       CORS_ORIGINS: http://localhost:3005
+      NEXT_PUBLIC_LINE_ADD_FRIEND_URL: https://line.me/R/ti/p/@524osura
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

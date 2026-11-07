@@ -241,7 +241,7 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-brand px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="inline-flex min-h-11 items-center rounded-xl bg-brand px-5 text-sm font-medium text-brand-fg transition active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? "กำลังบันทึก…" : "บันทึก"}
         </button>

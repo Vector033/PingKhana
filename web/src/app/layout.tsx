@@ -30,28 +30,48 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="th" className={`${plex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-line bg-surface/80 backdrop-blur sticky top-0 z-10">
-          <nav className="mx-auto flex max-w-5xl items-center gap-5 px-4 py-3">
+        <header className="sticky top-0 z-10 border-b border-line bg-surface/85 backdrop-blur">
+          <nav className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-1.5">
             <Link
               href="/"
-              className="flex items-center gap-2 font-semibold tracking-tight"
+              className="-ml-1 flex min-h-11 items-center gap-2 px-1 font-semibold tracking-tight"
             >
-              <span
+              {/* A radar ping: the site watches faculty pages and pings you. */}
+              <svg
                 aria-hidden
-                className="grid size-7 place-items-center rounded-lg bg-brand text-white text-sm"
+                viewBox="0 0 24 24"
+                className="size-6 text-brand"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
               >
-                P
-              </span>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="2.2"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4" />
+                <path
+                  d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"
+                  opacity=".5"
+                />
+              </svg>
               PingKhana
             </Link>
-            <div className="ml-auto flex items-center gap-4 text-sm text-muted">
+            <div className="ml-auto flex items-center text-sm text-muted">
               <Link
                 href="/?status=closing&sort=deadline"
-                className="hover:text-fg"
+                className="inline-flex min-h-11 items-center px-2.5 hover:text-fg"
               >
                 ใกล้ปิดรับ
               </Link>
-              <Link href="/sources" className="hover:text-fg">
+              <Link
+                href="/sources"
+                className="inline-flex min-h-11 items-center px-2.5 hover:text-fg"
+              >
                 แหล่งข้อมูล
               </Link>
             </div>
@@ -66,7 +86,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <p className="mt-1">
               โปรเจกต์นักศึกษา · โค้ด{" "}
               <a
-                className="underline"
+                className="underline underline-offset-2 hover:text-fg"
                 href="https://github.com/Vector033/PingKhana"
               >
                 github.com/Vector033/PingKhana
