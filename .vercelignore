@@ -1,0 +1,8 @@
+# CLI deploys upload only the website (project root directory = web).
+/*
+!/web
+/web/node_modules
+/web/.next
+/web/test-results
+/web/.env*
+/web/.vercel
