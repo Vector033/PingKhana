@@ -5,6 +5,8 @@
   "correct": 48,
   "total": 48,
   "answered_by": {},
+  "errors": 0,
+  "seconds": 0,
   "by_kind": {
     "real": {
       "correct": 26,

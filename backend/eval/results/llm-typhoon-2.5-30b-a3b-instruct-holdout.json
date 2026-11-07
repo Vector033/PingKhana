@@ -1,0 +1,133 @@
+{
+  "method": "llm-typhoon-2.5-30b-a3b-instruct",
+  "set": "holdout",
+  "accuracy": 0.529,
+  "correct": 18,
+  "total": 34,
+  "answered_by": {
+    "llm:typhoon-v2.5-30b-a3b-instruct": 34
+  },
+  "errors": 0,
+  "seconds": 109,
+  "by_kind": {
+    "holdout": {
+      "correct": 18,
+      "total": 34,
+      "accuracy": 0.529
+    }
+  },
+  "failures": [
+    {
+      "id": "h06",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2027-01-15",
+      "ok": false
+    },
+    {
+      "id": "h08",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-11-13",
+      "ok": false
+    },
+    {
+      "id": "h10",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-11-03",
+      "ok": false
+    },
+    {
+      "id": "h11",
+      "kind": "holdout",
+      "expected": "2026-12-30",
+      "got": "2027-01-05",
+      "ok": false
+    },
+    {
+      "id": "h12",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2027-11-12",
+      "ok": false
+    },
+    {
+      "id": "h13",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-10-15",
+      "ok": false
+    },
+    {
+      "id": "h14",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2027-01-12",
+      "ok": false
+    },
+    {
+      "id": "h15",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-12-03",
+      "ok": false
+    },
+    {
+      "id": "h16",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-10-28",
+      "ok": false
+    },
+    {
+      "id": "h17",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-06-23",
+      "ok": false
+    },
+    {
+      "id": "h23",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2027-01-14",
+      "ok": false
+    },
+    {
+      "id": "h24",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-12-13",
+      "ok": false
+    },
+    {
+      "id": "h25",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-11-07",
+      "ok": false
+    },
+    {
+      "id": "h26",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-12-24",
+      "ok": false
+    },
+    {
+      "id": "h33",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2027-01-05",
+      "ok": false
+    },
+    {
+      "id": "h34",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-11-07",
+      "ok": false
+    }
+  ]
+}

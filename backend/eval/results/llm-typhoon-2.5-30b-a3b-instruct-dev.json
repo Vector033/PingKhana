@@ -1,0 +1,108 @@
+{
+  "method": "llm-typhoon-2.5-30b-a3b-instruct",
+  "set": "dev",
+  "accuracy": 0.771,
+  "correct": 37,
+  "total": 48,
+  "answered_by": {
+    "llm:typhoon-v2.5-30b-a3b-instruct": 48
+  },
+  "errors": 0,
+  "seconds": 124,
+  "by_kind": {
+    "real": {
+      "correct": 17,
+      "total": 26,
+      "accuracy": 0.654
+    },
+    "page": {
+      "correct": 9,
+      "total": 10,
+      "accuracy": 0.9
+    },
+    "synthetic": {
+      "correct": 11,
+      "total": 12,
+      "accuracy": 0.917
+    }
+  },
+  "failures": [
+    {
+      "id": "r03",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-10-21",
+      "ok": false
+    },
+    {
+      "id": "r05",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-07-19",
+      "ok": false
+    },
+    {
+      "id": "r06",
+      "kind": "real",
+      "expected": "2026-10-29",
+      "got": "2026-10-28",
+      "ok": false
+    },
+    {
+      "id": "r07",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-10-30",
+      "ok": false
+    },
+    {
+      "id": "r13",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-12-04",
+      "ok": false
+    },
+    {
+      "id": "r15",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-11-20",
+      "ok": false
+    },
+    {
+      "id": "r20",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-11-18",
+      "ok": false
+    },
+    {
+      "id": "r23",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-12-14",
+      "ok": false
+    },
+    {
+      "id": "r24",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-11-19",
+      "ok": false
+    },
+    {
+      "id": "p10",
+      "kind": "page",
+      "expected": null,
+      "got": "2026-11-18",
+      "ok": false
+    },
+    {
+      "id": "s10",
+      "kind": "synthetic",
+      "expected": null,
+      "got": "2026-11-21",
+      "ok": false
+    }
+  ]
+}
