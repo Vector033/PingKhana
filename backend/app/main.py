@@ -102,6 +102,7 @@ class AnnouncementOut(BaseModel):
     min_gpax: float | None
     published_on: date | None
     first_seen_at: datetime
+    image_url: str | None = None
 
 
 def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
@@ -121,6 +122,7 @@ def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
         min_gpax=float(a.min_gpax) if a.min_gpax is not None else None,
         published_on=a.published_on,
         first_seen_at=a.first_seen_at,
+        image_url=a.image_url,
     )
 
 

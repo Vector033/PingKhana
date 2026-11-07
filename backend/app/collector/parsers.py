@@ -22,6 +22,8 @@ class ListItem:
     url: str
     title: str
     published_on: date | None = None
+    # Thumbnail shown next to the item on the source's list page (absolute https URL).
+    image: str | None = None
 
 
 @dataclass
@@ -63,6 +65,22 @@ def canonical_url(href: str, base: str) -> str:
     return url
 
 
+_NOT_A_PHOTO = re.compile(r"emoji|logo|icon|avatar|spacer|blank|\.svg(\?|$)|^data:", re.I)
+
+
+def list_image(node: Node, base_url: str) -> str | None:
+    """The item's thumbnail on the list page, or None. Lazy-loaded images keep it in data-src."""
+    for img in node.css("img"):
+        a = img.attributes
+        src = (a.get("data-src") or a.get("data-lazy-src") or a.get("src") or "").strip()
+        if not src or _NOT_A_PHOTO.search(src):
+            continue
+        url = canonical_url(src, base_url)
+        # The site is served over https; an http image would be blocked as mixed content.
+        return "https://" + url.removeprefix("http://") if url.startswith("http://") else url
+    return None
+
+
 def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list[ListItem]:
     if cfg.kind == "rss":
         return parse_rss(html)
@@ -95,7 +113,7 @@ def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list
         if published is None and cfg.date_from_url:
             published = date_from_url(url, cfg.date_from_url)
         seen.add(url)
-        items.append(ListItem(url, title, published))
+        items.append(ListItem(url, title, published, list_image(node, base_url)))
     if not items:
         raise ParseError(f"no items matched {cfg.listing.item!r} on {base_url}")
     return items

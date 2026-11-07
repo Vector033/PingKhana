@@ -38,6 +38,10 @@ def test_list_pages(sid: str, count: int, url_part: str, has_dates: bool) -> Non
     assert len(items) == count
     assert all(i.url.startswith(url_part) for i in items)
     assert all(len(i.title) > 10 for i in items)
+    # Every source shows a thumbnail per item; the card uses it.
+    with_image = [i.image for i in items if i.image]
+    assert len(with_image) >= count * 0.8
+    assert all(u.startswith("https://") for u in with_image)
     assert len({i.url for i in items}) == count
     if has_dates:
         assert all(i.published_on and i.published_on <= TODAY for i in items)

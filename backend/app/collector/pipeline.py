@@ -90,6 +90,8 @@ async def collect_source(
             existing = known.get(item.url)
             if existing is not None:
                 existing.last_seen_at = now
+                if item.image and existing.image_url != item.image:
+                    existing.image_url = item.image
                 if existing.list_title == item.title:
                     continue
                 # Title changed on the list (e.g. "ขยายเวลา"): re-read the page.
@@ -124,6 +126,7 @@ async def collect_source(
                 url=item.url,
                 title=detail.title,
                 list_title=item.title,
+                image_url=item.image,
                 body_text=detail.text,
                 content_hash=h,
                 duplicate_of_id=dup,
