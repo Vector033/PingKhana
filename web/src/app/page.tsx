@@ -47,7 +47,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
         <h1 className="text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl">
           ประกาศทุน สหกิจ งาน และกิจกรรม มช. ในที่เดียว
         </h1>
-        <p className="mt-2 max-w-2xl text-pretty text-muted">
+        <p className="mt-2 hidden max-w-2xl text-pretty text-muted sm:block">
           ดึงจากเว็บภาควิชา คณะ และมหาวิทยาลัยทุกชั่วโมง สรุปสั้นๆ
           พร้อมวันปิดรับ กดประกาศที่สนใจแล้วให้ LINE เตือนก่อนปิดรับ 3 วันและ 1
           วัน
@@ -149,7 +149,7 @@ async function Results({ searchParams }: { searchParams: Promise<Search> }) {
 
   const moreFilters = (
     <>
-      <FilterGroup title="ชั้นปีที่สมัครได้">
+      <FilterGroup title="ชั้นปี">
         <FilterLink
           href={hrefWith(current, { year: null })}
           active={!current.year}
@@ -183,150 +183,115 @@ async function Results({ searchParams }: { searchParams: Promise<Search> }) {
     </>
   );
 
+  const heading = current.q
+    ? "ผลการค้นหา"
+    : current.category
+      ? (meta.categories.find((c) => c.id === current.category)?.th ?? "ประกาศ")
+      : front
+        ? "ประกาศล่าสุด"
+        : "ประกาศ";
+
   return (
     <PreviewProvider today={today} majors={majors} q={current.q}>
       {closing && closing.items.length > 0 && (
         <ClosingHero items={closing.items} />
       )}
-      <div className="grid gap-6 md:grid-cols-[13rem_1fr] md:gap-8">
-        <aside className="min-w-0 space-y-3 text-sm md:space-y-5">
-          <form action="/" className="space-y-2" role="search">
-            <label htmlFor="q" className="font-medium">
-              ค้นหา
-            </label>
-            <input
-              id="q"
-              name="q"
-              type="search"
-              enterKeyHint="search"
-              defaultValue={current.q}
-              placeholder="เช่น ทุน, Python, SCB"
-              className="min-h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-base outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-[var(--brand-ring)] md:text-sm"
-            />
-            {Object.entries(current)
-              .filter(([k]) => k !== "q" && k !== "page")
-              .map(([k, v]) => (
-                <input key={k} type="hidden" name={k} value={v} />
-              ))}
-          </form>
-
-          <FilterGroup title="ประเภท">
-            <FilterLink
-              href={hrefWith(current, { category: null })}
-              active={!current.category}
-            >
-              ทั้งหมด
-            </FilterLink>
-            {meta.categories.map((c) => (
-              <FilterLink
-                key={c.id}
-                href={hrefWith(current, { category: c.id })}
-                active={current.category === c.id}
-              >
-                {c.th}
-              </FilterLink>
-            ))}
-          </FilterGroup>
-
-          <FilterGroup title="สถานะ">
-            {[
-              ["open", "ยังเปิดรับ"],
-              ["closing", "ปิดรับใน 14 วัน"],
-              ["all", "ทั้งหมด (รวมที่ปิดแล้ว)"],
-            ].map(([id, label]) => (
-              <FilterLink
-                key={id}
-                href={hrefWith(current, { status: id === "open" ? null : id })}
-                active={status === id}
-              >
-                {label}
-              </FilterLink>
-            ))}
-          </FilterGroup>
-
-          {/* Phones: year and sort fold away so the first screen reaches the feed. */}
-          <details
-            className="group md:hidden"
-            open={Boolean(current.year || current.sort)}
-          >
-            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-muted [&::-webkit-details-marker]:hidden">
-              ชั้นปีและการเรียง
-              <svg
-                aria-hidden
-                viewBox="0 0 16 16"
-                className="size-3.5 transition-transform group-open:rotate-180"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <path d="M4 6l4 4 4-4" strokeLinecap="round" />
-              </svg>
-            </summary>
-            <div className="mt-3 space-y-3">{moreFilters}</div>
-          </details>
-          <div className="hidden space-y-5 md:block">{moreFilters}</div>
-        </aside>
-
-        <section
-          aria-label="รายการประกาศ"
-          aria-live="polite"
-          className="min-w-0"
-        >
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            {front && (
-              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-                ประกาศล่าสุด
-              </h2>
-            )}
+      <section aria-label="รายการประกาศ" aria-live="polite" className="min-w-0">
+        <div className="mb-4 border-b border-line pb-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              {heading}
+            </h2>
             <p className="text-sm text-muted [overflow-wrap:anywhere]">
               พบ {data.total} ประกาศ{current.q && <> สำหรับ “{current.q}”</>}
             </p>
           </div>
-          {data.items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
-              <p>ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
-              <Link
-                href="/"
-                className="mt-2 inline-flex min-h-11 items-center px-3 font-medium text-brand underline underline-offset-4"
-              >
-                ล้างตัวกรองทั้งหมด
-              </Link>
-            </div>
-          ) : (
-            <Feed items={data.items} />
-          )}
-          {pages > 1 && (
-            <nav
-              className="mt-6 flex items-center justify-between text-sm"
-              aria-label="หน้า"
+          {/* Category and search live in the header; these narrow the list further. */}
+          <div className="mt-3 flex flex-col gap-2 text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-6">
+            <FilterGroup title="สถานะ">
+              {[
+                ["open", "ยังเปิดรับ"],
+                ["closing", "ปิดรับใน 14 วัน"],
+                ["all", "รวมที่ปิดแล้ว"],
+              ].map(([id, label]) => (
+                <FilterLink
+                  key={id}
+                  href={hrefWith(current, {
+                    status: id === "open" ? null : id,
+                  })}
+                  active={status === id}
+                >
+                  {label}
+                </FilterLink>
+              ))}
+            </FilterGroup>
+            {/* Phones: year and sort fold away so the first screen reaches the feed. */}
+            <details
+              className="group md:hidden"
+              open={Boolean(current.year || current.sort)}
             >
-              {page > 1 ? (
-                <Link
-                  className={PAGER}
-                  href={hrefWith(current, { page: String(page - 1) })}
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-muted [&::-webkit-details-marker]:hidden">
+                ชั้นปีและการเรียง
+                <svg
+                  aria-hidden
+                  viewBox="0 0 16 16"
+                  className="size-3.5 transition-transform group-open:rotate-180"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
                 >
-                  ← ก่อนหน้า
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-muted tabular-nums">
-                หน้า {page} / {pages}
-              </span>
-              {page < pages ? (
-                <Link
-                  className={PAGER}
-                  href={hrefWith(current, { page: String(page + 1) })}
-                >
-                  ถัดไป →
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          )}
-        </section>
-      </div>
+                  <path d="M4 6l4 4 4-4" strokeLinecap="round" />
+                </svg>
+              </summary>
+              <div className="mt-2 space-y-2">{moreFilters}</div>
+            </details>
+            <div className="hidden md:contents">{moreFilters}</div>
+          </div>
+        </div>
+        {data.items.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
+            <p>ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
+            <Link
+              href="/"
+              className="mt-2 inline-flex min-h-11 items-center px-3 font-medium text-brand underline underline-offset-4"
+            >
+              ล้างตัวกรองทั้งหมด
+            </Link>
+          </div>
+        ) : (
+          <Feed items={data.items} />
+        )}
+        {pages > 1 && (
+          <nav
+            className="mt-6 flex items-center justify-between text-sm"
+            aria-label="หน้า"
+          >
+            {page > 1 ? (
+              <Link
+                className={PAGER}
+                href={hrefWith(current, { page: String(page - 1) })}
+              >
+                ← ก่อนหน้า
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-muted tabular-nums">
+              หน้า {page} / {pages}
+            </span>
+            {page < pages ? (
+              <Link
+                className={PAGER}
+                href={hrefWith(current, { page: String(page + 1) })}
+              >
+                ถัดไป →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
+      </section>
     </PreviewProvider>
   );
 }
@@ -342,14 +307,10 @@ function FilterGroup({
   children: React.ReactNode;
 }) {
   return (
-    // One horizontally scrolling row per group on phones, a vertical list in the sidebar on desktop.
-    <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:block md:overflow-visible md:px-0">
-      <h2 className="shrink-0 text-xs text-muted md:mb-1 md:text-sm md:font-medium md:text-fg">
-        {title}
-      </h2>
-      <div className="flex shrink-0 gap-1.5 whitespace-nowrap md:flex-wrap md:gap-1 md:whitespace-normal">
-        {children}
-      </div>
+    // One row per group; scrolls sideways on phones instead of wrapping.
+    <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0">
+      <h3 className="shrink-0 text-xs text-muted">{title}</h3>
+      <div className="flex shrink-0 gap-1.5 whitespace-nowrap">{children}</div>
     </div>
   );
 }

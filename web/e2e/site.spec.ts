@@ -16,8 +16,8 @@ test("home lists open announcements and filters by category", async ({ page }) =
 
 test("search narrows the list", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("ค้นหา").fill("FastAPI");
-  await page.getByLabel("ค้นหา").press("Enter");
+  await page.getByRole("searchbox").fill("FastAPI");
+  await page.getByRole("searchbox").press("Enter");
   await expect(page).toHaveURL(/q=FastAPI/);
   await expect(page.getByText(/พบ 1 ประกาศ/)).toBeVisible();
 });

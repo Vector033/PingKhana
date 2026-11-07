@@ -69,3 +69,12 @@ export const CATEGORY_TINT: Record<string, string> = {
   general:
     "from-slate-100 to-slate-200 text-slate-600 dark:from-slate-900 dark:to-slate-800 dark:text-slate-300",
 };
+
+/** Same ids and labels as the API's /api/meta categories (backend app/models.py CATEGORY_TH). */
+export const CATEGORIES = [
+  { id: "scholarship", th: "ทุน" },
+  { id: "internship", th: "สหกิจ/ฝึกงาน" },
+  { id: "job", th: "งาน" },
+  { id: "activity", th: "กิจกรรม" },
+  { id: "general", th: "ประกาศทั่วไป" },
+] as const;

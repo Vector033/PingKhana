@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
 import Link from "next/link";
+import { Suspense } from "react";
+import { CategoryTabs, HeaderSearch } from "@/components/TopNav";
 import { DISCLAIMER } from "@/lib/format";
 import "./globals.css";
 
@@ -30,54 +32,68 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="th" className={`${plex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <header className="sticky top-0 z-10 border-b border-line bg-surface/85 backdrop-blur">
-          <nav className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-1.5">
-            <Link
-              href="/"
-              className="-ml-1 flex min-h-11 items-center gap-2 px-1 font-semibold tracking-tight"
-            >
-              {/* A radar ping: the site watches faculty pages and pings you. */}
-              <svg
-                aria-hidden
-                viewBox="0 0 24 24"
-                className="size-6 text-brand"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="2.2"
-                  fill="currentColor"
-                  stroke="none"
-                />
-                <path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4" />
-                <path
-                  d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"
-                  opacity=".5"
-                />
-              </svg>
-              PingKhana
-            </Link>
-            <div className="ml-auto flex items-center text-sm text-muted">
+        <header className="z-20 bg-bg/85 px-3 pt-3 backdrop-blur md:sticky md:top-0 md:px-4">
+          <div className="mx-auto max-w-6xl">
+            <div className="bar flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2 shadow-card sm:px-4">
               <Link
-                href="/?status=closing&sort=deadline"
-                className="inline-flex min-h-11 items-center px-2.5 hover:text-fg"
+                href="/"
+                className="-ml-1 flex min-h-11 shrink-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
               >
-                ใกล้ปิดรับ
+                {/* A radar ping: the site watches faculty pages and pings you. */}
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="size-6 text-teal-300"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="2.2"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4" />
+                  <path
+                    d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"
+                    opacity=".5"
+                  />
+                </svg>
+                PingKhana
               </Link>
-              <Link
-                href="/sources"
-                className="inline-flex min-h-11 items-center px-2.5 hover:text-fg"
+              <Suspense
+                fallback={
+                  <div className="order-last h-11 w-full md:order-none md:max-w-md md:flex-1" />
+                }
               >
-                แหล่งข้อมูล
-              </Link>
+                <HeaderSearch className="order-last w-full md:order-none md:max-w-md md:flex-1" />
+              </Suspense>
+              <div className="ml-auto flex items-center text-sm text-white/75">
+                <Link
+                  href="/?status=closing&sort=deadline"
+                  className="inline-flex min-h-11 items-center px-2.5 hover:text-white"
+                >
+                  ใกล้ปิดรับ
+                </Link>
+                <Link
+                  href="/sources"
+                  className="inline-flex min-h-11 items-center px-2.5 hover:text-white"
+                >
+                  แหล่งข้อมูล
+                </Link>
+              </div>
             </div>
-          </nav>
+            <div className="mt-1 border-b border-line px-1">
+              <Suspense fallback={<div className="h-11" />}>
+                <CategoryTabs />
+              </Suspense>
+            </div>
+          </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
           {children}
         </main>
         <footer className="border-t border-line">
