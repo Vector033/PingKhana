@@ -20,6 +20,7 @@
   --line-green: #06c755;
   --line-green-fg: #052e16; /* LINE green is too light for white text at this size */
   --scrim: rgb(15 23 42 / 0.45);
+  --mark: #fde68a; /* marker-pen yellow behind key text */
   --shadow:
     0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.18);
   color-scheme: light;
@@ -43,6 +44,7 @@
     --danger-pulse: rgb(248 113 113 / 0.45);
     --live: #4ade80;
     --scrim: rgb(2 6 23 / 0.65);
+    --mark: rgb(250 204 21 / 0.28);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.6);
     color-scheme: dark;
   }
@@ -80,6 +82,19 @@ body {
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* Marker-pen highlight on the lower half of the line, like a student's highlighter. */
+.marker {
+  background: linear-gradient(
+    transparent 52%,
+    var(--mark) 52%,
+    var(--mark) 92%,
+    transparent 92%
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding-inline: 0.15em;
 }
 
 /* ---------- Motion ---------- */

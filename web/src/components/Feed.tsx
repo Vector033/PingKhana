@@ -1,25 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   AnnouncementCard,
   CategoryChip,
+  CompactCard,
   DeadlineBadge,
+  LeadCard,
 } from "@/components/AnnouncementCard";
+import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
 import type { Announcement } from "@/lib/api";
 import { thDate } from "@/lib/format";
 
-/** The list plus one quick-preview drawer. Without JS every card is a plain link to /a/[id]. */
-export function Feed({
-  items,
+type Ctx = { open: (a: Announcement) => void; today: string; q?: string };
+const PreviewCtx = createContext<Ctx | null>(null);
+
+function usePreview(): Ctx {
+  const c = useContext(PreviewCtx);
+  if (!c) throw new Error("usePreview outside PreviewProvider");
+  return c;
+}
+
+/** One quick-preview drawer for everything inside. Without JS every card is a plain link. */
+export function PreviewProvider({
   today,
   majors,
+  q,
+  children,
 }: {
-  items: Announcement[];
   today: string;
   majors: Record<string, string>;
+  q?: string;
+  children: React.ReactNode;
 }) {
   const [current, setCurrent] = useState<Announcement | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -34,29 +56,19 @@ export function Feed({
     }
   }, [current]);
 
-  function open(a: Announcement) {
+  const open = useCallback((a: Announcement) => {
     opener.current = document.activeElement as HTMLElement | null;
     setCurrent(a);
-  }
+  }, []);
+  const ctx = useMemo(() => ({ open, today, q }), [open, today, q]);
 
   function close() {
     dialog.current?.close();
   }
 
   return (
-    <>
-      <div className="space-y-3">
-        {items.map((a, i) => (
-          <AnnouncementCard
-            key={a.id}
-            a={a}
-            today={today}
-            index={i}
-            onOpen={open}
-          />
-        ))}
-      </div>
-
+    <PreviewCtx.Provider value={ctx}>
+      {children}
       <dialog
         ref={dialog}
         className="drawer"
@@ -74,7 +86,71 @@ export function Feed({
           <Preview a={current} today={today} majors={majors} onClose={close} />
         )}
       </dialog>
-    </>
+    </PreviewCtx.Provider>
+  );
+}
+
+/** The main list: image cards, two columns from tablet up. */
+export function Feed({ items }: { items: Announcement[] }) {
+  const { open, today, q } = usePreview();
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {items.map((a, i) => (
+        <AnnouncementCard
+          key={a.id}
+          a={a}
+          today={today}
+          index={i}
+          q={q}
+          onOpen={open}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Front-page lead: the soonest deadline as a big poster, the next few beside it. */
+export function ClosingHero({ items }: { items: Announcement[] }) {
+  const { open, today } = usePreview();
+  const [lead, ...rest] = items;
+  if (!lead) return null;
+  return (
+    <section aria-labelledby="closing-title" className="mb-10">
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h2
+          id="closing-title"
+          className="text-xl font-semibold tracking-tight sm:text-2xl"
+        >
+          <span
+            className="mr-2 inline-block size-2.5 translate-y-[-2px] rounded-full bg-danger align-middle"
+            aria-hidden
+          />
+          ใกล้ปิดรับ
+        </h2>
+        <Link
+          href="/?status=closing&sort=deadline"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-brand hover:underline"
+        >
+          ดูทั้งหมด →
+        </Link>
+      </div>
+      <div
+        className={
+          rest.length ? "grid gap-4 lg:grid-cols-[1.4fr_1fr]" : "max-w-3xl"
+        }
+      >
+        <LeadCard a={lead} today={today} onOpen={open} />
+        {rest.length > 0 && (
+          <ol className="grid content-start gap-3">
+            {rest.map((a, i) => (
+              <li key={a.id}>
+                <CompactCard a={a} today={today} index={i + 1} onOpen={open} />
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -133,6 +209,15 @@ function Preview({
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+        {a.image_url && (
+          <Thumb
+            src={a.image_url}
+            category={a.category}
+            label={a.category_th}
+            sizes="(min-width: 768px) 440px, 100vw"
+            className="mb-4 aspect-[16/9] rounded-xl"
+          />
+        )}
         <section aria-labelledby="pv-sum">
           <h3 id="pv-sum" className="text-sm font-medium text-muted">
             สรุป

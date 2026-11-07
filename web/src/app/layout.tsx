@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="th" className={`${plex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <header className="sticky top-0 z-10 border-b border-line bg-surface/85 backdrop-blur">
-          <nav className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-1.5">
+          <nav className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-1.5">
             <Link
               href="/"
               className="-ml-1 flex min-h-11 items-center gap-2 px-1 font-semibold tracking-tight"
@@ -77,11 +77,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </div>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
           {children}
         </main>
         <footer className="border-t border-line">
-          <div className="mx-auto max-w-5xl px-4 py-6 text-xs leading-relaxed text-muted">
+          <div className="mx-auto max-w-6xl px-4 py-6 text-xs leading-relaxed text-muted">
             <p>{DISCLAIMER}</p>
             <p className="mt-1">
               โปรเจกต์นักศึกษา · โค้ด{" "}

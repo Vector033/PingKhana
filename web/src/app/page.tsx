@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Feed } from "@/components/Feed";
+import { ClosingHero, Feed, PreviewProvider } from "@/components/Feed";
 import { getAnnouncements, getMeta, getStats } from "@/lib/api";
 import { minutesSince, todayBangkok } from "@/lib/format";
 
@@ -123,13 +123,18 @@ async function Results({ searchParams }: { searchParams: Promise<Search> }) {
   const status = current.status ?? "open";
   await connection(); // "today" must be computed per request, not at build time
   const today = todayBangkok();
-  let data, meta;
+  // The front page (no filter, no search) leads with the deadlines closing soonest.
+  const front = Object.keys(current).length === 0;
+  let data, meta, closing;
   try {
-    [data, meta] = await Promise.all([
+    [data, meta, closing] = await Promise.all([
       getAnnouncements(
         new URLSearchParams({ page_size: "20", ...current, status }).toString(),
       ),
       getMeta(),
+      front
+        ? getAnnouncements("status=closing&sort=deadline&page_size=4")
+        : null,
     ]);
   } catch {
     return (
@@ -179,134 +184,150 @@ async function Results({ searchParams }: { searchParams: Promise<Search> }) {
   );
 
   return (
-    <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:gap-8">
-      <aside className="min-w-0 space-y-3 text-sm md:space-y-5">
-        <form action="/" className="space-y-2" role="search">
-          <label htmlFor="q" className="font-medium">
-            ค้นหา
-          </label>
-          <input
-            id="q"
-            name="q"
-            type="search"
-            enterKeyHint="search"
-            defaultValue={current.q}
-            placeholder="เช่น ทุน, Python, SCB"
-            className="min-h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-base outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-[var(--brand-ring)] md:text-sm"
-          />
-          {Object.entries(current)
-            .filter(([k]) => k !== "q" && k !== "page")
-            .map(([k, v]) => (
-              <input key={k} type="hidden" name={k} value={v} />
+    <PreviewProvider today={today} majors={majors} q={current.q}>
+      {closing && closing.items.length > 0 && (
+        <ClosingHero items={closing.items} />
+      )}
+      <div className="grid gap-6 md:grid-cols-[13rem_1fr] md:gap-8">
+        <aside className="min-w-0 space-y-3 text-sm md:space-y-5">
+          <form action="/" className="space-y-2" role="search">
+            <label htmlFor="q" className="font-medium">
+              ค้นหา
+            </label>
+            <input
+              id="q"
+              name="q"
+              type="search"
+              enterKeyHint="search"
+              defaultValue={current.q}
+              placeholder="เช่น ทุน, Python, SCB"
+              className="min-h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-base outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-[var(--brand-ring)] md:text-sm"
+            />
+            {Object.entries(current)
+              .filter(([k]) => k !== "q" && k !== "page")
+              .map(([k, v]) => (
+                <input key={k} type="hidden" name={k} value={v} />
+              ))}
+          </form>
+
+          <FilterGroup title="ประเภท">
+            <FilterLink
+              href={hrefWith(current, { category: null })}
+              active={!current.category}
+            >
+              ทั้งหมด
+            </FilterLink>
+            {meta.categories.map((c) => (
+              <FilterLink
+                key={c.id}
+                href={hrefWith(current, { category: c.id })}
+                active={current.category === c.id}
+              >
+                {c.th}
+              </FilterLink>
             ))}
-        </form>
+          </FilterGroup>
 
-        <FilterGroup title="ประเภท">
-          <FilterLink
-            href={hrefWith(current, { category: null })}
-            active={!current.category}
+          <FilterGroup title="สถานะ">
+            {[
+              ["open", "ยังเปิดรับ"],
+              ["closing", "ปิดรับใน 14 วัน"],
+              ["all", "ทั้งหมด (รวมที่ปิดแล้ว)"],
+            ].map(([id, label]) => (
+              <FilterLink
+                key={id}
+                href={hrefWith(current, { status: id === "open" ? null : id })}
+                active={status === id}
+              >
+                {label}
+              </FilterLink>
+            ))}
+          </FilterGroup>
+
+          {/* Phones: year and sort fold away so the first screen reaches the feed. */}
+          <details
+            className="group md:hidden"
+            open={Boolean(current.year || current.sort)}
           >
-            ทั้งหมด
-          </FilterLink>
-          {meta.categories.map((c) => (
-            <FilterLink
-              key={c.id}
-              href={hrefWith(current, { category: c.id })}
-              active={current.category === c.id}
-            >
-              {c.th}
-            </FilterLink>
-          ))}
-        </FilterGroup>
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-muted [&::-webkit-details-marker]:hidden">
+              ชั้นปีและการเรียง
+              <svg
+                aria-hidden
+                viewBox="0 0 16 16"
+                className="size-3.5 transition-transform group-open:rotate-180"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path d="M4 6l4 4 4-4" strokeLinecap="round" />
+              </svg>
+            </summary>
+            <div className="mt-3 space-y-3">{moreFilters}</div>
+          </details>
+          <div className="hidden space-y-5 md:block">{moreFilters}</div>
+        </aside>
 
-        <FilterGroup title="สถานะ">
-          {[
-            ["open", "ยังเปิดรับ"],
-            ["closing", "ปิดรับใน 14 วัน"],
-            ["all", "ทั้งหมด (รวมที่ปิดแล้ว)"],
-          ].map(([id, label]) => (
-            <FilterLink
-              key={id}
-              href={hrefWith(current, { status: id === "open" ? null : id })}
-              active={status === id}
-            >
-              {label}
-            </FilterLink>
-          ))}
-        </FilterGroup>
-
-        {/* Phones: year and sort fold away so the first screen reaches the feed. */}
-        <details
-          className="group md:hidden"
-          open={Boolean(current.year || current.sort)}
+        <section
+          aria-label="รายการประกาศ"
+          aria-live="polite"
+          className="min-w-0"
         >
-          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-muted [&::-webkit-details-marker]:hidden">
-            ชั้นปีและการเรียง
-            <svg
-              aria-hidden
-              viewBox="0 0 16 16"
-              className="size-3.5 transition-transform group-open:rotate-180"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <path d="M4 6l4 4 4-4" strokeLinecap="round" />
-            </svg>
-          </summary>
-          <div className="mt-3 space-y-3">{moreFilters}</div>
-        </details>
-        <div className="hidden space-y-5 md:block">{moreFilters}</div>
-      </aside>
-
-      <section aria-live="polite" className="min-w-0">
-        <p className="mb-3 text-sm text-muted [overflow-wrap:anywhere]">
-          พบ {data.total} ประกาศ{current.q && <> สำหรับ “{current.q}”</>}
-        </p>
-        {data.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
-            <p>ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
-            <Link
-              href="/"
-              className="mt-2 inline-flex min-h-11 items-center px-3 font-medium text-brand underline underline-offset-4"
-            >
-              ล้างตัวกรองทั้งหมด
-            </Link>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            {front && (
+              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                ประกาศล่าสุด
+              </h2>
+            )}
+            <p className="text-sm text-muted [overflow-wrap:anywhere]">
+              พบ {data.total} ประกาศ{current.q && <> สำหรับ “{current.q}”</>}
+            </p>
           </div>
-        ) : (
-          <Feed items={data.items} today={today} majors={majors} />
-        )}
-        {pages > 1 && (
-          <nav
-            className="mt-6 flex items-center justify-between text-sm"
-            aria-label="หน้า"
-          >
-            {page > 1 ? (
+          {data.items.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
+              <p>ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
               <Link
-                className={PAGER}
-                href={hrefWith(current, { page: String(page - 1) })}
+                href="/"
+                className="mt-2 inline-flex min-h-11 items-center px-3 font-medium text-brand underline underline-offset-4"
               >
-                ← ก่อนหน้า
+                ล้างตัวกรองทั้งหมด
               </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-muted tabular-nums">
-              หน้า {page} / {pages}
-            </span>
-            {page < pages ? (
-              <Link
-                className={PAGER}
-                href={hrefWith(current, { page: String(page + 1) })}
-              >
-                ถัดไป →
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
-      </section>
-    </div>
+            </div>
+          ) : (
+            <Feed items={data.items} />
+          )}
+          {pages > 1 && (
+            <nav
+              className="mt-6 flex items-center justify-between text-sm"
+              aria-label="หน้า"
+            >
+              {page > 1 ? (
+                <Link
+                  className={PAGER}
+                  href={hrefWith(current, { page: String(page - 1) })}
+                >
+                  ← ก่อนหน้า
+                </Link>
+              ) : (
+                <span />
+              )}
+              <span className="text-muted tabular-nums">
+                หน้า {page} / {pages}
+              </span>
+              {page < pages ? (
+                <Link
+                  className={PAGER}
+                  href={hrefWith(current, { page: String(page + 1) })}
+                >
+                  ถัดไป →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </nav>
+          )}
+        </section>
+      </div>
+    </PreviewProvider>
   );
 }
 

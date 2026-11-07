@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryChip, DeadlineBadge } from "@/components/AnnouncementCard";
 import { RemindSlot } from "@/components/RemindButton";
+import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
 import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
 
@@ -47,6 +48,17 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       <h1 className="mt-3 text-2xl leading-snug font-semibold tracking-tight text-balance [overflow-wrap:anywhere]">
         {a.title}
       </h1>
+
+      {a.image_url && (
+        <Thumb
+          src={a.image_url}
+          category={a.category}
+          label={a.category_th}
+          sizes="(min-width: 768px) 672px, 100vw"
+          priority
+          className="mt-5 aspect-[16/9] rounded-2xl border border-line"
+        />
+      )}
 
       {a.summary_th && (
         <section className="mt-5">

@@ -19,6 +19,8 @@ export type Announcement = {
   min_gpax: number | null;
   published_on: string | null;
   first_seen_at: string;
+  /** Thumbnail from the source's list page, if it has one. */
+  image_url?: string | null;
 };
 
 export type Page = {

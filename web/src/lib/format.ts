@@ -56,3 +56,16 @@ export const DISCLAIMER =
 export function minutesSince(iso: string, now: number = Date.now()): number {
   return Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
 }
+
+/** Background for a card without a poster: the category's colour, so the grid stays readable. */
+export const CATEGORY_TINT: Record<string, string> = {
+  scholarship:
+    "from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300",
+  internship:
+    "from-blue-100 to-blue-200 text-blue-700 dark:from-blue-950 dark:to-blue-900 dark:text-blue-300",
+  job: "from-violet-100 to-violet-200 text-violet-700 dark:from-violet-950 dark:to-violet-900 dark:text-violet-300",
+  activity:
+    "from-orange-100 to-orange-200 text-orange-700 dark:from-orange-950 dark:to-orange-900 dark:text-orange-300",
+  general:
+    "from-slate-100 to-slate-200 text-slate-600 dark:from-slate-900 dark:to-slate-800 dark:text-slate-300",
+};
