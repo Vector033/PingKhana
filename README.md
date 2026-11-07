@@ -5,11 +5,17 @@
 > PingKhana รวมประกาศทุน สหกิจ งาน และกิจกรรมจากเว็บภาควิชา คณะ และมหาวิทยาลัยเชียงใหม่ อ่านวันปิดรับให้อัตโนมัติ และให้ LINE เตือนก่อนปิดรับ 3 วันและ 1 วัน
 > ไม่ใช่ช่องทางทางการของคณะหรือมหาวิทยาลัย
 
-![Home page with live data](docs/screenshots/home.png)
+**Live:** https://pingkhana.vercel.app · LINE bot `@524osura` (screenshots from the deployed site and the real bot, 2026-11-08)
 
-| Announcement detail | Phone, closing soon (dark) |
+![Home page with live data](docs/screenshots/home-light.png)
+
+| Quick preview drawer (dark) | Phone: bottom sheet with the LINE reminder button |
 |---|---|
-| ![Detail](docs/screenshots/detail.png) | ![Mobile](docs/screenshots/mobile-closing.png) |
+| ![Drawer](docs/screenshots/drawer-dark.png) | ![Phone](docs/screenshots/mobile-sheet.png) |
+
+| LINE: "ใกล้ปิดรับ" answered with a carousel | LINE: set a reminder, open settings, delete my data |
+|---|---|
+| ![Carousel](docs/screenshots/line-carousel.png) | ![Chat](docs/screenshots/line-chat.png) |
 
 ## Why
 
