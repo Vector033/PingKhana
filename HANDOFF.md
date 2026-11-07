@@ -1,4 +1,4 @@
-# PingKhana: สถานะส่งต่อ (2026-11-08)
+# PingKhana: สถานะส่งต่อ (2026-11-08, อัปเดตตี 4)
 
 ## Live แล้ว
 - เว็บ: https://pingkhana.vercel.app (Vercel project `pingkhana`, root directory `web`)
@@ -18,18 +18,23 @@
   - Typhoon ได้ 77.1% บนชุด dev และ 52.9% บนชุด held-out (ผลอยู่ใน README)
 - pytest ผ่าน 82
 
+## ทำเพิ่มคืน 2026-11-08
+- Vercel ต่อ Git แล้ว ตอนนี้ push ขึ้น main แล้ว deploy เอง (ลองแล้วกับ commit 4d14404)
+- **CI ผ่านครั้งแรก** (backend + web + Playwright) สาเหตุที่ล้มมาตลอดคือ CI รัน `tsc` ก่อนที่ Next จะสร้าง `PageProps` ให้ แก้โดยรัน `next typegen` ก่อน
+- `gh` login แล้ว (Vector033) จึงดูผล CI และ log ของ workflow เองได้
+- GitHub schedule จริงๆ รันแค่ประมาณทุก 5 ชั่วโมง จึงเพิ่ม `/jobs/run?background=1` และ `GET /jobs/last` แล้วให้ cron-job.org เรียกทุกชั่วโมง (ผู้ใช้ตั้งไว้แล้ว ตอนนาทีที่ 00)
+- Gemini ไม่ได้ upgrade เลย เพราะ `gemini-flash-latest` ค้างนานเกิน 90 วินาที จึงเปลี่ยนให้ `gemini-3.6-flash` เป็นตัวหลัก และตั้ง timeout 25 วินาทีต่อ request
+  - หลังแก้ รอบแรก upgrade ได้ 15 ประกาศ ตอนนี้ Gemini 20 / rules 62 จากทั้งหมด 82 ประกาศ (ดูได้ที่ `/api/stats` ช่อง `extraction` และหน้า `/sources`)
+- ภาพหน้าจอจาก live site และจาก LINE จริงอยู่ใน `docs/screenshots/` และใส่ใน README แล้ว
+
 ## ยังเหลือ
 1. ผู้ใช้ทดสอบปุ่มเขียวบนเว็บผ่านมือถือ และเช็กว่าหน้า LIFF แสดง "ประกาศที่ให้เตือน" ถูกต้องหรือไม่ (ตอนเช็กยังไม่ชัดว่าแคปหน้าจอก่อนหรือหลังพิมพ์ "ยกเลิก")
-2. Vercel ยังไม่ได้ต่อ Git เพราะ Vercel GitHub app ยังไม่มีสิทธิ์เข้า repo private
-   - ตอนนี้ต้อง deploy เองด้วย `npx vercel deploy --prod` จาก root ของ repo (CLI login เป็น vector033 แล้ว)
-   - ถ้าจะให้ deploy อัตโนมัติ: ผู้ใช้ให้สิทธิ์ Vercel app เข้า repo แล้วกด Connect Git ใน Settings ของ project
 3. Eval model อื่นยังรันไม่ได้เพราะติดข้อจำกัดของแพ็กเกจฟรี
    - gpt-oss-120b: Groq ติด 429
    - qwen3.8-27b: เจอ 413 เพราะ prompt ยาวเกิน
    - Gemini ผ่าน router: โควตาหมด
    - ให้รันใหม่ทีละ model วันอื่น หรือตัดเนื้อหาให้สั้นลง (`body[:6000]`)
-4. ดูว่า Gemini upgrade ผล rules ได้จริงในรอบถัดๆ ไปหรือไม่ (ดู log ของ workflow ที่ `extracted.gemini_calls` และ `upgraded`)
-5. CI บน GitHub ยังไม่เคยเช็ก (`gh` ยังไม่ได้ login) ผู้ใช้เปิดดูแท็บ Actions → CI ได้
+4. ดูว่า cron-job.org รอบ 04:00 ทำงานจริง (ใน HISTORY ต้องขึ้น 200 และ `started`) และอีกประมาณ 4 รอบ Gemini ควรอ่านครบทุกประกาศ
 6. ชวนเพื่อนมาใช้ แล้วใส่ตัวเลขจริง (followers, reminders) และภาพหน้าจอใน README
 
 ## ข้อควรรู้บนเครื่อง
