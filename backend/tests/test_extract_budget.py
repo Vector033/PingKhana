@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date, timedelta
 
 import httpx
@@ -9,6 +10,15 @@ from app.extract.schema import Extracted
 from app.extract.service import GeminiBudget, extract_pending, upgrade_rule_results
 from app.models import Announcement, Category
 from tests import factories as f
+
+
+class SlowGemini:
+    calls = 0
+
+    async def extract(self, title: str, body: str, ref: date) -> Extracted:
+        self.calls += 1
+        await asyncio.sleep(10)
+        raise AssertionError("should have timed out")
 
 
 class FakeGemini:
@@ -121,3 +131,13 @@ async def test_time_cap_stops_new_calls(monkeypatch) -> None:
     monkeypatch.setattr(service.time, "monotonic", lambda: later)
     assert not b.available
     assert not await b.take()
+
+
+async def test_slow_answer_times_out_and_pauses_gemini(session, fake, monkeypatch) -> None:
+    monkeypatch.setattr(service, "CALL_TIMEOUT", 0.05)
+    g = fake(SlowGemini())
+    await pending(session, 3)
+    budget = GeminiBudget(10)
+    await extract_pending(session, budget)
+    assert g.calls == 1 and budget.tripped
+    assert await methods(session) == ["rules"] * 3

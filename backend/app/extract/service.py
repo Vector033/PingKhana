@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 RULES = "rules"
 # Gemini rejected this one for a non-quota reason; do not spend budget on it again.
 RULES_GEMINI_FAILED = "rules:gemini-error"
+CALL_TIMEOUT = 90.0
 
 
 class GeminiBudget:
@@ -78,7 +79,11 @@ async def _gemini(
     if ex is None or not await budget.take():
         return None, False
     try:
-        return await ex.extract(a.title, a.body_text, ref), False
+        # One answer may retry 503/429 across fallback models for minutes; cap it.
+        return await asyncio.wait_for(ex.extract(a.title, a.body_text, ref), CALL_TIMEOUT), False
+    except TimeoutError:
+        budget.trip(f"no answer within {CALL_TIMEOUT:.0f}s")
+        return None, False
     except (httpx.TransportError, httpx.HTTPStatusError) as e:
         status = getattr(getattr(e, "response", None), "status_code", None)
         if status is None or status in RETRY_STATUS:
