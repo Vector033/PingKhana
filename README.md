@@ -44,7 +44,7 @@ Run with `python -m eval.run_deadline_eval [--set holdout]`. A case is correct w
 | Dev set: 26 real sentences + 10 whole saved pages + 12 synthetic ([eval/deadline_cases.yaml](backend/eval/deadline_cases.yaml)) | 48 | 93.8% before tuning → 100% after (the rules were tuned on this set) |
 | **Held-out set**: 34 real passages from CMU, KKU and TU pages, collected by a separate agent that never saw the extractor code ([eval/deadline_holdout.yaml](backend/eval/deadline_holdout.yaml)) | 34 | **94.1% on the first (blind) run** (32/34). Both misses were fixed afterwards, so later runs on this set are no longer blind |
 
-Gemini has not been measured yet because there is no API key on the dev machine. `--gemini` runs the same sets.
+Gemini (`--gemini`, first run 2026-11-04, free API key): **97.9%** on the dev set (47/48) and **91.2%** on the held-out set (31/34), so it scored below the rules on held-out data. All three held-out misses gave a date where the expected answer was "no deadline". The run is not a clean test of one model: the main models were overloaded (503) or rate-limited (429), so most cases were answered by the fallback `gemini-flash-lite-latest` (see `answered_by` in [eval/results](backend/eval/results)). In production, the rule extractor takes over whenever Gemini fails.
 About 45% of the cases have **no** deadline (event days, interview dates, posting dates). Telling those apart is the hard part, not parsing `๒๙ ต.ค. ๖๙`.
 
 ## Numbers from real use

@@ -1,0 +1,37 @@
+{
+  "method": "gemini",
+  "set": "dev",
+  "accuracy": 0.979,
+  "correct": 47,
+  "total": 48,
+  "answered_by": {
+    "gemini:gemini-3.6-flash": 12,
+    "gemini:gemini-flash-lite-latest": 36
+  },
+  "by_kind": {
+    "real": {
+      "correct": 25,
+      "total": 26,
+      "accuracy": 0.962
+    },
+    "page": {
+      "correct": 10,
+      "total": 10,
+      "accuracy": 1.0
+    },
+    "synthetic": {
+      "correct": 12,
+      "total": 12,
+      "accuracy": 1.0
+    }
+  },
+  "failures": [
+    {
+      "id": "r24",
+      "kind": "real",
+      "expected": null,
+      "got": "2026-11-19",
+      "ok": false
+    }
+  ]
+}

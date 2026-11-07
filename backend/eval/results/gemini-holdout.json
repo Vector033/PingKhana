@@ -1,0 +1,40 @@
+{
+  "method": "gemini",
+  "set": "holdout",
+  "accuracy": 0.912,
+  "correct": 31,
+  "total": 34,
+  "answered_by": {
+    "gemini:gemini-flash-lite-latest": 34
+  },
+  "by_kind": {
+    "holdout": {
+      "correct": 31,
+      "total": 34,
+      "accuracy": 0.912
+    }
+  },
+  "failures": [
+    {
+      "id": "h15",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-12-03",
+      "ok": false
+    },
+    {
+      "id": "h24",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-12-13",
+      "ok": false
+    },
+    {
+      "id": "h25",
+      "kind": "holdout",
+      "expected": null,
+      "got": "2026-11-06",
+      "ok": false
+    }
+  ]
+}
