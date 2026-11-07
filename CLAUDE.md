@@ -1,6 +1,6 @@
 # PingKhana: LINE bot แจ้งเตือนประกาศทุน สหกิจ และกำหนดส่งจากเว็บคณะ
 
-> สถานะ (2026-11-07): MVP เสร็จบนเครื่อง, LINE channel + Gemini key ใส่แล้ว, eval Gemini วัดแล้ว, ไฟล์ deploy (render.yaml) พร้อม · ยังเหลือ: deploy จริง (Neon/Render/Vercel), LIFF, ปรับดีไซน์ตาม CLAUDE_DESIGN_GUIDE.md, ชวนผู้ใช้จริง · **อ่าน HANDOFF.md ก่อน**
+> สถานะ (2026-11-08): **Live** ที่ https://pingkhana.vercel.app (API บน Render, DB บน Neon) · ยังเหลือ: ชวนผู้ใช้จริง, ตัวเลขใน README, eval model อื่น · **อ่าน HANDOFF.md ก่อน**
 > Stack ที่เลือกแล้ว: FastAPI + Postgres (Docker port 54532, SQLAlchemy/Alembic) + Next.js 16 ใน `web/` · แหล่งข้อมูล 5 เว็บอยู่ใน `backend/app/collector/sources.yaml` (ผู้ใช้อนุมัติครบทั้ง 5 เว็บแล้วเมื่อ 2026-11-04)
 > สร้างเมื่อ 2026-11-04 · ลำดับ: ทำเมื่อไรก็ได้ (โปรเจกต์ขนาดเล็กถึงกลาง)
 > ชื่อมาจาก Ping (แจ้งเตือน) + Khana (คณะ)
