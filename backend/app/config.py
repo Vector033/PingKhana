@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-flash-latest"
     # Comma-separated; used when the main model answers 503 "high demand" or has been retired.
     gemini_fallback_models: str = "gemini-3.6-flash,gemini-flash-lite-latest"
+    # Free tier is ~10 requests/minute and a few hundred a day. One collection run (hourly) spends
+    # at most this many calls, 6 s apart; the rest get rule-based results that later runs upgrade.
+    gemini_max_calls_per_run: int = 15
+    gemini_min_interval_seconds: float = 6.0
 
     user_agent: str = "PingKhanaBot/0.1 (+https://github.com/Vector033/PingKhana)"
     # Never fetch the same source more often than this, whatever the scheduler does.
