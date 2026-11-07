@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryChip, DeadlineBadge } from "@/components/AnnouncementCard";
-import { RemindButton } from "@/components/RemindButton";
+import { RemindSlot } from "@/components/RemindButton";
 import { getAnnouncement, getMeta } from "@/lib/api";
-import { DISCLAIMER, daysLeft, thDate, todayBangkok } from "@/lib/format";
+import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
 
 export default function AnnouncementPage({ params }: PageProps<"/a/[id]">) {
   return (
@@ -98,9 +98,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       </dl>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        {a.deadline && daysLeft(a.deadline, today) >= 1 && (
-          <RemindButton id={a.id} />
-        )}
+        <RemindSlot id={a.id} deadline={a.deadline} today={today} />
         <a
           href={a.url}
           target="_blank"

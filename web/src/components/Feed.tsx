@@ -7,9 +7,9 @@ import {
   CategoryChip,
   DeadlineBadge,
 } from "@/components/AnnouncementCard";
-import { RemindButton } from "@/components/RemindButton";
+import { RemindSlot } from "@/components/RemindButton";
 import type { Announcement } from "@/lib/api";
-import { daysLeft, thDate } from "@/lib/format";
+import { thDate } from "@/lib/format";
 
 /** The list plus one quick-preview drawer. Without JS every card is a plain link to /a/[id]. */
 export function Feed({
@@ -27,7 +27,11 @@ export function Feed({
 
   useEffect(() => {
     const d = dialog.current;
-    if (current && d && !d.open) d.showModal();
+    if (current && d && !d.open) {
+      d.showModal();
+      // Start on the title (read out by screen readers) rather than ringing the close button.
+      d.querySelector<HTMLElement>("#preview-title")?.focus();
+    }
   }, [current]);
 
   function open(a: Announcement) {
@@ -85,8 +89,6 @@ function Preview({
   majors: Record<string, string>;
   onClose: () => void;
 }) {
-  // Reminders go out 3 days and 1 day before, so a deadline today is too late to set one.
-  const canRemind = a.deadline != null && daysLeft(a.deadline, today) >= 1;
   // Summaries are 2-3 lines; show each line as its own point when the model wrote several.
   const points = (a.summary_th ?? "")
     .split(/\n+/)
@@ -103,8 +105,9 @@ function Preview({
           </div>
           <h2
             id="preview-title"
+            tabIndex={-1}
             title={a.title}
-            className="mt-2 line-clamp-4 text-lg leading-snug font-semibold [overflow-wrap:anywhere]"
+            className="mt-2 line-clamp-4 text-lg leading-snug font-semibold outline-none [overflow-wrap:anywhere]"
           >
             {a.title}
           </h2>
@@ -187,7 +190,12 @@ function Preview({
       </div>
 
       <div className="space-y-2 border-t border-line bg-surface px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        {canRemind && <RemindButton id={a.id} className="w-full" />}
+        <RemindSlot
+          id={a.id}
+          deadline={a.deadline}
+          today={today}
+          className="w-full"
+        />
         <div className="flex gap-2 text-sm">
           <a
             href={a.url}

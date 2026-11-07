@@ -1,3 +1,4 @@
+import { daysLeft } from "@/lib/format";
 import { remindHref } from "@/lib/line";
 
 export function BellIcon({ className = "size-5" }: { className?: string }) {
@@ -39,4 +40,42 @@ export function RemindButton({
       ให้ LINE เตือนก่อนปิดรับ
     </a>
   );
+}
+
+/** Why a reminder cannot be set, or null when it can (reminders go out 3 days and 1 day before). */
+export function remindBlockedReason(
+  deadline: string | null,
+  today: string,
+): string | null {
+  if (!deadline)
+    return "ประกาศนี้ไม่ระบุวันปิดรับ จึงตั้งเตือนไม่ได้ ดูรายละเอียดที่ประกาศต้นทาง";
+  const n = daysLeft(deadline, today);
+  if (n < 0) return "ประกาศนี้ปิดรับไปแล้ว";
+  if (n === 0)
+    return "ปิดรับวันนี้ เตือนล่วงหน้าไม่ทันแล้ว ถ้าสนใจให้สมัครที่ประกาศต้นทางเลย";
+  return null;
+}
+
+/** The LINE button, or a one-line reason in its place. */
+export function RemindSlot({
+  id,
+  deadline,
+  today,
+  className = "",
+}: {
+  id: number;
+  deadline: string | null;
+  today: string;
+  className?: string;
+}) {
+  const reason = remindBlockedReason(deadline, today);
+  if (reason) {
+    return (
+      <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-sm text-muted">
+        <BellIcon className="mt-0.5 size-4 opacity-70" />
+        {reason}
+      </p>
+    );
+  }
+  return <RemindButton id={id} className={className} />;
 }

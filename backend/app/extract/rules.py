@@ -19,7 +19,13 @@ _KEYWORDS: dict[Category, list[str]] = {
 _NOT_SCHOLARSHIP = re.compile(r"ทุนพัฒนาการเรียนการสอน|ทุนวิจัยสำหรับอาจารย์|ขอแสดงความยินดี")
 
 
+# News about people ("แต่งตั้งให้ดำรงตำแหน่ง", awards, condolences) is never something to apply for.
+_PEOPLE_NEWS = re.compile(r"แสดงความยินดี|ขอแสดงความเสียใจ|ไว้อาลัย|ร่วมไว้อาลัย")
+
+
 def classify(title: str, body: str) -> Category:
+    if _PEOPLE_NEWS.search(title):
+        return Category.GENERAL
     title_l, body_l = title.lower(), body.lower()
     scores: dict[Category, float] = {}
     for cat, words in _KEYWORDS.items():

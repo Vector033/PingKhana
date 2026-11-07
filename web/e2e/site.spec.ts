@@ -36,6 +36,16 @@ test("card opens a quick preview without leaving the filtered list", async ({ pa
   await expect(page.getByRole("link", { name: /ผู้ช่วยวิจัยโครงการ Data Platform/ })).toBeFocused();
 });
 
+test("no deadline: the drawer says why there is no reminder button", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /ประกาศปิดปรับปรุงห้องสมุดคณะ/ }).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByText(/ไม่ระบุวันปิดรับ จึงตั้งเตือนไม่ได้/)).toBeVisible();
+  await expect(drawer.getByRole("link", { name: /ให้ LINE เตือน/ })).toHaveCount(0);
+  // Focus starts on the title, not on the close button.
+  await expect(drawer.getByRole("heading", { level: 2 })).toBeFocused();
+});
+
 test("closing within 3 days gets the urgency badge, later ones do not", async ({ page }) => {
   await page.goto("/");
   const urgent = page.locator("article", { hasText: "Data Platform" });
