@@ -20,3 +20,6 @@ web/playwright-report/
 next-env.d.ts
 
 .DS_Store
+
+# Vercel CLI link
+.vercel
