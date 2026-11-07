@@ -61,6 +61,10 @@
   - แท็บ Secrets เพิ่ม `JOBS_TOKEN` = ค่าที่ Render สุ่มให้ (ดูได้ในหน้า Environment ของ service)
   - จากนั้น workflow `collect.yml` จะเรียก `/jobs/run` ทุกชั่วโมง กด Run workflow ครั้งแรกเองได้ ครั้งแรกใช้เวลาประมาณ 3–5 นาที
   - แต่ละรอบเรียก Gemini ไม่เกิน 15 ครั้ง ห่างกัน 6 วินาที (ปรับได้ด้วย `GEMINI_MAX_CALLS_PER_RUN`, `GEMINI_MIN_INTERVAL_SECONDS`) ประกาศที่เกินโควตาจะใช้ผลจาก rules ไปก่อน แล้วรอบถัดๆ ไปค่อยอ่านซ้ำด้วย Gemini ผลลัพธ์ของรอบดูได้ใน log ของ workflow (`extracted.gemini_calls`, `upgraded`)
+- **ให้รันทุกชั่วโมงจริง (แนะนำ):** GitHub ไม่รับประกันเวลาของ schedule ใน repo นี้จริงๆ รันห่างกันประมาณ 5 ชั่วโมง จึงควรสร้าง job ใน cron-job.org เพิ่มอีก 1 ตัว
+  - URL `https://<render>/jobs/run?background=1`, Method **POST**, ทุกชั่วโมงที่นาที 17
+  - Advanced → Headers: `Authorization` = `Bearer <JOBS_TOKEN>`
+  - `background=1` ทำให้ API ตอบกลับทันทีแล้วค่อยทำงานต่อเอง เพราะ cron-job.org รอได้แค่ 30 วินาที ถ้ามีรอบที่รันซ้อนกัน ระบบจะข้ามรอบนั้นเอง ดูผลรอบล่าสุดได้ที่ `GET /jobs/last` (ใช้ token เดียวกัน)
 - **กันเครื่องหลับ (แนะนำ):** สมัคร https://cron-job.org (ฟรี) แล้วสร้าง job เรียก `https://<render>/health` ทุก 10 นาที
   - service เดียวที่เปิดตลอดเดือนใช้ประมาณ 744 ชั่วโมง ยังอยู่ในโควตาฟรี 750 ชั่วโมงต่อเดือนของ Render
   - ไม่ใช้ GitHub Actions ทำงานนี้ เพราะ repo เป็น private และนาทีฟรีจะหมด

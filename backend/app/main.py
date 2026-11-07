@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import date, datetime, timedelta
@@ -384,6 +385,39 @@ def check_jobs_token(authorization: Annotated[str | None, Header()] = None) -> N
         raise HTTPException(401)
 
 
+# One run at a time: GitHub Actions and cron-job.org may both call in the same hour.
+_job_lock = asyncio.Lock()
+_last_run: dict = {}
+
+
+async def _run_locked() -> dict:
+    async with _job_lock:
+        started = datetime.now(tz=BANGKOK)
+        try:
+            result = await jobs.run_all()
+        except Exception as e:
+            log.exception("scheduled run failed")
+            _last_run.update(started=started.isoformat(), ok=False, error=repr(e)[:200])
+            raise
+        _last_run.update(started=started.isoformat(), ok=True, result=result, error=None)
+        return result
+
+
 @app.post("/jobs/run", dependencies=[Depends(check_jobs_token)])
-async def run_jobs() -> dict:
-    return await jobs.run_all()
+async def run_jobs(tasks: BackgroundTasks, background: Annotated[bool, Query()] = False) -> dict:
+    """Collect, extract and notify.
+
+    `?background=1` answers right away and runs after the response, for schedulers with a short
+    HTTP timeout (cron-job.org allows 30 s). Without it the caller waits for the result.
+    """
+    if _job_lock.locked():
+        return {"status": "already running", "last_run": _last_run}
+    if background:
+        tasks.add_task(_run_locked)
+        return {"status": "started", "last_run": _last_run}
+    return await _run_locked()
+
+
+@app.get("/jobs/last", dependencies=[Depends(check_jobs_token)])
+async def last_job() -> dict:
+    return _last_run

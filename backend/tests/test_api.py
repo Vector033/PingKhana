@@ -89,3 +89,23 @@ async def test_stats_counts_extraction_methods(session, client) -> None:
     await session.commit()
     r = (await client.get("/api/stats")).json()
     assert r["extraction"] == {"gemini": 2, "rules": 1}
+
+
+async def test_jobs_background_mode_returns_at_once(client, monkeypatch) -> None:
+    from app import main
+
+    monkeypatch.setattr(main.get_settings(), "jobs_token", "t")
+    calls = []
+
+    async def fake_run_all() -> dict:
+        calls.append(1)
+        return {"collect": [], "extracted": {}, "notify": {}}
+
+    monkeypatch.setattr(main.jobs, "run_all", fake_run_all)
+    auth = {"Authorization": "Bearer t"}
+    r = await client.post("/jobs/run", params={"background": "1"}, headers=auth)
+    assert r.json()["status"] == "started"
+    # ASGITransport runs background tasks before returning; the result is recorded.
+    assert calls == [1]
+    last = (await client.get("/jobs/last", headers=auth)).json()
+    assert last["ok"] is True
