@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import httpx
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import BANGKOK, get_settings
@@ -77,24 +77,37 @@ def new_budget() -> GeminiBudget:
     return GeminiBudget(calls, s.gemini_min_interval_seconds, s.gemini_max_seconds_per_run)
 
 
+async def fetch_pdf(url: str | None) -> bytes | None:
+    """Download a post's PDF for Gemini (up to 8 MB)."""
+    # Google Drive serves downloads as application/octet-stream; trust the file signature.
+    got = await _fetch(url, ("application/pdf", "application/octet-stream"), 8_000_000)
+    return got[0] if got and got[0][:5] == b"%PDF-" else None
+
+
 async def fetch_poster(url: str | None) -> tuple[bytes, str] | None:
     """Download a post's poster for Gemini; None when missing, too big or not an image."""
+    return await _fetch(url, POSTER_TYPES, POSTER_MAX_BYTES)
+
+
+async def _fetch(
+    url: str | None, types: tuple[str, ...], max_bytes: int
+) -> tuple[bytes, str] | None:
     if not url:
         return None
     try:
         async with httpx.AsyncClient(timeout=15, follow_redirects=True) as c:
             async with c.stream("GET", url, headers={"User-Agent": get_settings().user_agent}) as r:
                 mime = r.headers.get("content-type", "").split(";")[0].strip().lower()
-                if r.status_code != 200 or mime not in POSTER_TYPES:
+                if r.status_code != 200 or mime not in types:
                     return None
                 data = b""
                 async for chunk in r.aiter_bytes():
                     data += chunk
-                    if len(data) > POSTER_MAX_BYTES:
+                    if len(data) > max_bytes:
                         return None
                 return data, mime
     except httpx.HTTPError as e:
-        log.info("poster %s not fetched: %r", url, e)
+        log.info("file %s not fetched: %r", url, e)
         return None
 
 
@@ -105,11 +118,12 @@ async def _gemini(
     if ex is None or not await budget.take():
         return None, False
     poster = await fetch_poster(a.image_url)
+    pdf = await fetch_pdf(a.attachment_url)
     try:
         # One answer may retry 503/429 across fallback models for minutes; cap it.
         return (
             await asyncio.wait_for(
-                ex.extract(a.title, a.body_text, ref, poster, budget.known_tags), CALL_TIMEOUT
+                ex.extract(a.title, a.body_text, ref, poster, budget.known_tags, pdf), CALL_TIMEOUT
             ),
             False,
         )
@@ -232,9 +246,10 @@ async def read_posters(session: AsyncSession, budget: GeminiBudget, today: date)
             select(Announcement)
             .where(
                 Announcement.extraction_method.like("gemini:%"),
-                Announcement.extraction_method.not_like("%+poster"),
+                Announcement.extraction_method.not_like("%+poster%"),
+                Announcement.extraction_method.not_like("%+pdf%"),
                 Announcement.deadline.is_(None),
-                Announcement.image_url.is_not(None),
+                or_(Announcement.image_url.is_not(None), Announcement.attachment_url.is_not(None)),
                 Announcement.category != "general",
                 Announcement.duplicate_of_id.is_(None),
                 Announcement.first_seen_at >= today - timedelta(days=60),

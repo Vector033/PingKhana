@@ -128,7 +128,7 @@ async def collect_source(
                 break
             try:
                 dpage = await fetcher.get(item.url)
-                detail = parse_detail(dpage.text, cfg, item.title, today)
+                detail = parse_detail(dpage.text, cfg, item.title, today, dpage.url)
             except (httpx.HTTPError, ParseError, RobotsDisallowed) as e:
                 result.errors.append(f"{item.url}: {e}")
                 continue
@@ -159,6 +159,7 @@ async def collect_source(
                 title=detail.title,
                 list_title=item.title,
                 image_url=item.image or detail.image,
+                attachment_url=detail.attachment or item.attachment,
                 body_text=detail.text,
                 content_hash=h,
                 duplicate_of_id=dup,

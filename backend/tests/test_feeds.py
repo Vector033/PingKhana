@@ -52,3 +52,22 @@ def test_teacher_news_sites() -> None:
     assert len(items("kruachieve")) == 10
     krupatom = items("krupatom")
     assert len(krupatom) == 50 and all(i.body for i in krupatom)
+
+
+def test_pdf_attachments() -> None:
+    from datetime import date
+
+    from app.collector.parsers import parse_detail
+
+    with_pdf = [i for i in items("krupatom") if i.attachment]
+    assert with_pdf
+    assert all(
+        i.attachment.lower().split("?")[0].endswith(".pdf")
+        or i.attachment.startswith("https://drive.google.com/uc?export=download&id=")
+        for i in with_pdf
+    )
+    # CMU pages link two PDFs in the site footer; only links inside the post count.
+    cfg = SOURCES["cmu_jobs"]
+    html = (FIXTURES / "cmu_jobs_detail_1.html").read_text(encoding="utf-8")
+    d = parse_detail(html, cfg, "t", date(2026, 11, 4), "https://www.cmu.ac.th/th/article/x")
+    assert d.attachment is None

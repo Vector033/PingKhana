@@ -69,3 +69,12 @@ async def test_poster_is_sent_inline_and_marked() -> None:
     parts = json.loads(route.calls[0].request.content)["contents"][0]["parts"]
     assert parts[-1]["inline_data"]["mime_type"] == "image/png"
     assert r.method == "gemini:m+poster"
+
+
+@respx.mock
+async def test_pdf_is_sent_inline_and_marked() -> None:
+    route = respx.post(API.format(model="m")).mock(return_value=ok())
+    r = await GeminiExtractor("k", "m").extract("t", "b", date(2026, 11, 4), pdf=b"%PDF-1.4")
+    parts = json.loads(route.calls[0].request.content)["contents"][0]["parts"]
+    assert parts[-1]["inline_data"]["mime_type"] == "application/pdf"
+    assert r.method == "gemini:m+pdf"

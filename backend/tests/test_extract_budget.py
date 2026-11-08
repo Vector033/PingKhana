@@ -15,9 +15,7 @@ from tests import factories as f
 class SlowGemini:
     calls = 0
 
-    async def extract(
-        self, title: str, body: str, ref: date, poster=None, known_tags=None
-    ) -> Extracted:
+    async def extract(self, title: str, body: str, ref: date, *args, **kw) -> Extracted:
         self.calls += 1
         await asyncio.sleep(10)
         raise AssertionError("should have timed out")
@@ -30,9 +28,7 @@ class FakeGemini:
         self.calls = 0
         self.errors = list(errors or [])
 
-    async def extract(
-        self, title: str, body: str, ref: date, poster=None, known_tags=None
-    ) -> Extracted:
+    async def extract(self, title: str, body: str, ref: date, *args, **kw) -> Extracted:
         self.calls += 1
         if self.errors:
             raise self.errors.pop(0)

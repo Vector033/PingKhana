@@ -27,6 +27,7 @@ class ListItem:
     # RSS only: the item's <category> labels and its text, when the feed carries it.
     categories: list[str] = field(default_factory=list)
     body: str = ""
+    attachment: str | None = None  # first PDF linked from the item's text
 
 
 @dataclass
@@ -35,6 +36,7 @@ class Detail:
     text: str
     published_on: date | None = None
     image: str | None = None  # og:image of the page
+    attachment: str | None = None  # first PDF linked inside the post
 
 
 def clean_text(s: str) -> str:
@@ -140,6 +142,24 @@ def _feed_image(it: ET.Element, html: str) -> str | None:
     return None
 
 
+_DRIVE_FILE = re.compile(r"drive\.google\.com/(?:file/d/|open\?id=)([\w-]{20,})")
+
+
+def first_pdf(html: str, base: str) -> str | None:
+    """First PDF linked in a post's own HTML (announcements often put the details there).
+
+    Thai offices often share the PDF on Google Drive; those links become direct downloads.
+    """
+    for a in HTMLParser(html).css("a[href]"):
+        href = (a.attributes.get("href") or "").strip()
+        label = f"{a.attributes.get('title') or ''} {a.text()}".lower()
+        if re.search(r"\.pdf(\?|$)", href, re.I):
+            return _https(urljoin(base, href))
+        if (m := _DRIVE_FILE.search(href)) and ("pdf" in label or "ไฟล์" in label):
+            return f"https://drive.google.com/uc?export=download&id={m.group(1)}"
+    return None
+
+
 def _https(url: str) -> str:
     url = url.strip()
     return "https://" + url.removeprefix("http://") if url.startswith("http://") else url
@@ -167,7 +187,11 @@ def parse_rss(xml: str) -> list[ListItem]:
         body = clean_text(HTMLParser(html).text(separator=" ")) if html else ""
         cats = [clean_text(c.text or "") for c in it.findall("category") if c.text]
         if link and title:
-            items.append(ListItem(link, title, published, _feed_image(it, html), cats, body))
+            items.append(
+                ListItem(
+                    link, title, published, _feed_image(it, html), cats, body, first_pdf(html, link)
+                )
+            )
     atom = "{http://www.w3.org/2005/Atom}"
     for entry in root.iter(f"{atom}entry"):
         link_el = entry.find(f"{atom}link")
@@ -179,7 +203,9 @@ def parse_rss(xml: str) -> list[ListItem]:
     return items
 
 
-def parse_detail(html: str, cfg: SourceConfig, fallback_title: str, today: date) -> Detail:
+def parse_detail(
+    html: str, cfg: SourceConfig, fallback_title: str, today: date, fallback_url: str = ""
+) -> Detail:
     tree = HTMLParser(html)
     sel = cfg.detail
     content = tree.css_first(sel.content) if sel else None
@@ -191,6 +217,7 @@ def parse_detail(html: str, cfg: SourceConfig, fallback_title: str, today: date)
                 break
     if content is None:
         raise ParseError("detail page has no content")
+    attachment = first_pdf(content.html or "", fallback_url) if fallback_url else None
     for bad in ["script", "style", "noscript", "form", *(sel.drop if sel else [])]:
         for n in content.css(bad):
             n.decompose()
@@ -211,4 +238,4 @@ def parse_detail(html: str, cfg: SourceConfig, fallback_title: str, today: date)
         src = (og.attributes.get("content") or "").strip()
         if src and not _NOT_A_PHOTO.search(src):
             image = _https(src)
-    return Detail(title, text, published, image)
+    return Detail(title, text, published, image, attachment)

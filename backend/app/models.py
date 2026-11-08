@@ -108,6 +108,7 @@ class Announcement(Base):
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(48)))
     extraction_method: Mapped[str | None] = mapped_column(String(64))
     image_url: Mapped[str | None] = mapped_column(Text)
+    attachment_url: Mapped[str | None] = mapped_column(Text)
     needs_extraction: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Digest matching runs once per announcement; set when it has been considered.
     matched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)

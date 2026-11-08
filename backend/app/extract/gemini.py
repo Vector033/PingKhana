@@ -45,6 +45,10 @@ POSTER_NOTE = (
     " ให้ใช้ข้อมูลจากรูปด้วย แต่ถ้ารูปกับเนื้อหาขัดกัน ให้เชื่อเนื้อหา"
 )
 
+PDF_NOTE = (
+    "แนบไฟล์ PDF ประกาศฉบับเต็มมาด้วย ใช้หาวันปิดรับสมัครและคุณสมบัติ (ระวังสับสนกับวันประกาศผล วันสอบ หรือวันสัมภาษณ์)"
+)
+
 RETRY_STATUS = (429, 500, 502, 503, 504)
 
 
@@ -69,6 +73,7 @@ class GeminiExtractor:
         ref: date,
         poster: tuple[bytes, str] | None = None,
         known_tags: list[str] | None = None,
+        pdf: bytes | None = None,
     ) -> Extracted:
         """`poster` is (image bytes, mime type): many posts put the closing date only on it."""
         prompt = PROMPT.format(
@@ -90,6 +95,16 @@ class GeminiExtractor:
                     }
                 }
             )
+        if pdf:
+            parts.append({"text": PDF_NOTE})
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": "application/pdf",
+                        "data": base64.b64encode(pdf).decode(),
+                    }
+                }
+            )
         payload = {
             "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
@@ -101,7 +116,7 @@ class GeminiExtractor:
         model, data = await self._post(payload)
         text = data["candidates"][0]["content"]["parts"][0]["text"]
         raw = json.loads(text)
-        method = f"gemini:{model}" + ("+poster" if poster else "")
+        method = f"gemini:{model}" + ("+poster" if poster else "") + ("+pdf" if pdf else "")
         result = Extracted.model_validate({**raw, "method": method})
         return _sanity(result, ref)
 
