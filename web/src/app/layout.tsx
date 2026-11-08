@@ -13,6 +13,10 @@ const plex = IBM_Plex_Sans_Thai({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://pingkhana.vercel.app",
+  ),
+  openGraph: { siteName: "PingKhana", locale: "th_TH", images: ["/og.png"] },
   title: {
     default: "PingKhana — ประกาศทุน สหกิจ งาน มช.",
     template: "%s · PingKhana",

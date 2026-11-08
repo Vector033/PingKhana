@@ -96,6 +96,21 @@ test("a guest can follow sources without an account", async ({ page }) => {
   await expect(page).toHaveURL(/all=1/);
 });
 
+test("calendar file and LINE share for an open announcement", async ({ page, request }) => {
+  await page.goto("/?status=closing&sort=deadline");
+  const link = list(page).getByRole("link", { name: /ผู้ช่วยวิจัยโครงการ Data Platform/ });
+  const href = await link.getAttribute("href");
+  await link.click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByRole("link", { name: /แชร์ใน LINE/ })).toHaveAttribute("href", /social-plugins\.line\.me\/lineit\/share/);
+  await expect(drawer.getByRole("link", { name: /Google Calendar/ })).toHaveAttribute("href", /calendar\.google\.com/);
+  const ics = await request.get(`${href}/ics`);
+  expect(ics.headers()["content-type"]).toContain("text/calendar");
+  const body = await ics.text();
+  expect(body).toContain("BEGIN:VEVENT");
+  expect(body).toContain("TRIGGER:-P3D");
+});
+
 test("interactive controls are at least 44px tall", async ({ page }) => {
   await page.goto("/");
   const small = await page.evaluate(() =>

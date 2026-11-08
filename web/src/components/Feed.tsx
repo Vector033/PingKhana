@@ -19,6 +19,7 @@ import {
 } from "@/components/AnnouncementCard";
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
+import { ShareRow } from "@/components/ShareRow";
 import type { Announcement } from "@/lib/api";
 import { thDate } from "@/lib/format";
 
@@ -306,6 +307,9 @@ function Preview({
             </table>
           </section>
         )}
+        <div className="mt-5">
+          <ShareRow a={a} today={today} />
+        </div>
       </div>
 
       <div className="space-y-2 border-t border-line bg-surface px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

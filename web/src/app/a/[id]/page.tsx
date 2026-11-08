@@ -1,12 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryChip, DeadlineBadge } from "@/components/AnnouncementCard";
 import { RemindSlot } from "@/components/RemindButton";
+import { ShareRow } from "@/components/ShareRow";
 import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
 import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/a/[id]">): Promise<Metadata> {
+  const { id } = await params;
+  const a = await getAnnouncement(id).catch(() => null);
+  if (!a) return { title: "ไม่พบประกาศ" };
+  const description =
+    (a.deadline ? `ปิดรับ ${thDate(a.deadline)} · ` : "") +
+    (a.summary_th ?? a.source_name).slice(0, 160);
+  return {
+    title: a.title.slice(0, 90),
+    description,
+    openGraph: {
+      title: a.title,
+      description,
+      images: a.image_url ? [{ url: a.image_url }] : undefined,
+    },
+  };
+}
 
 export default function AnnouncementPage({ params }: PageProps<"/a/[id]">) {
   return (
@@ -119,6 +141,9 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         >
           เปิดประกาศต้นทาง ↗
         </a>
+      </div>
+      <div className="mt-3">
+        <ShareRow a={a} today={today} />
       </div>
       <p className="mt-6 text-xs leading-relaxed text-muted">{DISCLAIMER}</p>
     </article>
