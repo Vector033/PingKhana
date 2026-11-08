@@ -12,7 +12,12 @@ from app import notify
 from app.collector.pipeline import collect_all
 from app.config import BANGKOK
 from app.db import SessionLocal
-from app.extract.service import extract_pending, new_budget, upgrade_rule_results
+from app.extract.service import (
+    extract_pending,
+    new_budget,
+    read_posters,
+    upgrade_rule_results,
+)
 from app.line.client import get_line_client
 
 log = logging.getLogger(__name__)
@@ -30,10 +35,13 @@ async def extract() -> dict:
     async with SessionLocal() as s:
         while n := await extract_pending(s, budget):
             total += n
-        upgraded = await upgrade_rule_results(s, budget, datetime.now(tz=BANGKOK).date())
+        today = datetime.now(tz=BANGKOK).date()
+        upgraded = await upgrade_rule_results(s, budget, today)
+        posters = await read_posters(s, budget, today)
     return {
         "new": total,
         "upgraded": upgraded,
+        "deadlines_from_posters": posters,
         "gemini_calls": budget.used,
         "gemini_paused": budget.tripped,
     }

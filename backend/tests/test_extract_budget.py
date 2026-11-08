@@ -15,7 +15,7 @@ from tests import factories as f
 class SlowGemini:
     calls = 0
 
-    async def extract(self, title: str, body: str, ref: date) -> Extracted:
+    async def extract(self, title: str, body: str, ref: date, poster=None) -> Extracted:
         self.calls += 1
         await asyncio.sleep(10)
         raise AssertionError("should have timed out")
@@ -28,7 +28,7 @@ class FakeGemini:
         self.calls = 0
         self.errors = list(errors or [])
 
-    async def extract(self, title: str, body: str, ref: date) -> Extracted:
+    async def extract(self, title: str, body: str, ref: date, poster=None) -> Extracted:
         self.calls += 1
         if self.errors:
             raise self.errors.pop(0)
@@ -141,3 +141,28 @@ async def test_slow_answer_times_out_and_pauses_gemini(session, fake, monkeypatc
     await extract_pending(session, budget)
     assert g.calls == 1 and budget.tripped
     assert await methods(session) == ["rules"] * 3
+
+
+async def test_poster_pass_rereads_gemini_results_without_deadline(
+    session, fake, monkeypatch
+) -> None:
+    g = fake(FakeGemini())
+    seen = []
+
+    async def poster(url):
+        seen.append(url)
+        return (b"img", "image/png")
+
+    monkeypatch.setattr(service, "fetch_poster", poster)
+    no_date = await f.announcement(session, title="อบรมครู")
+    no_date.extraction_method, no_date.image_url = "gemini:x", "https://example.com/p.png"
+    done = await f.announcement(session, title="อ่านรูปแล้ว")
+    done.extraction_method, done.image_url = "gemini:x+poster", "https://example.com/q.png"
+    news = await f.announcement(session, title="ข่าว", category=Category.GENERAL)
+    news.extraction_method, news.image_url = "gemini:x", "https://example.com/r.png"
+    await session.commit()
+
+    assert await service.read_posters(session, GeminiBudget(5), f.TODAY) == 1
+    assert g.calls == 1 and seen == ["https://example.com/p.png"]
+    await session.refresh(no_date)
+    assert no_date.deadline == f.TODAY + timedelta(days=9)

@@ -10,7 +10,7 @@ upgrade them to Gemini while budget is left.
 import asyncio
 import logging
 import time
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import httpx
@@ -30,6 +30,8 @@ RULES = "rules"
 # Gemini rejected this one for a non-quota reason; do not spend budget on it again.
 RULES_GEMINI_FAILED = "rules:gemini-error"
 CALL_TIMEOUT = 90.0
+POSTER_TYPES = ("image/jpeg", "image/png", "image/webp", "image/gif")
+POSTER_MAX_BYTES = 6_000_000
 REQUEST_TIMEOUT = 25.0
 
 
@@ -73,15 +75,40 @@ def new_budget() -> GeminiBudget:
     return GeminiBudget(calls, s.gemini_min_interval_seconds, s.gemini_max_seconds_per_run)
 
 
+async def fetch_poster(url: str | None) -> tuple[bytes, str] | None:
+    """Download a post's poster for Gemini; None when missing, too big or not an image."""
+    if not url:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=15, follow_redirects=True) as c:
+            async with c.stream("GET", url, headers={"User-Agent": get_settings().user_agent}) as r:
+                mime = r.headers.get("content-type", "").split(";")[0].strip().lower()
+                if r.status_code != 200 or mime not in POSTER_TYPES:
+                    return None
+                data = b""
+                async for chunk in r.aiter_bytes():
+                    data += chunk
+                    if len(data) > POSTER_MAX_BYTES:
+                        return None
+                return data, mime
+    except httpx.HTTPError as e:
+        log.info("poster %s not fetched: %r", url, e)
+        return None
+
+
 async def _gemini(
     ex: GeminiExtractor | None, budget: GeminiBudget, a: Announcement, ref: date
 ) -> tuple[Extracted | None, bool]:
     """(result, permanently_failed). None when out of budget or Gemini could not answer."""
     if ex is None or not await budget.take():
         return None, False
+    poster = await fetch_poster(a.image_url)
     try:
         # One answer may retry 503/429 across fallback models for minutes; cap it.
-        return await asyncio.wait_for(ex.extract(a.title, a.body_text, ref), CALL_TIMEOUT), False
+        return (
+            await asyncio.wait_for(ex.extract(a.title, a.body_text, ref, poster), CALL_TIMEOUT),
+            False,
+        )
     except TimeoutError:
         budget.trip(f"no answer within {CALL_TIMEOUT:.0f}s")
         return None, False
@@ -184,3 +211,43 @@ async def upgrade_rule_results(session: AsyncSession, budget: GeminiBudget, toda
             await session.commit()
         await session.commit()
     return upgraded
+
+
+async def read_posters(session: AsyncSession, budget: GeminiBudget, today: date) -> int:
+    """Re-read recent Gemini results that found no deadline, this time with the poster.
+
+    Runs after new posts and rule upgrades, so it only spends budget that is left over. Each post
+    is tried once (its method then ends in "+poster"), whether or not a deadline turns up.
+    """
+    if not budget.available:
+        return 0
+    rows = (
+        await session.scalars(
+            select(Announcement)
+            .where(
+                Announcement.extraction_method.like("gemini:%"),
+                Announcement.extraction_method.not_like("%+poster"),
+                Announcement.deadline.is_(None),
+                Announcement.image_url.is_not(None),
+                Announcement.category != "general",
+                Announcement.duplicate_of_id.is_(None),
+                Announcement.first_seen_at >= today - timedelta(days=60),
+            )
+            .order_by(Announcement.id.desc())
+            .limit(budget.left)
+        )
+    ).all()
+    found = 0
+    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+        ex = _extractor(client)
+        for a in rows:
+            r, failed = await _gemini(ex, budget, a, _ref(a))
+            if r:
+                apply(a, r)
+                found += r.deadline is not None
+            elif failed:
+                a.extraction_method = (a.extraction_method or "") + "+poster"
+            elif not budget.available:
+                break
+            await session.commit()
+    return found

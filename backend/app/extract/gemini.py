@@ -1,6 +1,7 @@
 """Gemini extractor with a JSON response schema. Used when GEMINI_API_KEY is set."""
 
 import asyncio
+import base64
 import json
 import logging
 from datetime import date
@@ -35,6 +36,11 @@ PROMPT = """คุณช่วยสรุปประกาศจากเว�
 """
 
 
+POSTER_NOTE = (
+    "แนบรูปโปสเตอร์ของประกาศนี้มาด้วย ถ้าในรูปมีวันปิดรับสมัคร คุณสมบัติ หรือรายละเอียดที่เนื้อหาไม่มี"
+    " ให้ใช้ข้อมูลจากรูปด้วย แต่ถ้ารูปกับเนื้อหาขัดกัน ให้เชื่อเนื้อหา"
+)
+
 RETRY_STATUS = (429, 500, 502, 503, 504)
 
 
@@ -52,7 +58,10 @@ class GeminiExtractor:
         self.models = (model, *(m for m in fallback_models if m != model))
         self.client = client or httpx.AsyncClient(timeout=120)
 
-    async def extract(self, title: str, body: str, ref: date) -> Extracted:
+    async def extract(
+        self, title: str, body: str, ref: date, poster: tuple[bytes, str] | None = None
+    ) -> Extracted:
+        """`poster` is (image bytes, mime type): many posts put the closing date only on it."""
         prompt = PROMPT.format(
             today=date.today().isoformat(),
             published=ref.isoformat(),
@@ -60,8 +69,19 @@ class GeminiExtractor:
             title=title,
             body=body[:6000],
         )
+        parts: list[dict] = [{"text": prompt}]
+        if poster:
+            parts.append({"text": POSTER_NOTE})
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": poster[1],
+                        "data": base64.b64encode(poster[0]).decode(),
+                    }
+                }
+            )
         payload = {
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
                 "temperature": 0,
                 "responseMimeType": "application/json",
@@ -71,7 +91,8 @@ class GeminiExtractor:
         model, data = await self._post(payload)
         text = data["candidates"][0]["content"]["parts"][0]["text"]
         raw = json.loads(text)
-        result = Extracted.model_validate({**raw, "method": f"gemini:{model}"})
+        method = f"gemini:{model}" + ("+poster" if poster else "")
+        result = Extracted.model_validate({**raw, "method": method})
         return _sanity(result, ref)
 
     async def _post(self, payload: dict) -> tuple[str, dict]:

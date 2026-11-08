@@ -59,3 +59,13 @@ async def test_timeout_is_retried_and_bad_request_is_not():
             await GeminiExtractor("k", "bad", client, ("spare",)).extract(
                 "t", "b", date(2026, 11, 4)
             )
+
+
+@respx.mock
+async def test_poster_is_sent_inline_and_marked() -> None:
+    route = respx.post(API.format(model="m")).mock(return_value=ok())
+    ex = GeminiExtractor("k", "m")
+    r = await ex.extract("t", "b", date(2026, 11, 4), (b"PNG-bytes", "image/png"))
+    parts = json.loads(route.calls[0].request.content)["contents"][0]["parts"]
+    assert parts[-1]["inline_data"]["mime_type"] == "image/png"
+    assert r.method == "gemini:m+poster"
