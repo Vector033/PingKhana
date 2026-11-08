@@ -77,6 +77,19 @@ await page.locator("table").waitFor({ timeout: 90_000 });
 await settle(page);
 await page.screenshot({ path: out("sources.png"), fullPage: true });
 
+// Pages added when PingKhana grew past CMU: news zone, teacher pack, follow, add a source.
+for (const [path, name] of [
+  ["/news", "news.png"],
+  ["/news?pack=teacher", "teacher-news.png"],
+  ["/follow", "follow.png"],
+  ["/sources/new", "add-source.png"],
+]) {
+  await page.goto(`${BASE}${path}`);
+  await page.locator("main h1").waitFor({ timeout: 90_000 });
+  await settle(page);
+  await page.screenshot({ path: out(name) });
+}
+
 const phone = await browser.newContext({ ...devices["Pixel 7"], colorScheme: "dark" });
 page = await phone.newPage();
 await page.goto(`${BASE}/`);

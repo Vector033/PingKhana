@@ -290,7 +290,9 @@ async def _extraction_counts(session: AsyncSession) -> dict[str, int]:
 
 @app.get("/api/stats")
 async def stats(session: Session) -> dict:
-    sources = (await session.scalars(select(Source).order_by(Source.name))).all()
+    sources = (
+        await session.scalars(select(Source).where(Source.enabled).order_by(Source.name))
+    ).all()
     follower_count = None
     try:
         follower_count = await get_line_client().followers()
