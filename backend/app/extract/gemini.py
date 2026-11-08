@@ -113,7 +113,8 @@ class GeminiExtractor:
                 "responseSchema": GEMINI_RESPONSE_SCHEMA,
             },
         }
-        model, data = await self._post(payload)
+        # A PDF or poster takes Gemini longer to read than the per-request default.
+        model, data = await self._post(payload, timeout=75.0 if (pdf or poster) else None)
         text = data["candidates"][0]["content"]["parts"][0]["text"]
         raw = json.loads(text)
         method = f"gemini:{model}" + ("+poster" if poster else "") + ("+pdf" if pdf else "")
@@ -133,7 +134,7 @@ class GeminiExtractor:
         _, data = await self._post(payload)
         return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
 
-    async def _post(self, payload: dict) -> tuple[str, dict]:
+    async def _post(self, payload: dict, timeout: float | None = None) -> tuple[str, dict]:
         last: Exception | None = None
         for i, model in enumerate(self.models):
             last_model = i == len(self.models) - 1
@@ -145,6 +146,7 @@ class GeminiExtractor:
                         API.format(model=model),
                         headers={"x-goog-api-key": self.api_key},
                         json=payload,
+                        timeout=timeout if timeout is not None else httpx.USE_CLIENT_DEFAULT,
                     )
                 except httpx.TransportError as e:  # includes timeouts
                     last = e

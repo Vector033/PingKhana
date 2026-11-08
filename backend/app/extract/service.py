@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 RULES = "rules"
 # Gemini rejected this one for a non-quota reason; do not spend budget on it again.
 RULES_GEMINI_FAILED = "rules:gemini-error"
-CALL_TIMEOUT = 90.0
+CALL_TIMEOUT = 100.0
 POSTER_TYPES = ("image/jpeg", "image/png", "image/webp", "image/gif")
 POSTER_MAX_BYTES = 6_000_000
 REQUEST_TIMEOUT = 25.0
