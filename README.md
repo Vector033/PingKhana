@@ -11,6 +11,10 @@
 
 ![Poster grid with status, year and sort filters (dark mode)](docs/screenshots/grid-dark.png)
 
+| News zone, teacher pack (สพฐ. and teacher-news sites) | Add a source by pasting a link |
+|---|---|
+| ![Teacher news](docs/screenshots/teacher-news.png) | ![Add source](docs/screenshots/add-source.png) |
+
 | Quick preview drawer (dark) | Phone: bottom sheet with the LINE reminder button |
 |---|---|
 | ![Drawer](docs/screenshots/drawer-dark.png) | ![Phone](docs/screenshots/mobile-sheet.png) |
