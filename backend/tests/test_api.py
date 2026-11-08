@@ -145,3 +145,45 @@ async def test_prefs_packs_roundtrip_and_validation(client, monkeypatch) -> None
     assert (await client.get("/api/liff/me", headers=DEV)).json()["packs"] == ["teacher", "student"]
     r = await client.put("/api/liff/me", json={**body, "packs": ["aliens"]}, headers=DEV)
     assert r.status_code == 422
+
+
+async def test_submitted_source_waits_for_admin_then_gets_collected(
+    session, client, monkeypatch
+) -> None:
+    from app import main
+    from app.collector import discover
+    from app.collector.pipeline import user_source_configs
+
+    async def ok(url):
+        return None
+
+    monkeypatch.setattr(discover, "ensure_public", ok)
+    monkeypatch.setattr(main.get_settings(), "jobs_token", "t")
+    body = {
+        "kind": "rss",
+        "url": "https://school.example.org/feed/",
+        "homepage": "https://school.example.org/",
+        "name": "โรงเรียนตัวอย่าง",
+        "pack": "teacher",
+        "preview": [{"title": "ข่าว", "url": "https://school.example.org/1"}],
+    }
+    r = await client.post("/api/sources", json=body)
+    assert r.status_code == 201 and r.json()["status"] == "pending"
+    sid = r.json()["id"]
+    # Hidden until approved, and submitting again does not duplicate it.
+    assert sid not in {s["id"] for s in (await client.get("/api/meta")).json()["sources"]}
+    assert (await client.post("/api/sources", json=body)).json()["status"] == "exists"
+    assert await user_source_configs(session) == []
+
+    assert (await client.post(f"/api/admin/sources/{sid}/approve", json={})).status_code == 401
+    auth = {"Authorization": "Bearer t"}
+    r = await client.post(
+        f"/api/admin/sources/{sid}/approve", json={"pack": "general"}, headers=auth
+    )
+    assert r.json()["status"] == "approved"
+    cfgs = await user_source_configs(session)
+    assert [(c.id, c.kind, c.url, c.pack) for c in cfgs] == [
+        (sid, "rss", "https://school.example.org/feed/", "general")
+    ]
+    pending = (await client.get("/api/admin/overview", headers=auth)).json()["pending_sources"]
+    assert pending == 0

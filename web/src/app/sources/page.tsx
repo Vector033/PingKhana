@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -15,6 +16,20 @@ export default function SourcesPage() {
           ดึงแต่ละเว็บไม่ถี่กว่าชั่วโมงละครั้ง และระบุตัวตนด้วย User-Agent{" "}
           <code className="text-xs">PingKhanaBot/0.1</code> พร้อมลิงก์ติดต่อ
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href="/sources/new"
+            className="inline-flex min-h-11 items-center rounded-xl bg-brand px-5 font-semibold text-brand-fg"
+          >
+            + เสนอแหล่งข่าวใหม่
+          </Link>
+          <Link
+            href="/follow"
+            className="inline-flex min-h-11 items-center rounded-xl border border-line-strong px-5 font-medium hover:border-brand hover:text-brand"
+          >
+            เลือกแหล่งที่ติดตาม
+          </Link>
+        </div>
         <Suspense
           fallback={
             <div className="mt-4 h-40 animate-pulse rounded-xl border border-line bg-surface" />

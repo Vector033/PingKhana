@@ -15,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -47,6 +48,12 @@ class Source(Base):
     url: Mapped[str] = mapped_column(Text)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     pack: Mapped[str] = mapped_column(String(32), default="student", server_default="student")
+    # Sources people added on the website live here instead of sources.yaml:
+    # config = {kind, url, homepage, listing?, preview}; status pending -> approved / rejected.
+    config: Mapped[dict | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(16), default="approved", server_default="approved")
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    note: Mapped[str | None] = mapped_column(Text)
     last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     consecutive_failures: Mapped[int] = mapped_column(Integer, default=0)

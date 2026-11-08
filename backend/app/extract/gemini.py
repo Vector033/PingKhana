@@ -95,6 +95,19 @@ class GeminiExtractor:
         result = Extracted.model_validate({**raw, "method": method})
         return _sanity(result, ref)
 
+    async def ask_json(self, prompt: str, schema: dict) -> dict:
+        """Any structured question (used by source discovery), same fallbacks and retries."""
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0,
+                "responseMimeType": "application/json",
+                "responseSchema": schema,
+            },
+        }
+        _, data = await self._post(payload)
+        return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+
     async def _post(self, payload: dict) -> tuple[str, dict]:
         last: Exception | None = None
         for i, model in enumerate(self.models):

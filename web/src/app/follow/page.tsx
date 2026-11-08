@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -20,6 +21,15 @@ export default function FollowPage() {
         เลือกเว็บที่อยากเห็น หน้าแรกและหน้าข่าวสารจะแสดงเฉพาะเว็บเหล่านี้
         จำไว้ในเบราว์เซอร์นี้ ไม่ต้องสมัครสมาชิก ส่วนใน LINE
         เลือกได้ที่เมนูตั้งค่าของบอท
+      </p>
+      <p className="mt-2 text-sm">
+        ไม่เจอเว็บที่อยากติดตาม?{" "}
+        <Link
+          href="/sources/new"
+          className="font-medium text-brand underline underline-offset-4"
+        >
+          เสนอแหล่งข่าวใหม่
+        </Link>
       </p>
       <Suspense
         fallback={

@@ -41,6 +41,27 @@ class RunResult:
     errors: list[str] = field(default_factory=list)
 
 
+async def user_source_configs(session: AsyncSession) -> list[SourceConfig]:
+    """Approved sources that people added on the website (config stored on the row)."""
+    rows = (
+        await session.scalars(
+            select(Source).where(
+                Source.config.is_not(None), Source.status == "approved", Source.enabled
+            )
+        )
+    ).all()
+    out = []
+    for s in rows:
+        cfg = {k: v for k, v in (s.config or {}).items() if k != "preview"}
+        try:
+            out.append(
+                SourceConfig.model_validate({**cfg, "id": s.id, "name": s.name, "pack": s.pack})
+            )
+        except ValueError:
+            log.warning("user source %s has an invalid config", s.id)
+    return out
+
+
 async def sync_sources(session: AsyncSession, configs: list[SourceConfig]) -> None:
     for cfg in configs:
         src = await session.get(Source, cfg.id)
@@ -183,8 +204,10 @@ async def collect_source(
 async def collect_all(
     session: AsyncSession, fetcher: PoliteFetcher | None = None, force: bool = False
 ) -> list[RunResult]:
-    configs = [c for c in load_sources() if c.enabled]
-    await sync_sources(session, configs)
+    yaml_configs = load_sources()
+    # Sync every yaml source, so turning one off there also hides it on the site.
+    await sync_sources(session, yaml_configs)
+    configs = [c for c in yaml_configs if c.enabled] + await user_source_configs(session)
     own = fetcher is None
     fetcher = fetcher or PoliteFetcher(get_settings().user_agent)
     try:

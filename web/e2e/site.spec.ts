@@ -111,6 +111,20 @@ test("calendar file and LINE share for an open announcement", async ({ page, req
   expect(body).toContain("TRIGGER:-P3D");
 });
 
+test("adding a source refuses internal addresses with a clear message", async ({ page }) => {
+  await page.goto("/sources/new");
+  await page.getByLabel("ลิงก์เว็บ").fill("http://127.0.0.1/");
+  await page.getByRole("button", { name: "ค้นหาข่าวจากเว็บนี้" }).click();
+  await expect(page.locator("main").getByRole("alert")).toContainText("เครือข่ายภายใน");
+});
+
+test("admin page rejects a wrong token", async ({ page }) => {
+  await page.goto("/admin");
+  await page.getByLabel(/รหัสแอดมิน/).fill("wrong");
+  await page.getByRole("button", { name: "เข้าสู่หน้าแอดมิน" }).click();
+  await expect(page.locator("main").getByRole("alert")).toHaveText("รหัสไม่ถูกต้อง");
+});
+
 test("interactive controls are at least 44px tall", async ({ page }) => {
   await page.goto("/");
   const small = await page.evaluate(() =>

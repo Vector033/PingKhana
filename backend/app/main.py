@@ -451,3 +451,176 @@ async def run_jobs(tasks: BackgroundTasks, background: Annotated[bool, Query()] 
 @app.get("/jobs/last", dependencies=[Depends(check_jobs_token)])
 async def last_job() -> dict:
     return _last_run
+
+
+# ---------- Sources people add on the website ----------
+
+_discover_hits: dict[str, list[float]] = {}
+DISCOVER_PER_HOUR = 10
+
+
+def _rate_limit(request: Request) -> None:
+    """A few discoveries per visitor per hour: each one fetches a site and may call Gemini."""
+    import time
+
+    ip = (
+        (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "?"))
+        .split(",")[0]
+        .strip()
+    )
+    now = time.monotonic()
+    hits = [t for t in _discover_hits.get(ip, []) if now - t < 3600]
+    if len(hits) >= DISCOVER_PER_HOUR:
+        raise HTTPException(429, "ลองค้นหาเว็บบ่อยเกินไป รออีกสักพักแล้วลองใหม่")
+    hits.append(now)
+    _discover_hits[ip] = hits
+
+
+class DiscoverIn(BaseModel):
+    url: str = Field(min_length=4, max_length=500)
+
+
+@app.post("/api/sources/discover")
+async def discover_source(body: DiscoverIn, request: Request, session: Session) -> dict:
+    from dataclasses import asdict
+
+    from app.collector.discover import DiscoveryError, discover
+
+    _rate_limit(request)
+    try:
+        d = await discover(body.url)
+    except DiscoveryError as e:
+        raise HTTPException(422, str(e)) from e
+    existing = await _find_source(session, d.homepage, d.url)
+    return {**asdict(d), "existing": existing}
+
+
+async def _find_source(session: AsyncSession, homepage: str, url: str) -> dict | None:
+    rows = (await session.scalars(select(Source))).all()
+    for s in rows:
+        cfg_url = (s.config or {}).get("url")
+        if s.url.rstrip("/") == homepage.rstrip("/") or cfg_url == url:
+            return {"id": s.id, "name": s.name, "status": s.status, "enabled": s.enabled}
+    return None
+
+
+class SubmitIn(BaseModel):
+    kind: str = Field(pattern="^(rss|html)$")
+    url: str = Field(max_length=500)
+    homepage: str = Field(max_length=500)
+    name: str = Field(min_length=2, max_length=120)
+    pack: str
+    listing: dict | None = None
+    preview: list[dict] = []
+    note: str | None = Field(None, max_length=500)
+
+
+@app.post("/api/sources", status_code=201)
+async def submit_source(body: SubmitIn, request: Request, session: Session) -> dict:
+    """Queue a discovered source for an admin. Hidden from everyone until approved."""
+    import hashlib
+    import re as _re
+    from urllib.parse import urlsplit
+
+    from app.collector.discover import DiscoveryError, ensure_public, to_config
+
+    _rate_limit(request)
+    if body.pack not in PACKS:
+        raise HTTPException(422, "unknown pack")
+    try:
+        await ensure_public(body.url)
+    except DiscoveryError as e:
+        raise HTTPException(422, str(e)) from e
+    if existing := await _find_source(session, body.homepage, body.url):
+        return {"status": "exists", "source": existing}
+    host = urlsplit(body.homepage).hostname or "site"
+    slug = _re.sub(r"[^a-z0-9]+", "-", host.removeprefix("www.").lower()).strip("-")[:40]
+    sid = f"u-{slug}-{hashlib.sha1(body.url.encode()).hexdigest()[:4]}"
+    session.add(
+        Source(
+            id=sid,
+            name=body.name.strip(),
+            url=body.homepage,
+            enabled=False,
+            pack=body.pack,
+            status="pending",
+            config=to_config(body.model_dump(), sid),
+            submitted_at=now_bkk(),
+            note=(body.note or "").strip() or None,
+        )
+    )
+    await session.commit()
+    return {"status": "pending", "id": sid}
+
+
+@app.get("/api/admin/sources", dependencies=[Depends(check_jobs_token)])
+async def admin_sources(session: Session) -> list[dict]:
+    rows = (
+        await session.scalars(
+            select(Source).order_by(Source.submitted_at.desc().nulls_last(), Source.name)
+        )
+    ).all()
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "url": s.url,
+            "pack": s.pack,
+            "enabled": s.enabled,
+            "status": s.status,
+            "user_added": s.config is not None,
+            "config": s.config,
+            "submitted_at": s.submitted_at,
+            "note": s.note,
+            "last_success_at": s.last_success_at,
+            "last_error": s.last_error if s.consecutive_failures else None,
+            "healthy": s.consecutive_failures < BROKEN_AFTER,
+        }
+        for s in rows
+    ]
+
+
+class Decision(BaseModel):
+    pack: str | None = None
+    name: str | None = Field(None, min_length=2, max_length=120)
+
+
+@app.post("/api/admin/sources/{sid}/{action}", dependencies=[Depends(check_jobs_token)])
+async def admin_decide(sid: str, action: str, body: Decision, session: Session) -> dict:
+    s = await session.get(Source, sid)
+    if s is None or s.config is None:
+        raise HTTPException(404, "not a user-added source")
+    if action not in ("approve", "reject"):
+        raise HTTPException(422, "approve or reject")
+    if body.pack:
+        if body.pack not in PACKS:
+            raise HTTPException(422, "unknown pack")
+        s.pack = body.pack
+    if body.name:
+        s.name = body.name
+    s.status = "approved" if action == "approve" else "rejected"
+    s.enabled = action == "approve"
+    await session.commit()
+    return {"id": s.id, "status": s.status}
+
+
+@app.get("/api/admin/overview", dependencies=[Depends(check_jobs_token)])
+async def admin_overview(session: Session) -> dict:
+    from app import notify
+
+    today = now_bkk().date()
+    pending = await session.scalar(
+        select(func.count()).select_from(Source).where(Source.status == "pending")
+    )
+    return {
+        "pending_sources": pending,
+        "announcements": await session.scalar(
+            select(func.count()).select_from(visible().subquery())
+        ),
+        "extraction": await _extraction_counts(session),
+        "users": await session.scalar(select(func.count()).select_from(User)),
+        "reminders_set": await session.scalar(select(func.count()).select_from(Reminder)),
+        "pushes_this_month": await notify.pushes_this_month(session, today),
+        "push_monthly_limit": get_settings().push_monthly_limit,
+        "last_run": _last_run,
+    }
