@@ -1,59 +1,52 @@
-# PingKhana: สถานะส่งต่อ (2026-11-08, อัปเดตตี 4)
+# PingKhana: สถานะส่งต่อ (2026-11-09)
 
-## Live แล้ว
-- เว็บ: https://pingkhana.vercel.app (Vercel project `pingkhana`, root directory `web`)
-- API: https://pingkhana-api.onrender.com (Render free, Docker, Singapore, auto-deploy จาก `main`)
-- DB: Neon (Singapore) · บอท LINE `@524osura` · LIFF ID `2012375267-i6ogVExo`
-- GitHub Actions `collect.yml` เรียก `/jobs/run` ทุกชั่วโมง (นาทีที่ 17) และ cron-job.org เรียก `/health` ทุก 10 นาที
-- รอบแรก (2026-11-07): 68 ประกาศจาก 5 เว็บ ยังเปิดรับ 11 ประกาศ ผู้ใช้ทดสอบในแชทผ่านแล้ว (ใกล้ปิดรับ, เตือนฉัน, ตั้งค่า, ยกเลิก)
+## Live
+- เว็บ: https://pingkhana.vercel.app (Vercel, deploy เองเมื่อ push main) · API: https://pingkhana-api.onrender.com (Render, auto-deploy, migration รันตอนเริ่ม)
+- DB: Neon · บอท LINE `@524osura` · LIFF `2012375267-i6ogVExo`
+- ตั้งเวลา: cron-job.org เรียก `POST /jobs/run?background=1` ทุกชั่วโมง และ `/health` ทุก 10 นาที ส่วน GitHub `collect.yml` เป็นตัวสำรอง (GitHub รันจริงประมาณทุก 5 ชั่วโมง)
+- CI ผ่าน (pytest + Playwright) · `gh` login ไว้แล้ว (Vector033)
 
-## ทำใน session 2026-11-07
-- ดีไซน์เว็บตาม `CLAUDE_DESIGN_GUIDE.md`
-  - การ์ดขึ้นทีละใบ, ป้ายแดงสำหรับประกาศที่ปิดรับใน ≤3 วัน, drawer ดูประกาศแบบ `<dialog>`, ปุ่มเขียว "ให้ LINE เตือน"
-  - ปุ่มเขียวเปิดแชทพร้อมข้อความ `เตือน <id>` และบอทรับคำสั่งนี้แล้ว
-  - Playwright 14 test ผ่าน
-- Gemini budget ต่อรอบ: เรียกได้ไม่เกิน 15 ครั้ง ห่างกัน 6 วินาที, แต่ละครั้งรอไม่เกิน 90 วินาที, ไม่เริ่มเรียกใหม่หลัง 4 นาที
-  - ถ้าเจอ 429 หรือ timeout จะหยุดใช้ Gemini ไปทั้งรอบ ประกาศที่เหลือใช้ rules ไปก่อน แล้วรอบถัดไปค่อย upgrade เป็น Gemini
-- Eval: เพิ่ม `--llm MODEL` ซึ่งเรียกผ่าน FreeLLMAPI ที่ `127.0.0.1:31415` (key `FREELLMAPI_KEY` อยู่ใน `MorPlan/.env.local`)
-  - Typhoon ได้ 77.1% บนชุด dev และ 52.9% บนชุด held-out (ผลอยู่ใน README)
-- pytest ผ่าน 82
+## ทำแล้ว (ตามแผน 9 ข้อ, 2026-11-08 ถึง 09)
+1. **ข่าวสารแยกโซน** หน้าแรกแสดงเฉพาะสิ่งที่ต้องสมัคร (`kind=open`) ส่วนข่าวทั่วไปอยู่ที่ `/news`
+   - ชุดแหล่งข่าว (pack): นักศึกษา มช. / ครู-ศึกษาธิการ / ทั่วไป
+   - ชุดครู: สพฐ. (RSS), ครูอาชีพดอทคอม, ครูประถมดอทคอม
+   - **moe.go.th และ ksp.or.th ปิดกั้นการเข้าจากต่างประเทศ** จึงปิดไว้ใน `sources.yaml` (เปิดได้ถ้าย้ายตัวดึงข้อมูลไปรันในไทย)
+2. **ติดตาม**
+   - บนเว็บ: `/follow` เก็บใน cookie ไม่ต้องมีบัญชี
+   - ใน LINE: หน้า LIFF เลือก pack ได้ แล้วบอทส่งตาม pack ที่เลือก
+3. **ปฏิทินและการแชร์**
+   - ไฟล์ `.ics` (`/a/<id>/ics`) และลิงก์ Google Calendar มีแจ้งเตือนก่อน 3 วันและ 1 วัน
+   - แชร์ใน LINE ได้ และมี og:image จากโปสเตอร์
+4. **Gemini อ่านโปสเตอร์และ PDF:** ส่งไฟล์ไปในการเรียกครั้งเดียวกันกับข้อความ
+   - PDF จาก Google Drive แปลงเป็นลิงก์ดาวน์โหลดตรง
+   - งบที่เหลือในแต่ละรอบใช้อ่านซ้ำโพสต์ที่ยังไม่รู้วันปิดรับ
+5. **เพิ่มแหล่งด้วยการวางลิงก์** (`/sources/new` → `app/collector/discover.py`)
+   - กัน SSRF และเคารพ robots.txt
+   - ใช้ RSS ถ้ามี ถ้าไม่มีให้ Gemini หา selector แล้วตรวจด้วยการ parse จริง
+   - รอแอดมินอนุมัติที่ `/admin` (ใช้ JOBS_TOKEN เป็นรหัส) หน้านี้มีภาพรวมด้วย
+6. **แท็กจาก Gemini:** ใช้แท็กเดิมก่อนสร้างใหม่ มีหน้า `?tag=`, `/api/tags` และติดตามแท็กได้ (ขึ้นเป็นแถวแยกบนหน้าแรก)
+7. **รวมโพสต์ซ้ำข้ามเว็บ** (`app/collector/dedupe.py`) หน้าประกาศแสดงว่า "ลงในเว็บอื่นด้วย"
+8. **Google login (เปิดเมื่อตั้งค่า):** ติดตามได้ข้ามเครื่อง และผูกกับ LINE ด้วยการพิมพ์ "ผูก 123456"
+   - ยังปิดอยู่ จนกว่าผู้ใช้จะสร้าง Google OAuth Client ID (ขั้นตอนอยู่ใน `docs/line-setup.md` หัวข้อ 3.6)
 
-## ทำเพิ่มคืน 2026-11-08
-- Vercel ต่อ Git แล้ว ตอนนี้ push ขึ้น main แล้ว deploy เอง (ลองแล้วกับ commit 4d14404)
-- **CI ผ่านครั้งแรก** (backend + web + Playwright) สาเหตุที่ล้มมาตลอดคือ CI รัน `tsc` ก่อนที่ Next จะสร้าง `PageProps` ให้ แก้โดยรัน `next typegen` ก่อน
-- `gh` login แล้ว (Vector033) จึงดูผล CI และ log ของ workflow เองได้
-- GitHub schedule จริงๆ รันแค่ประมาณทุก 5 ชั่วโมง จึงเพิ่ม `/jobs/run?background=1` และ `GET /jobs/last` แล้วให้ cron-job.org เรียกทุกชั่วโมง (ผู้ใช้ตั้งไว้แล้ว ตอนนาทีที่ 00)
-- Gemini ไม่ได้ upgrade เลย เพราะ `gemini-flash-latest` ค้างนานเกิน 90 วินาที จึงเปลี่ยนให้ `gemini-3.6-flash` เป็นตัวหลัก และตั้ง timeout 25 วินาทีต่อ request
-  - หลังแก้ รอบแรก upgrade ได้ 15 ประกาศ ตอนนี้ Gemini 20 / rules 62 จากทั้งหมด 82 ประกาศ (ดูได้ที่ `/api/stats` ช่อง `extraction` และหน้า `/sources`)
-- ภาพหน้าจอจาก live site และจาก LINE จริงอยู่ใน `docs/screenshots/` และใส่ใน README แล้ว
+## ผู้ใช้ต้องทำเอง
+- **Google login (ถ้าต้องการ):** ทำตาม `docs/line-setup.md` หัวข้อ 3.6 แล้วใส่ `GOOGLE_CLIENT_ID` ใน Render และ `NEXT_PUBLIC_GOOGLE_CLIENT_ID` ใน Vercel
+- ถ้า Render ไม่ได้สร้าง `SESSION_SECRET` ให้เองจาก render.yaml ให้กด Generate ในหน้า Environment
+- ทดสอบปุ่มเขียว "ให้ LINE เตือน" บนมือถือ และหน้า LIFF (เลือก pack ครู)
 
-## ทำเพิ่มเช้า 2026-11-08 (redesign แนวเว็บข่าว)
-- เก็บรูปของแต่ละประกาศจากหน้ารายการของเว็บต้นทาง ใส่ในคอลัมน์ `image_url` (migration `9d63692efb02`) ตอนนี้มีรูปครบทั้ง 82 ประกาศ เว็บแสดงผ่าน `next/image` (ตั้ง remotePatterns สำหรับ 4 host ไว้แล้ว)
-- หน้าแรกแบบเว็บข่าว
-  - header เป็นแถบสีเข้มมีช่องค้นหา และมีแท็บหมวดอยู่ใต้แถบ
-  - ส่วนนำ "ใกล้ปิดรับ" มีการ์ดใหญ่ 1 ใบ และรายการด้านข้างอีก 3 ใบ
-  - ตารางการ์ดมีรูป 3 คอลัมน์ ส่วนสถานะ ชั้นปี และการเรียง ย้ายไปเป็นแถบเลือกเหนือรายการ
-  - วันปิดรับมีไฮไลต์แบบปากกาเน้นข้อความ และคำที่ค้นหาถูกครอบด้วย `<mark>`
-- Drawer: ถ้าตั้งเตือนไม่ได้ (ไม่มีวันปิดรับ, ปิดรับแล้ว หรือปิดรับวันนี้) จะแสดงเหตุผลแทนปุ่ม
-- rules จัดข่าวแสดงความยินดีหรือไว้อาลัยเป็นประกาศทั่วไป
-- Playwright ผ่าน 20 (10 test × 2 ขนาดจอ), pytest ผ่าน 86 และ CI ผ่าน
-- ภาพหน้าจอ: `cd web && BASE_URL=https://pingkhana.vercel.app node scripts/screenshots.mjs`
-
-## ยังเหลือ
-1. ผู้ใช้ทดสอบปุ่มเขียวบนเว็บผ่านมือถือ และเช็กว่าหน้า LIFF แสดง "ประกาศที่ให้เตือน" ถูกต้องหรือไม่ (ตอนเช็กยังไม่ชัดว่าแคปหน้าจอก่อนหรือหลังพิมพ์ "ยกเลิก")
-2. Eval model อื่นยังรันไม่ได้เพราะติดข้อจำกัดของแพ็กเกจฟรี
-   - gpt-oss-120b: Groq ติด 429
-   - qwen3.8-27b: เจอ 413 เพราะ prompt ยาวเกิน
-   - Gemini ผ่าน router: โควตาหมด
-   - ให้รันใหม่ทีละ model วันอื่น หรือตัดเนื้อหาให้สั้นลง (`body[:6000]`)
-3. ดูว่า cron-job.org รอบ 04:00 ทำงานจริง (ใน HISTORY ต้องขึ้น 200 และ `started`) และอีกประมาณ 4 รอบ Gemini ควรอ่านครบทุกประกาศ
-4. ชวนเพื่อนมาใช้ แล้วใส่ตัวเลขจริง (followers, reminders) และภาพหน้าจอใน README
+## ยังเหลือ / ไอเดียต่อ
+- Eval model อื่น (gpt-oss, qwen, gemini ผ่าน router) ติดโควตาแพ็กเกจฟรี ให้ลองใหม่วันอื่น
+- ชวนผู้ใช้จริง (ครูคนที่ขอ + เพื่อน) แล้วใส่ตัวเลขใน README
+- ตัวดึงข้อมูลที่รันในไทย สำหรับเว็บราชการที่ปิดกั้นต่างประเทศ (moe, ksp, สพป. บางเขต)
 
 ## ข้อควรรู้บนเครื่อง
-- Postgres บนเครื่อง: Docker `pingkhana_db` port 54532 (ตอนนี้ Docker ปิดอยู่) ใช้ DB `pingkhana_e2e` สำหรับ Playwright (seed demo + เคส break-ui)
-- Playwright: เปิด API ที่ :8100 ชี้ไป `pingkhana_e2e` ก่อน แล้ว `npm run build` → `npx playwright test`
-- ห้ามดึง token จาก Git Credential Manager มาใช้ (ระบบบล็อก)
+- Postgres: Docker `pingkhana_db` port 54532 (มี DB `pingkhana`, `pingkhana_test`, `pingkhana_e2e`)
+- Playwright:
+  1. `cd backend` → `alembic upgrade head` + `python -m scripts.seed_demo` (ใช้ DATABASE_URL ของ `pingkhana_e2e`)
+  2. เปิด API ที่ :8100 พร้อม `CORS_ORIGINS=http://localhost:3005` และ `JOBS_TOKEN=`
+  3. `cd web && npm run build && npx playwright test`
+- ภาพหน้าจอ: `cd web && BASE_URL=https://pingkhana.vercel.app node scripts/screenshots.mjs`
+- ห้ามดึง token จาก Git Credential Manager (ระบบบล็อก) ตอนนี้ใช้ `gh` แทน
 
 ## กติกา
-- ตอบภาษาไทย ห้าม secret ในแชท ห้าม broadcast
-- ถามก่อน push หรือ deploy ทุกครั้ง (สิทธิ์ push main ใช้ได้แค่ session 2026-11-07)
+ตอบภาษาไทย · ห้าม secret ในแชท · ห้าม broadcast · ถามก่อน push/deploy ยกเว้นผู้ใช้อนุญาตใน session นั้น (2026-11-09 ผู้ใช้ให้ทำต่อเองได้)

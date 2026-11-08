@@ -69,6 +69,21 @@
   - service เดียวที่เปิดตลอดเดือนใช้ประมาณ 744 ชั่วโมง ยังอยู่ในโควตาฟรี 750 ชั่วโมงต่อเดือนของ Render
   - ไม่ใช้ GitHub Actions ทำงานนี้ เพราะ repo เป็น private และนาทีฟรีจะหมด
 
+### 3.6 เข้าสู่ระบบด้วย Google (ไม่บังคับ)
+ถ้าไม่ตั้งค่าส่วนนี้ เว็บก็ใช้ได้ทุกอย่าง แค่จะไม่เห็นปุ่มเข้าสู่ระบบ
+1. เปิด https://console.cloud.google.com/apis/credentials แล้วสร้างหรือเลือก project
+2. หน้า OAuth consent screen: เลือก External ใส่ชื่อแอป PingKhana อีเมลติดต่อ แล้วกด Publish app
+3. Credentials → Create credentials → OAuth client ID → Web application
+   - Authorized JavaScript origins: `https://pingkhana.vercel.app`
+   - ไม่ต้องใส่ Redirect URI
+4. คัดลอก Client ID (ค่านี้เปิดเผยได้ ไม่ใช่ secret)
+   - Render → Environment → `GOOGLE_CLIENT_ID` (ส่วน `SESSION_SECRET` Render สุ่มให้เองจาก render.yaml ถ้ายังไม่มีให้กด Generate)
+   - Vercel → Settings → Environment Variables → `NEXT_PUBLIC_GOOGLE_CLIENT_ID` แล้วกด Redeploy
+5. เปิด `https://pingkhana.vercel.app/account` จะเห็นปุ่ม Google
+
+### 3.7 หน้าแอดมิน
+เปิด `https://pingkhana.vercel.app/admin` แล้วใส่ค่า `JOBS_TOKEN` (ดูใน Render → Environment) ใช้อนุมัติแหล่งข่าวที่ผู้ใช้เสนอ ดูสุขภาพของแหล่ง และโควตา LINE ที่ใช้ไป รหัสจะจำไว้แค่แท็บนั้น
+
 ## 4. ก่อนชวนเพื่อน
 - ทดสอบกับบัญชีตัวเองก่อน: แอดบอท, พิมพ์คำสั่ง, กด "เตือนฉัน", เปิดหน้าตั้งค่า และพิมพ์ "ยกเลิก"
 - ดูโควตาที่ใช้ไปได้ใน OA Manager หรือที่ `/api/stats`

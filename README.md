@@ -19,6 +19,13 @@
 |---|---|
 | ![Carousel](docs/screenshots/line-carousel.png) | ![Chat](docs/screenshots/line-chat.png) |
 
+## How it grew
+
+PingKhana started as a bot for one faculty's announcements. Then a teacher asked for the
+Ministry of Education's news, so it became a reader for any public news source: groups of
+sources ("packs") for students, teachers and everyone, sources people add by pasting a link,
+and topic tags across sites. The name stayed: it is where the project came from.
+
 ## Why
 
 Announcements are spread over many department, faculty and university pages. Nobody checks all of them every day, so deadlines get missed (the author missed SCB Co-op 2027, which closed on 20 Oct 2026, this way).
@@ -30,7 +37,13 @@ Announcements are spread over many department, faculty and university pages. Nob
 - **LINE bot**: chat commands `ทุนที่เปิดอยู่` (open scholarships), `สหกิจล่าสุด` (latest co-op), `ใกล้ปิดรับ` (closing soon), `เตือนของฉัน` (my reminders), `ตั้งค่า` (settings), `ยกเลิก` (delete my data). Answers come back as flex carousels with a "เตือนฉัน" (remind me) button, the source link and a disclaimer.
 - **Reminders**: 3 days and 1 day before the deadline, for announcements the user pressed "เตือนฉัน" on.
 - **LIFF settings page**: users pick categories, year and major. Only matching announcements are sent.
-- **Public website** (Next.js): search, filters for category, status, year and sort, detail pages, and source health.
+- **Public website** (Next.js): a news-style front page of things to apply for (posters from the source sites, the deadlines closing soonest first), a separate **ข่าวสาร** zone for general news, search, filters, detail pages, and source health.
+- **Packs and following**: sources belong to a pack (นักศึกษา มช., ครู / ศึกษาธิการ, ทั่วไป). Visitors tick sources and tags on `/follow` without an account (a cookie; the server filters the lists). In LINE the settings page picks packs, and the bot's commands and digests follow them.
+- **Add a source by pasting a link** (`/sources/new`): no RSS knowledge needed. The API checks the host is public (no internal addresses) and robots.txt, uses the site's feed if it has one (direct, advertised, or at a usual path), and otherwise asks Gemini for CSS selectors and checks them by parsing the page. People see a preview of the posts; an admin approves on `/admin`.
+- **Gemini reads more than text**: the post's poster and its first PDF (also Google Drive links) go into the same call, because dates often live only there. Gemini also adds topic tags, reusing the tags already in use.
+- **Reposts merge**: the same announcement on two sites becomes one card that lists the other site.
+- **Calendar and sharing**: Google Calendar link and an `.ics` file with alarms 3 days and 1 day before; share to LINE; link previews show the poster.
+- **Optional Google sign-in** (off until configured): follows on every device, and a code typed in LINE links the chat to the account.
 
 ## Staying inside the free LINE quota
 
@@ -77,16 +90,19 @@ About 45% of the cases have **no** deadline (event days, interview dates, postin
 ## Architecture
 
 ```
-GitHub Actions cron (hourly) ──POST /jobs/run──▶ FastAPI (backend/)
-                                                  ├─ collector: fetch → parse → dedupe → store
-                                                  ├─ extract: Gemini (JSON schema) or rules
-                                                  └─ notify: plan reminders/digests → push within budget
-LINE platform ──webhook──▶ /webhook (signature checked) ──reply──▶ user
-LIFF page (web/liff) ──ID token──▶ /api/liff/* (token verified with LINE)
-Next.js site (web/) ──▶ /api/announcements, /api/stats
-Postgres (announcements, users, reminders, deliveries outbox, fetch_runs)
+cron-job.org (hourly, ?background=1) ─┐
+GitHub Actions (backup schedule) ─────┴─POST /jobs/run─▶ FastAPI (backend/)
+   ├─ collector: sources.yaml + approved user sources → fetch (robots, polite) → parse
+   │             (HTML selectors or RSS) → posters, PDFs → hash dedupe → store
+   ├─ extract: Gemini (text + poster + PDF, JSON schema, tags) within a per-run budget;
+   │           rules when out of budget; later runs upgrade rules, read posters, add tags
+   ├─ merge reposts across sources (title trigrams + numbers + deadline)
+   └─ notify: reminders/digests by each user's packs → push within the LINE budget
+LINE ──webhook──▶ /webhook ──reply──▶ user      LIFF (web/liff) ──ID token──▶ /api/liff/*
+Website (web/, Vercel) ──▶ /api/announcements, /api/tags, /api/meta, /api/sources (add),
+                          /api/admin/* (JOBS_TOKEN), /api/auth/google + /api/me (optional)
+Postgres (Neon): announcements, sources (+ user configs), users, accounts, reminders, deliveries
 ```
-
 - **backend/**: Python 3.12, FastAPI, SQLAlchemy 2 (async) + Alembic, httpx, selectolax. Tests use pytest against real Postgres, respx for HTTP, and fixtures saved from each source.
 - **web/**: Next.js 16 (App Router, Cache Components), TypeScript, Tailwind 4, LIFF SDK, Playwright.
 
