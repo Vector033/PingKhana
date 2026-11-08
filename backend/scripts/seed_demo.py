@@ -44,11 +44,14 @@ async def main() -> None:
     today = now.date()
     async with SessionLocal() as s:
         await s.execute(delete(Announcement).where(Announcement.source_id == "demo"))
-        if await s.get(Source, "demo") is None:
-            s.add(
-                Source(id="demo", name="แหล่งข้อมูลตัวอย่าง", url="https://example.com/", enabled=False)
-            )
-            await s.flush()
+        # Enabled so it shows on /follow like a real source; the collector never fetches it
+        # (it is neither in sources.yaml nor a user-added source with a config).
+        src = await s.get(Source, "demo")
+        if src is None:
+            src = Source(id="demo", name="แหล่งข้อมูลตัวอย่าง", url="https://example.com/")
+            s.add(src)
+        src.enabled, src.pack = True, "student"
+        await s.flush()
         for i, (title, cat, days, years, majors, gpax) in enumerate(DEMO, start=1):
             s.add(
                 Announcement(
