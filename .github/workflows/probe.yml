@@ -1,0 +1,12 @@
+name: Probe source reachability (temporary)
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in https://www.moe.go.th/feed/ https://www.ksp.or.th/feed/ https://www.obec.go.th/feed/; do
+            for v in -4 -6; do
+              echo "$u $v -> $(curl $v -s -o /dev/null -m 25 -A 'PingKhanaBot/0.1 (+https://github.com/Vector033/PingKhana)' -w '%{http_code} %{time_connect}s' $u || echo fail)"
+            done
+          done
