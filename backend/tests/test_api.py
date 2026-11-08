@@ -109,3 +109,25 @@ async def test_jobs_background_mode_returns_at_once(client, monkeypatch) -> None
     assert calls == [1]
     last = (await client.get("/jobs/last", headers=auth)).json()
     assert last["ok"] is True
+
+
+async def test_kind_and_pack_filters(session, client) -> None:
+    from app.models import Source
+
+    await f.announcement(session, title="ทุน ป.ตรี", category=Category.SCHOLARSHIP)
+    await f.announcement(session, title="ข่าวแสดงความยินดี", category=Category.GENERAL)
+    session.add(Source(id="moe", name="ศธ.", url="https://www.moe.go.th/", pack="teacher"))
+    await session.flush()
+    t = await f.announcement(session, title="ข่าว ศธ.", category=Category.GENERAL)
+    t.source_id = "moe"
+    await session.commit()
+
+    titles = lambda r: {a["title"] for a in r.json()["items"]}  # noqa: E731
+    assert titles(await client.get("/api/announcements", params={"kind": "open"})) == {"ทุน ป.ตรี"}
+    assert titles(await client.get("/api/announcements", params={"kind": "news"})) == {
+        "ข่าวแสดงความยินดี",
+        "ข่าว ศธ.",
+    }
+    assert titles(await client.get("/api/announcements", params={"pack": "teacher"})) == {"ข่าว ศธ."}
+    meta = (await client.get("/api/meta")).json()
+    assert {"id": "teacher", "th": "ครู / ศึกษาธิการ"} in meta["packs"]

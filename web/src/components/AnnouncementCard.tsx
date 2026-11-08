@@ -186,7 +186,7 @@ export function AnnouncementCard({
         <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 text-xs text-muted">
           {a.deadline ? (
             <DeadlineBadge deadline={a.deadline} today={today} />
-          ) : (
+          ) : a.category === "general" ? null : (
             <span>ไม่ระบุวันปิดรับ</span>
           )}
           {a.eligible_years && (

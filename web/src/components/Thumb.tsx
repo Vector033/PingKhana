@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { CATEGORY_TINT } from "@/lib/format";
+import { optimizable } from "@/lib/imageHosts";
 
 /**
  * The announcement's poster from the source site, or — when there is none or it fails to load —
@@ -34,6 +35,9 @@ export function Thumb({
           fill
           sizes={sizes}
           priority={priority}
+          // A host we have not listed (e.g. a newly added source) loads directly instead of
+          // crashing the page on next/image's host check.
+          unoptimized={!optimizable(src!)}
           onError={() => setFailed(true)}
           className="object-cover object-top transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
         />

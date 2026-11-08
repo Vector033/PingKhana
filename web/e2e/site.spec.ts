@@ -5,7 +5,7 @@ const list = (page: Page) => page.getByRole("region", { name: "รายกา�
 
 test("home lists open announcements and filters by category", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("ประกาศทุน");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("ที่เปิดรับ");
   await expect(list(page).getByRole("link", { name: /ทุนเรียนดีสำหรับนักศึกษาวิทยาการคอมพิวเตอร์/ })).toBeVisible();
 
   await page.getByRole("link", { name: "สหกิจ/ฝึกงาน" }).first().click();
@@ -39,12 +39,15 @@ test("card opens a quick preview without leaving the filtered list", async ({ pa
   await expect(list(page).getByRole("link", { name: /ผู้ช่วยวิจัยโครงการ Data Platform/ })).toBeFocused();
 });
 
-test("no deadline: the drawer says why there is no reminder button", async ({ page }) => {
+test("general news lives on /news, without deadline or reminder", async ({ page }) => {
   await page.goto("/");
+  await expect(list(page).getByRole("link", { name: /ประกาศปิดปรับปรุงห้องสมุดคณะ/ })).toHaveCount(0);
+  await page.getByRole("link", { name: "ข่าวสาร", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/news/);
   await list(page).getByRole("link", { name: /ประกาศปิดปรับปรุงห้องสมุดคณะ/ }).click();
   const drawer = page.getByRole("dialog");
-  await expect(drawer.getByText(/ไม่ระบุวันปิดรับ จึงตั้งเตือนไม่ได้/)).toBeVisible();
   await expect(drawer.getByRole("link", { name: /ให้ LINE เตือน/ })).toHaveCount(0);
+  await expect(drawer.getByText(/วันปิดรับ/)).toHaveCount(0);
   // Focus starts on the title, not on the close button.
   await expect(drawer.getByRole("heading", { level: 2 })).toBeFocused();
 });

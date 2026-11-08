@@ -87,6 +87,7 @@ async function SourceTable() {
           <thead className="border-b border-line text-muted">
             <tr>
               <th className="px-4 py-2 font-medium">เว็บ</th>
+              <th className="px-4 py-2 font-medium">กลุ่ม</th>
               <th className="px-4 py-2 font-medium">ดึงสำเร็จล่าสุด</th>
               <th className="px-4 py-2 font-medium">สถานะ</th>
             </tr>
@@ -103,6 +104,9 @@ async function SourceTable() {
                   >
                     {s.name}
                   </a>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-muted">
+                  {s.pack ?? "—"}
                 </td>
                 <td className="px-4 py-2 text-muted">
                   {s.last_success_at

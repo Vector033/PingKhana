@@ -38,6 +38,12 @@ class SourceConfig(BaseModel):
     # Rewrite http:// links to https:// (some sites link to http and then redirect)
     force_https: bool = False
     max_new_per_run: int = 15
+    # Who the source is for. The site groups sources into packs people can follow.
+    pack: Literal["student", "teacher", "general"] = "student"
+    # Page to show people; for feeds `url` is the XML feed itself.
+    homepage: str | None = None
+    # RSS items whose <category> contains one of these are skipped (procurement reports etc.)
+    skip_categories: list[str] = []
 
 
 def load_sources(path: Path = SOURCES_FILE) -> list[SourceConfig]:

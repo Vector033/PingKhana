@@ -21,8 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import BANGKOK, get_settings
 from app.line import messages as msg
 from app.line.client import LineApiError, LineClient
-from app.models import Announcement, Delivery, Reminder, User
-from app.queries import user_matches
+from app.models import Announcement, Delivery, Reminder, Source, User
+from app.queries import BOT_PACK, user_matches
 
 log = logging.getLogger(__name__)
 
@@ -79,9 +79,12 @@ async def plan_digests(session: AsyncSession, now: datetime) -> int:
     users = (
         await session.scalars(select(User).where(User.notify_new, User.blocked.is_(False)))
     ).all()
+    bot_sources = set(
+        (await session.scalars(select(Source.id).where(Source.pack == BOT_PACK))).all()
+    )
     created = 0
     for u in users:
-        ids = [a.id for a in fresh if user_matches(u, a, today)]
+        ids = [a.id for a in fresh if a.source_id in bot_sources and user_matches(u, a, today)]
         if not ids:
             continue
         key = f"digest:{u.id}:{min(ids)}-{max(ids)}:{len(ids)}"

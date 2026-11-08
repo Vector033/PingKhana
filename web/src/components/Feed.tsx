@@ -109,6 +109,36 @@ export function Feed({ items }: { items: Announcement[] }) {
   );
 }
 
+/** Front page, under the list: the latest news, with a way into /news. */
+export function NewsStrip({ items }: { items: Announcement[] }) {
+  const { open, today } = usePreview();
+  return (
+    <section aria-labelledby="news-title" className="mt-12">
+      <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+        <h2
+          id="news-title"
+          className="text-xl font-semibold tracking-tight sm:text-2xl"
+        >
+          ข่าวสาร
+        </h2>
+        <Link
+          href="/news"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-brand hover:underline"
+        >
+          ดูข่าวทั้งหมด →
+        </Link>
+      </div>
+      <ul className="grid gap-3 md:grid-cols-2">
+        {items.map((a, i) => (
+          <li key={a.id}>
+            <CompactCard a={a} today={today} index={i} onOpen={open} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** Front-page lead: the soonest deadline as a big poster, the next few beside it. */
 export function ClosingHero({ items }: { items: Announcement[] }) {
   const { open, today } = usePreview();
@@ -165,6 +195,8 @@ function Preview({
   majors: Record<string, string>;
   onClose: () => void;
 }) {
+  // General news has no deadline, eligibility or reminder to show.
+  const isNews = a.category === "general" && !a.deadline;
   // Summaries are 2-3 lines; show each line as its own point when the model wrote several.
   const points = (a.summary_th ?? "")
     .split(/\n+/)
@@ -235,52 +267,62 @@ function Preview({
           )}
         </section>
 
-        <section aria-labelledby="pv-elig" className="mt-5">
-          <h3 id="pv-elig" className="text-sm font-medium text-muted">
-            คุณสมบัติและกำหนดการ
-          </h3>
-          <table className="mt-1.5 w-full text-sm">
-            <tbody className="divide-y divide-line">
-              <Row label="วันปิดรับ">
-                {a.deadline ? (
-                  <DeadlineBadge deadline={a.deadline} today={today} />
-                ) : (
-                  "ไม่ระบุ (ดูที่ประกาศต้นทาง)"
+        {!isNews && (
+          <section aria-labelledby="pv-elig" className="mt-5">
+            <h3 id="pv-elig" className="text-sm font-medium text-muted">
+              คุณสมบัติและกำหนดการ
+            </h3>
+            <table className="mt-1.5 w-full text-sm">
+              <tbody className="divide-y divide-line">
+                <Row label="วันปิดรับ">
+                  {a.deadline ? (
+                    <DeadlineBadge deadline={a.deadline} today={today} />
+                  ) : (
+                    "ไม่ระบุ (ดูที่ประกาศต้นทาง)"
+                  )}
+                  {a.deadline_text && (
+                    <div className="mt-1 text-xs text-muted [overflow-wrap:anywhere]">
+                      ต้นฉบับ: “{a.deadline_text}”
+                    </div>
+                  )}
+                </Row>
+                <Row label="ชั้นปี">
+                  {a.eligible_years
+                    ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
+                    : "ไม่จำกัด / ไม่ระบุ"}
+                </Row>
+                <Row label="สาขา">
+                  {a.eligible_majors
+                    ? a.eligible_majors.map((m) => majors[m] ?? m).join(", ")
+                    : "ไม่จำกัด / ไม่ระบุ"}
+                </Row>
+                <Row label="GPAX ขั้นต่ำ">
+                  {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
+                </Row>
+                {a.published_on && (
+                  <Row label="ประกาศเมื่อ">{thDate(a.published_on)}</Row>
                 )}
-                {a.deadline_text && (
-                  <div className="mt-1 text-xs text-muted [overflow-wrap:anywhere]">
-                    ต้นฉบับ: “{a.deadline_text}”
-                  </div>
-                )}
-              </Row>
-              <Row label="ชั้นปี">
-                {a.eligible_years
-                  ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
-                  : "ไม่จำกัด / ไม่ระบุ"}
-              </Row>
-              <Row label="สาขา">
-                {a.eligible_majors
-                  ? a.eligible_majors.map((m) => majors[m] ?? m).join(", ")
-                  : "ไม่จำกัด / ไม่ระบุ"}
-              </Row>
-              <Row label="GPAX ขั้นต่ำ">
-                {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
-              </Row>
-              {a.published_on && (
-                <Row label="ประกาศเมื่อ">{thDate(a.published_on)}</Row>
-              )}
-            </tbody>
-          </table>
-        </section>
+              </tbody>
+            </table>
+          </section>
+        )}
       </div>
 
       <div className="space-y-2 border-t border-line bg-surface px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <RemindSlot
-          id={a.id}
-          deadline={a.deadline}
-          today={today}
-          className="w-full"
-        />
+        {isNews ? (
+          a.published_on && (
+            <p className="text-sm text-muted">
+              ประกาศเมื่อ {thDate(a.published_on)}
+            </p>
+          )
+        ) : (
+          <RemindSlot
+            id={a.id}
+            deadline={a.deadline}
+            today={today}
+            className="w-full"
+          />
+        )}
         <div className="flex gap-2 text-sm">
           <a
             href={a.url}

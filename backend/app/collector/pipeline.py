@@ -45,9 +45,11 @@ async def sync_sources(session: AsyncSession, configs: list[SourceConfig]) -> No
     for cfg in configs:
         src = await session.get(Source, cfg.id)
         if src is None:
-            session.add(Source(id=cfg.id, name=cfg.name, url=cfg.url, enabled=cfg.enabled))
-        else:
-            src.name, src.url, src.enabled = cfg.name, cfg.url, cfg.enabled
+            src = Source(id=cfg.id)
+            session.add(src)
+        # The stored URL is what people see; feeds point them at the site, not the XML.
+        src.name, src.url, src.enabled = cfg.name, cfg.homepage or cfg.url, cfg.enabled
+        src.pack = cfg.pack
     await session.commit()
 
 
@@ -75,6 +77,12 @@ async def collect_source(
         page = await fetcher.get(cfg.url)
         run.http_status = page.status
         items = parse_list(page.text, cfg, page.url, today)
+        if cfg.skip_categories:
+            items = [
+                i
+                for i in items
+                if not any(s in c for c in i.categories for s in cfg.skip_categories)
+            ]
         result.seen = len(items)
 
         known = {
@@ -104,6 +112,9 @@ async def collect_source(
                 result.errors.append(f"{item.url}: {e}")
                 continue
             fetched_details += 1
+            # Feeds sometimes carry the full post; keep whichever text is longer.
+            if len(item.body) > len(detail.text):
+                detail.text = item.body
             if NAME_LIST.search(detail.title) or NAME_LIST.search(item.title):
                 detail.text = ""
             h = content_hash(detail.title, detail.text)
@@ -126,7 +137,7 @@ async def collect_source(
                 url=item.url,
                 title=detail.title,
                 list_title=item.title,
-                image_url=item.image,
+                image_url=item.image or detail.image,
                 body_text=detail.text,
                 content_hash=h,
                 duplicate_of_id=dup,

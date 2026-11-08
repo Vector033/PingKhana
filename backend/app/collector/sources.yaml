@@ -66,3 +66,28 @@ sources:
       title: "#cphPageContent_wucArticleView_lbHeader"
       date: "#cphPageContent_wucArticleView_lbDate"
     link_must_contain: [/th/article/]
+
+  # ---------- Teachers / education (pack: teacher), added 2026-11-09 on request of a teacher ----------
+  # All three are WordPress sites with an RSS feed; robots.txt only blocks /wp-admin/.
+  - id: moe
+    name: กระทรวงศึกษาธิการ (ข่าว ศธ.)
+    kind: rss
+    url: https://www.moe.go.th/feed/
+    homepage: https://www.moe.go.th/
+    pack: teacher
+    skip_categories: [หนังสืออิเล็กทรอนิกส์]
+
+  - id: obec
+    name: สพฐ. (สำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน)
+    kind: rss
+    url: https://www.obec.go.th/feed/
+    homepage: https://www.obec.go.th/
+    pack: teacher
+
+  - id: ksp
+    name: คุรุสภา
+    kind: rss
+    url: https://www.ksp.or.th/feed/
+    homepage: https://www.ksp.or.th/
+    pack: teacher
+    skip_categories: [จัดซื้อจัดจ้าง]

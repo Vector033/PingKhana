@@ -2,7 +2,14 @@ from datetime import date, timedelta
 
 from sqlalchemy import Select, and_, any_, literal, or_, select, true
 
-from app.models import Announcement, Category, User
+from app.models import Announcement, Category, Source, User
+
+# The LINE bot serves students until people can pick their own packs.
+BOT_PACK = "student"
+
+
+def in_pack(pack: str = BOT_PACK):
+    return Announcement.source_id.in_(select(Source.id).where(Source.pack == pack))
 
 
 def visible() -> Select[tuple[Announcement]]:
@@ -19,8 +26,8 @@ def still_open(today: date):
 def for_user(user: User | None):
     """Filter by what the user can apply for. Unknown profile fields never exclude anything."""
     if user is None:
-        return true()
-    conds = []
+        return in_pack()
+    conds = [in_pack()]
     if user.year is not None:
         conds.append(
             or_(

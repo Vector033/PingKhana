@@ -46,6 +46,7 @@ class Source(Base):
     name: Mapped[str] = mapped_column(String(200))
     url: Mapped[str] = mapped_column(Text)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    pack: Mapped[str] = mapped_column(String(32), default="student", server_default="student")
     last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     consecutive_failures: Mapped[int] = mapped_column(Integer, default=0)

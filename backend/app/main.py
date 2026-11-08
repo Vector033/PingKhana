@@ -147,6 +147,9 @@ async def list_announcements(
     year: int | None = Query(None, ge=1, le=6),
     major: str | None = None,
     sort: str = Query("new", pattern="^(new|deadline)$"),
+    # open = things to apply for (every category except general news); news = general only.
+    kind: str = Query("all", pattern="^(all|open|news)$"),
+    pack: str | None = Query(None, pattern="^(student|teacher|general)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
 ) -> Page:
@@ -165,6 +168,14 @@ async def list_announcements(
         query = query.where(Announcement.category == category.value)
     if source:
         query = query.where(Announcement.source_id == source)
+    if kind == "open":
+        query = query.where(Announcement.category != Category.GENERAL.value)
+    elif kind == "news":
+        query = query.where(Announcement.category == Category.GENERAL.value)
+    if pack:
+        query = query.where(
+            Announcement.source_id.in_(select(Source.id).where(Source.pack == pack))
+        )
     if status == "open":
         query = query.where(still_open(today))
     elif status == "closing":
@@ -208,6 +219,9 @@ async def get_announcement(ann_id: int, session: Session) -> AnnouncementOut:
     return to_out(a, await _source_names(session))
 
 
+PACKS = {"student": "นักศึกษา มช.", "teacher": "ครู / ศึกษาธิการ", "general": "ทั่วไป"}
+
+
 @app.get("/api/meta")
 async def meta(session: Session) -> dict:
     sources = (
@@ -217,7 +231,10 @@ async def meta(session: Session) -> dict:
         "categories": [{"id": c.value, "th": CATEGORY_TH[c]} for c in Category],
         "majors": [{"id": k, "th": v["th"]} for k, v in MAJORS.items()],
         "years": YEARS,
-        "sources": [{"id": s.id, "name": s.name, "url": s.url} for s in sources],
+        "sources": [{"id": s.id, "name": s.name, "url": s.url, "pack": s.pack} for s in sources],
+        "packs": [
+            {"id": p, "th": th} for p, th in PACKS.items() if any(s.pack == p for s in sources)
+        ],
         "liff_id": get_settings().liff_id,
     }
 
@@ -271,6 +288,7 @@ async def stats(session: Session) -> dict:
                 "id": s.id,
                 "name": s.name,
                 "url": s.url,
+                "pack": PACKS.get(s.pack, s.pack),
                 "last_success_at": s.last_success_at,
                 "healthy": s.consecutive_failures < BROKEN_AFTER,
                 "last_error": s.last_error if s.consecutive_failures else None,

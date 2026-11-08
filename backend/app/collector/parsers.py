@@ -1,7 +1,7 @@
 import hashlib
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from email.utils import parsedate_to_datetime
 from urllib.parse import urldefrag, urljoin
@@ -24,6 +24,9 @@ class ListItem:
     published_on: date | None = None
     # Thumbnail shown next to the item on the source's list page (absolute https URL).
     image: str | None = None
+    # RSS only: the item's <category> labels and its text, when the feed carries it.
+    categories: list[str] = field(default_factory=list)
+    body: str = ""
 
 
 @dataclass
@@ -31,6 +34,7 @@ class Detail:
     title: str
     text: str
     published_on: date | None = None
+    image: str | None = None  # og:image of the page
 
 
 def clean_text(s: str) -> str:
@@ -119,8 +123,35 @@ def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list
     return items
 
 
+_CONTENT = "{http://purl.org/rss/1.0/modules/content/}encoded"
+_MEDIA = "{http://search.yahoo.com/mrss/}"
+_IMG_SRC = re.compile(r"<img[^>]+?src=[\"']([^\"']+)[\"']", re.I)
+
+
+def _feed_image(it: ET.Element, html: str) -> str | None:
+    for tag in (f"{_MEDIA}content", f"{_MEDIA}thumbnail", "enclosure"):
+        for el in it.iter(tag):
+            url = el.get("url", "")
+            if url and (tag != "enclosure" or el.get("type", "").startswith("image/")):
+                return _https(url)
+    for m in _IMG_SRC.finditer(html):
+        if not _NOT_A_PHOTO.search(m.group(1)):
+            return _https(m.group(1))
+    return None
+
+
+def _https(url: str) -> str:
+    url = url.strip()
+    return "https://" + url.removeprefix("http://") if url.startswith("http://") else url
+
+
+LEADING_JUNK = "\ufeff \t\r\n"  # BOM and whitespace
+
+
 def parse_rss(xml: str) -> list[ListItem]:
-    root = ET.fromstring(xml.encode() if isinstance(xml, str) else xml)
+    # Some WordPress plugins print blank lines before <?xml ...?>, which is not well-formed.
+    raw = xml.lstrip(LEADING_JUNK) if isinstance(xml, str) else xml.lstrip()
+    root = ET.fromstring(raw.encode() if isinstance(raw, str) else raw)
     items: list[ListItem] = []
     for it in root.iter("item"):
         link = (it.findtext("link") or "").strip()
@@ -132,8 +163,11 @@ def parse_rss(xml: str) -> list[ListItem]:
                 published = parsedate_to_datetime(pub).date()
             except (TypeError, ValueError):
                 pass
+        html = (it.findtext(_CONTENT) or "") + (it.findtext("description") or "")
+        body = clean_text(HTMLParser(html).text(separator=" ")) if html else ""
+        cats = [clean_text(c.text or "") for c in it.findall("category") if c.text]
         if link and title:
-            items.append(ListItem(link, title, published))
+            items.append(ListItem(link, title, published, _feed_image(it, html), cats, body))
     atom = "{http://www.w3.org/2005/Atom}"
     for entry in root.iter(f"{atom}entry"):
         link_el = entry.find(f"{atom}link")
@@ -172,4 +206,9 @@ def parse_detail(html: str, cfg: SourceConfig, fallback_title: str, today: date)
     published = None
     if sel and sel.date and (dn := tree.css_first(sel.date)):
         published = _first_date(dn.attributes.get("datetime") or dn.text(), today)
-    return Detail(title, text, published)
+    image = None
+    if og := tree.css_first('meta[property="og:image"]'):
+        src = (og.attributes.get("content") or "").strip()
+        if src and not _NOT_A_PHOTO.search(src):
+            image = _https(src)
+    return Detail(title, text, published, image)

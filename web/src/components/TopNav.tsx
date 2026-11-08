@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { CATEGORIES } from "@/lib/format";
 
 /** Keeps the other filters when the category or search changes; always back to page 1. */
@@ -21,12 +22,14 @@ function hrefWith(
 
 export function HeaderSearch({ className = "" }: { className?: string }) {
   const params = useSearchParams();
-  const onHome = usePathname() === "/";
+  const path = usePathname();
+  const onHome = path === "/" || path === "/news";
+  const action = path === "/news" ? "/news" : "/";
   const keep = onHome
     ? [...params.entries()].filter(([k]) => k !== "q" && k !== "page")
     : [];
   return (
-    <form action="/" role="search" className={`relative ${className}`}>
+    <form action={action} role="search" className={`relative ${className}`}>
       <label htmlFor="q" className="sr-only">
         ค้นหา
       </label>
@@ -67,12 +70,26 @@ export function HeaderSearch({ className = "" }: { className?: string }) {
 /** Category tabs under the header bar, like a newspaper's sections. */
 export function CategoryTabs() {
   const params = useSearchParams();
-  const onHome = usePathname() === "/";
+  const path = usePathname();
+  const onHome = path === "/";
   const active = onHome ? (params.get("category") ?? "") : null;
   const base = onHome ? params : new URLSearchParams();
-  const tabs = [{ id: "", th: "ทั้งหมด" }, ...CATEGORIES];
+  const nav = useRef<HTMLElement>(null);
+  // On phones the row scrolls sideways: keep the current tab in view.
+  useEffect(() => {
+    const el = nav.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    const row = nav.current;
+    if (el && row)
+      row.scrollLeft = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2;
+  }, [path, params]);
+  // General news lives on /news; the tabs here are things to apply for.
+  const tabs = [
+    { id: "", th: "เปิดรับทั้งหมด" },
+    ...CATEGORIES.filter((c) => c.id !== "general"),
+  ];
   return (
     <nav
+      ref={nav}
       aria-label="หมวดประกาศ"
       className="-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none]"
     >
@@ -93,6 +110,18 @@ export function CategoryTabs() {
           </Link>
         );
       })}
+      <span aria-hidden className="mx-1 my-3 w-px shrink-0 bg-line-strong" />
+      <Link
+        href="/news"
+        aria-current={path === "/news" ? "page" : undefined}
+        className={`relative inline-flex min-h-11 shrink-0 items-center px-3 text-sm whitespace-nowrap transition-colors active:scale-95 ${
+          path === "/news"
+            ? "font-semibold text-fg after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
+            : "text-muted hover:text-fg"
+        }`}
+      >
+        ข่าวสาร
+      </Link>
     </nav>
   );
 }

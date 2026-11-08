@@ -34,7 +34,9 @@ export type Meta = {
   categories: { id: Category; th: string }[];
   majors: { id: string; th: string }[];
   years: number[];
-  sources: { id: string; name: string; url: string }[];
+  sources: { id: string; name: string; url: string; pack?: string }[];
+  /** Groups of sources people can follow (student, teacher, ...). */
+  packs?: { id: string; th: string }[];
   liff_id: string;
 };
 
@@ -53,6 +55,7 @@ export type Stats = {
     url: string;
     last_success_at: string | null;
     healthy: boolean;
+    pack?: string;
     last_error: string | null;
   }[];
 };
