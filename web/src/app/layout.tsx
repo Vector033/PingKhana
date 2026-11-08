@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AccountLink } from "@/components/AccountSync";
 import { CategoryTabs, HeaderSearch } from "@/components/TopNav";
 import { DISCLAIMER } from "@/lib/format";
 import "./globals.css";
@@ -88,6 +89,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 >
                   แหล่งข้อมูล
                 </Link>
+                <Suspense fallback={null}>
+                  <AccountLink />
+                </Suspense>
               </div>
             </div>
             <div className="mt-1 border-b border-line px-1">

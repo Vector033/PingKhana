@@ -28,6 +28,7 @@ HELP = (
 )
 
 
+LINK_TEXT = re.compile(r"ผูก\s*(\d{6})")
 REMIND_TEXT = re.compile(r"(?:เตือนฉัน|เตือน)\s*#?(\d{1,9})")
 
 
@@ -68,6 +69,17 @@ async def answer_text(session: AsyncSession, user: User, text: str, now: datetim
     today = now.astimezone(BANGKOK).date()
     t = text.strip().lower()
     # "เตือน 123" is what the website's reminder button pre-fills in LINE.
+    if link := LINK_TEXT.fullmatch(t):
+        from app.accounts import link_line_user
+
+        ok = await link_line_user(session, user, link.group(1), now)
+        return [
+            msg.text(
+                "ผูกบัญชีเว็บกับ LINE นี้แล้ว แหล่งข่าวที่ติดตามบนเว็บจะตรงกันทั้งสองที่"
+                if ok
+                else "รหัสไม่ถูกต้องหรือหมดอายุแล้ว (ใช้ได้ 10 นาที) ขอรหัสใหม่ได้ที่หน้าบัญชีบนเว็บ"
+            )
+        ]
     m = REMIND_TEXT.fullmatch(t)
     if m:
         return await handle_postback(session, user, f"action=remind&id={m.group(1)}", now)

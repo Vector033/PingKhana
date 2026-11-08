@@ -34,6 +34,10 @@ app.add_middleware(
 
 Session = Annotated[AsyncSession, Depends(get_session)]
 
+from app.accounts import router as accounts_router  # noqa: E402
+
+app.include_router(accounts_router)
+
 
 def now_bkk() -> datetime:
     return datetime.now(tz=BANGKOK)

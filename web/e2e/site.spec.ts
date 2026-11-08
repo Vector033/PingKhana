@@ -139,6 +139,11 @@ test("tags: popular chips filter the list, followed tags get their own row", asy
   await expect(row.getByRole("link", { name: /Workshop: เขียน FastAPI/ })).toBeVisible();
 });
 
+test("account page works without sign-in configured", async ({ page }) => {
+  await page.goto("/account");
+  await expect(page.locator("main")).toContainText("ใช้งานแบบไม่ล็อกอินได้ทุกอย่าง");
+});
+
 test("interactive controls are at least 44px tall", async ({ page }) => {
   await page.goto("/");
   const small = await page.evaluate(() =>

@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     # Token required by the /jobs/* endpoints that the scheduler calls.
     jobs_token: str = ""
+    # Optional Google sign-in on the website (see app/accounts.py). Both empty = off.
+    google_client_id: str = ""
+    session_secret: str = ""
 
     @field_validator("database_url")
     @classmethod

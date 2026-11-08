@@ -32,3 +32,9 @@ services:
         sync: false
       - key: JOBS_TOKEN
         generateValue: true
+      # Optional Google sign-in: Render generates the secret; the client id comes from
+      # Google Cloud Console (same value as NEXT_PUBLIC_GOOGLE_CLIENT_ID on Vercel).
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false

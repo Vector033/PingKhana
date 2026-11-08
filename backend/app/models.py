@@ -177,3 +177,20 @@ class Delivery(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class Account(Base):
+    """Optional website account (Google). Keeps website follows; may link to a LINE user."""
+
+    __tablename__ = "accounts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    google_sub: Mapped[str] = mapped_column(String(64), unique=True)
+    email: Mapped[str] = mapped_column(String(320))
+    name: Mapped[str | None] = mapped_column(String(200))
+    sources: Mapped[list[str] | None] = mapped_column(ARRAY(String(64)))
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(48)))
+    line_user_id: Mapped[str | None] = mapped_column(String(64))
+    link_code: Mapped[str | None] = mapped_column(String(6), index=True)
+    link_code_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
