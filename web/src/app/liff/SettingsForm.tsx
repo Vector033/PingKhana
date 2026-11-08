@@ -13,6 +13,7 @@ type Prefs = {
   major: string | null;
   categories: Category[];
   notify_new: boolean;
+  packs?: string[];
   reminders?: Announcement[];
 };
 
@@ -118,6 +119,7 @@ export function SettingsForm() {
       major: prefs.major,
       categories: prefs.categories,
       notify_new: prefs.notify_new,
+      packs: prefs.packs?.length ? prefs.packs : ["student"],
     };
     const res = await fetch(`${API}/api/liff/me`, {
       method: "PUT",
@@ -154,6 +156,40 @@ export function SettingsForm() {
         void save();
       }}
     >
+      {meta.packs && meta.packs.length > 1 && (
+        <fieldset>
+          <legend className="font-medium">ติดตามข่าวจาก</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {meta.packs.map((p) => {
+              const packs = prefs.packs ?? ["student"];
+              const on = packs.includes(p.id);
+              return (
+                <label
+                  key={p.id}
+                  className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm ${on ? "border-brand bg-brand-soft" : "border-line bg-surface"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    // At least one pack stays on, or the bot would have nothing to send.
+                    disabled={on && packs.length === 1}
+                    onChange={() =>
+                      update({
+                        packs: on
+                          ? packs.filter((x) => x !== p.id)
+                          : [...packs, p.id],
+                      })
+                    }
+                    className="accent-[var(--brand)]"
+                  />
+                  {p.th}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
       <fieldset>
         <legend className="font-medium">อยากรู้ประกาศประเภทไหน</legend>
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -162,7 +198,7 @@ export function SettingsForm() {
             return (
               <label
                 key={c.id}
-                className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${on ? "border-brand bg-brand-soft" : "border-line bg-surface"}`}
+                className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm ${on ? "border-brand bg-brand-soft" : "border-line bg-surface"}`}
               >
                 <input
                   type="checkbox"

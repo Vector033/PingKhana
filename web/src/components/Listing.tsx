@@ -7,6 +7,7 @@ import {
   PreviewProvider,
 } from "@/components/Feed";
 import { getAnnouncements, getMeta, getStats } from "@/lib/api";
+import { getFollowed } from "@/lib/follow";
 import { minutesSince, todayBangkok } from "@/lib/format";
 
 export type Search = Record<string, string | string[] | undefined>;
@@ -20,6 +21,7 @@ const FILTER_KEYS = [
   "source",
   "sort",
   "pack",
+  "all",
   "page",
 ] as const;
 
@@ -123,6 +125,13 @@ export async function Listing({
   const today = todayBangkok();
   // The front page (no filter, no search) leads with the deadlines closing soonest.
   const front = Object.keys(current).length === 0;
+  // Followed sources (cookie) narrow every list unless the visitor picked a pack or asked for all.
+  const followed = await getFollowed();
+  const follow =
+    followed.length > 0 && !current.pack && !current.source && !current.all
+      ? followed.join(",")
+      : null;
+  const withFollow = (qs: string) => (follow ? `${qs}&sources=${follow}` : qs);
   let data, meta, closing, latestNews;
   try {
     [data, meta, closing, latestNews] = await Promise.all([
@@ -132,13 +141,18 @@ export async function Listing({
           ...current,
           status,
           kind: zone,
+          ...(follow ? { sources: follow } : {}),
         }).toString(),
       ),
       getMeta(),
       front && !news
-        ? getAnnouncements("kind=open&status=closing&sort=deadline&page_size=4")
+        ? getAnnouncements(
+            withFollow("kind=open&status=closing&sort=deadline&page_size=4"),
+          )
         : null,
-      front && !news ? getAnnouncements("kind=news&page_size=4") : null,
+      front && !news
+        ? getAnnouncements(withFollow("kind=news&page_size=4"))
+        : null,
     ]);
   } catch {
     return (
@@ -193,12 +207,23 @@ export async function Listing({
           "ประกาศ")
         : "เปิดรับสมัครล่าสุด";
 
-  const packFilter = meta.packs && meta.packs.length > 1 && (
+  const packFilter = ((meta.packs?.length ?? 0) > 1 || followed.length > 0) && (
     <FilterGroup title="แหล่ง">
-      <FilterLink href={href({ pack: null })} active={!current.pack}>
+      {followed.length > 0 && (
+        <FilterLink
+          href={href({ pack: null, all: null })}
+          active={Boolean(follow)}
+        >
+          ที่ติดตาม ({followed.length})
+        </FilterLink>
+      )}
+      <FilterLink
+        href={href({ pack: null, all: followed.length > 0 ? "1" : null })}
+        active={!current.pack && !follow}
+      >
         ทั้งหมด
       </FilterLink>
-      {meta.packs.map((p) => (
+      {(meta.packs ?? []).map((p) => (
         <FilterLink
           key={p.id}
           href={href({ pack: p.id })}

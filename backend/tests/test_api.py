@@ -131,3 +131,17 @@ async def test_kind_and_pack_filters(session, client) -> None:
     assert titles(await client.get("/api/announcements", params={"pack": "teacher"})) == {"ข่าว ศธ."}
     meta = (await client.get("/api/meta")).json()
     assert {"id": "teacher", "th": "ครู / ศึกษาธิการ"} in meta["packs"]
+
+
+async def test_prefs_packs_roundtrip_and_validation(client, monkeypatch) -> None:
+    from app import main
+
+    monkeypatch.setattr(main.get_settings(), "line_login_channel_id", "")
+    body = {"year": 3, "major": None, "categories": ["scholarship"], "notify_new": True}
+    r = await client.put(
+        "/api/liff/me", json={**body, "packs": ["teacher", "student"]}, headers=DEV
+    )
+    assert r.status_code == 200
+    assert (await client.get("/api/liff/me", headers=DEV)).json()["packs"] == ["teacher", "student"]
+    r = await client.put("/api/liff/me", json={**body, "packs": ["aliens"]}, headers=DEV)
+    assert r.status_code == 422

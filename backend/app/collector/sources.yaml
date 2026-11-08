@@ -68,12 +68,16 @@ sources:
     link_must_contain: [/th/article/]
 
   # ---------- Teachers / education (pack: teacher), added 2026-11-09 on request of a teacher ----------
-  # All three are WordPress sites with an RSS feed; robots.txt only blocks /wp-admin/.
+  # WordPress sites with an RSS feed; robots.txt only blocks /wp-admin/.
+  # moe.go.th and ksp.or.th refuse connections from outside Thailand (tested 2026-11-09 from
+  # Render Singapore and a GitHub runner), so they are off in production. They work when the
+  # collector runs from a Thai network; turn them on there.
   - id: moe
     name: กระทรวงศึกษาธิการ (ข่าว ศธ.)
     kind: rss
     url: https://www.moe.go.th/feed/
     homepage: https://www.moe.go.th/
+    enabled: false
     pack: teacher
     skip_categories: [หนังสืออิเล็กทรอนิกส์]
 
@@ -89,5 +93,21 @@ sources:
     kind: rss
     url: https://www.ksp.or.th/feed/
     homepage: https://www.ksp.or.th/
+    enabled: false
     pack: teacher
     skip_categories: [จัดซื้อจัดจ้าง]
+
+  # Teacher-news sites (not official; every card links to the original post). Reachable from abroad.
+  - id: kruachieve
+    name: ครูอาชีพดอทคอม
+    kind: rss
+    url: https://www.kruachieve.com/feed/
+    homepage: https://www.kruachieve.com/
+    pack: teacher
+
+  - id: krupatom
+    name: ครูประถมดอทคอม
+    kind: rss
+    url: https://www.krupatom.com/feed/
+    homepage: https://www.krupatom.com/
+    pack: teacher

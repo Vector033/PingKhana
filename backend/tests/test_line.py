@@ -137,3 +137,27 @@ async def test_reply_carries_queued_items(session) -> None:
     d = await session.scalar(select(Delivery))
     await session.refresh(d)
     assert (d.status, d.channel) == ("sent", "reply")
+
+
+async def test_bot_lists_follow_the_users_packs(session) -> None:
+    from app.models import Source
+
+    session.add(Source(id="moe", name="ศธ.", url="https://www.moe.go.th/", pack="teacher"))
+    await session.flush()
+    teacher = await f.announcement(
+        session, title="อบรมครูวิทยาการคำนวณ", deadline=f.TODAY + timedelta(days=5)
+    )
+    teacher.source_id = "moe"
+    await f.announcement(session, title="ทุนนักศึกษา", deadline=f.TODAY + timedelta(days=5))
+    await session.commit()
+    line = LineClient()
+    await handle_event(session, line, ev(text="ใกล้ปิดรับ", uid="U-student"), f.NOW)
+    text = all_text(line.outbox[-1].messages)
+    assert "ทุนนักศึกษา" in text and "อบรมครู" not in text
+
+    u = await session.scalar(select(User).where(User.line_user_id == "U-student"))
+    u.packs = ["teacher"]
+    await session.commit()
+    await handle_event(session, line, ev(text="ใกล้ปิดรับ", uid="U-student"), f.NOW)
+    text = all_text(line.outbox[-1].messages)
+    assert "อบรมครู" in text and "ทุนนักศึกษา" not in text

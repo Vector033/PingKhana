@@ -118,6 +118,10 @@ class User(Base):
         ARRAY(String(32)), default=lambda: [c.value for c in Category if c != Category.GENERAL]
     )
     notify_new: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Source packs the user follows in LINE (see sources.yaml `pack`).
+    packs: Mapped[list[str]] = mapped_column(
+        ARRAY(String(32)), default=lambda: ["student"], server_default="{student}"
+    )
     blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_seen_at: Mapped[datetime] = mapped_column(

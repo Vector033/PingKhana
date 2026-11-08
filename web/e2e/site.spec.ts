@@ -86,6 +86,16 @@ test("search words are highlighted in results", async ({ page }) => {
   await expect(list(page).locator("mark").first()).toHaveText("FastAPI");
 });
 
+test("a guest can follow sources without an account", async ({ page }) => {
+  await page.goto("/follow");
+  await page.getByRole("button", { name: "นักศึกษา มช." }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: /ที่ติดตาม \(\d+\)/ })).toHaveAttribute("aria-current", "page");
+  // "ทั้งหมด" shows every source again without forgetting the choice.
+  await page.getByRole("link", { name: "ทั้งหมด", exact: true }).click();
+  await expect(page).toHaveURL(/all=1/);
+});
+
 test("interactive controls are at least 44px tall", async ({ page }) => {
   await page.goto("/");
   const small = await page.evaluate(() =>

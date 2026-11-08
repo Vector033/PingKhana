@@ -32,7 +32,7 @@ def test_feed_images_and_bodies() -> None:
 
 
 def test_teacher_sources_are_in_the_teacher_pack() -> None:
-    for sid in ("moe", "obec", "ksp"):
+    for sid in ("moe", "obec", "ksp", "kruachieve", "krupatom"):
         cfg = SOURCES[sid]
         assert cfg.kind == "rss" and cfg.pack == "teacher" and cfg.homepage
     assert SOURCES["cs_cmu"].pack == "student"
@@ -41,3 +41,14 @@ def test_teacher_sources_are_in_the_teacher_pack() -> None:
         any(s in c for c in i.categories for s in SOURCES["ksp"].skip_categories)
         for i in items("ksp")
     )
+
+
+def test_geo_blocked_feeds_are_off_in_production() -> None:
+    assert not SOURCES["moe"].enabled and not SOURCES["ksp"].enabled
+    assert SOURCES["obec"].enabled
+
+
+def test_teacher_news_sites() -> None:
+    assert len(items("kruachieve")) == 10
+    krupatom = items("krupatom")
+    assert len(krupatom) == 50 and all(i.body for i in krupatom)

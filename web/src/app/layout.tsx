@@ -73,10 +73,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </Suspense>
               <div className="ml-auto flex items-center text-sm text-white/75">
                 <Link
-                  href="/?status=closing&sort=deadline"
+                  href="/follow"
                   className="inline-flex min-h-11 items-center px-2.5 hover:text-white"
                 >
-                  ใกล้ปิดรับ
+                  ติดตาม
                 </Link>
                 <Link
                   href="/sources"

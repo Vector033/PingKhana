@@ -22,7 +22,7 @@ from app.config import BANGKOK, get_settings
 from app.line import messages as msg
 from app.line.client import LineApiError, LineClient
 from app.models import Announcement, Delivery, Reminder, Source, User
-from app.queries import BOT_PACK, user_matches
+from app.queries import user_matches, user_packs
 
 log = logging.getLogger(__name__)
 
@@ -79,12 +79,13 @@ async def plan_digests(session: AsyncSession, now: datetime) -> int:
     users = (
         await session.scalars(select(User).where(User.notify_new, User.blocked.is_(False)))
     ).all()
-    bot_sources = set(
-        (await session.scalars(select(Source.id).where(Source.pack == BOT_PACK))).all()
-    )
+    pack_of = dict((await session.execute(select(Source.id, Source.pack))).all())
     created = 0
     for u in users:
-        ids = [a.id for a in fresh if a.source_id in bot_sources and user_matches(u, a, today)]
+        packs = set(user_packs(u))
+        ids = [
+            a.id for a in fresh if pack_of.get(a.source_id) in packs and user_matches(u, a, today)
+        ]
         if not ids:
             continue
         key = f"digest:{u.id}:{min(ids)}-{max(ids)}:{len(ids)}"

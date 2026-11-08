@@ -150,6 +150,8 @@ async def list_announcements(
     # open = things to apply for (every category except general news); news = general only.
     kind: str = Query("all", pattern="^(all|open|news)$"),
     pack: str | None = Query(None, pattern="^(student|teacher|general)$"),
+    # Comma-separated source ids: what a visitor follows on the website.
+    sources: str | None = Query(None, max_length=1000),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
 ) -> Page:
@@ -172,6 +174,9 @@ async def list_announcements(
         query = query.where(Announcement.category != Category.GENERAL.value)
     elif kind == "news":
         query = query.where(Announcement.category == Category.GENERAL.value)
+    if sources:
+        ids = [s.strip() for s in sources.split(",") if s.strip()][:100]
+        query = query.where(Announcement.source_id.in_(ids))
     if pack:
         query = query.where(
             Announcement.source_id.in_(select(Source.id).where(Source.pack == pack))
@@ -325,6 +330,7 @@ class Prefs(BaseModel):
     major: str | None = None
     categories: list[Category] = Field(default_factory=list)
     notify_new: bool = True
+    packs: list[str] = Field(default_factory=lambda: ["student"])
 
 
 class PrefsOut(Prefs):
@@ -350,6 +356,7 @@ async def get_me(line_user_id: LiffUser, session: Session) -> PrefsOut:
         major=user.major,
         categories=[Category(c) for c in user.categories],
         notify_new=user.notify_new,
+        packs=user.packs or ["student"],
         reminders=[to_out(a, names) for a in anns],
     )
 
@@ -358,10 +365,13 @@ async def get_me(line_user_id: LiffUser, session: Session) -> PrefsOut:
 async def put_me(prefs: Prefs, line_user_id: LiffUser, session: Session) -> Prefs:
     if prefs.major is not None and prefs.major not in MAJORS:
         raise HTTPException(422, "unknown major")
+    if not prefs.packs or any(p not in PACKS for p in prefs.packs):
+        raise HTTPException(422, "unknown pack")
     user = await get_or_create_user(session, line_user_id)
     user.year, user.major = prefs.year, prefs.major
     user.categories = [c.value for c in prefs.categories]
     user.notify_new = prefs.notify_new
+    user.packs = list(dict.fromkeys(prefs.packs))
     await session.commit()
     return prefs
 
