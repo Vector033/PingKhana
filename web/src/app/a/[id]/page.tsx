@@ -149,6 +149,24 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       <div className="mt-4">
         <TagLinks a={a} />
       </div>
+      {a.also_on && (
+        <p className="mt-4 text-sm text-muted">
+          ประกาศนี้ลงในเว็บอื่นด้วย:{" "}
+          {a.also_on.map((o, i) => (
+            <span key={o.url}>
+              {i > 0 && ", "}
+              <a
+                href={o.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-fg underline underline-offset-2 hover:text-brand"
+              >
+                {o.source_name}
+              </a>
+            </span>
+          ))}
+        </p>
+      )}
       <p className="mt-6 text-xs leading-relaxed text-muted">{DISCLAIMER}</p>
     </article>
   );

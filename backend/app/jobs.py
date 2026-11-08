@@ -9,6 +9,7 @@ from dataclasses import asdict
 from datetime import datetime
 
 from app import notify
+from app.collector.dedupe import merge_duplicates
 from app.collector.pipeline import collect_all
 from app.config import BANGKOK
 from app.db import SessionLocal
@@ -42,11 +43,13 @@ async def extract() -> dict:
         upgraded = await upgrade_rule_results(s, budget, today)
         posters = await read_posters(s, budget, today)
         tagged = await tag_recent(s, budget, today)
+        merged = await merge_duplicates(s, today)
     return {
         "new": total,
         "upgraded": upgraded,
         "deadlines_from_posters": posters,
         "tagged": tagged,
+        "merged_duplicates": merged,
         "gemini_calls": budget.used,
         "gemini_paused": budget.tripped,
     }

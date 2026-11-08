@@ -23,6 +23,8 @@ export type Announcement = {
   image_url?: string | null;
   /** Short topic tags from Gemini, e.g. "สอบครูผู้ช่วย". */
   tags?: string[] | null;
+  /** Other sites that posted the same announcement (detail only). */
+  also_on?: { source_name: string; url: string }[] | null;
 };
 
 export type Page = {

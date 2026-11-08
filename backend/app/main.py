@@ -105,6 +105,8 @@ class AnnouncementOut(BaseModel):
     first_seen_at: datetime
     image_url: str | None = None
     tags: list[str] | None = None
+    # Other sites that posted the same announcement (detail endpoint only).
+    also_on: list[dict] | None = None
 
 
 def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
@@ -230,9 +232,22 @@ async def list_announcements(
 @app.get("/api/announcements/{ann_id}", response_model=AnnouncementOut)
 async def get_announcement(ann_id: int, session: Session) -> AnnouncementOut:
     a = await session.get(Announcement, ann_id)
-    if a is None or a.duplicate_of_id is not None:
+    if a is not None and a.duplicate_of_id is not None:
+        # An old link to a repost shows the announcement it was merged into.
+        a = await session.get(Announcement, a.duplicate_of_id)
+    if a is None:
         raise HTTPException(404)
-    return to_out(a, await _source_names(session))
+    names = await _source_names(session)
+    out = to_out(a, names)
+    copies = (
+        await session.scalars(select(Announcement).where(Announcement.duplicate_of_id == a.id))
+    ).all()
+    out.also_on = [
+        {"source_name": names.get(c.source_id, c.source_id), "url": c.url}
+        for c in copies
+        if c.source_id != a.source_id
+    ] or None
+    return out
 
 
 PACKS = {"student": "นักศึกษา มช.", "teacher": "ครู / ศึกษาธิการ", "general": "ทั่วไป"}
