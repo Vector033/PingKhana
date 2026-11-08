@@ -20,6 +20,7 @@ import {
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
+import { TagLinks } from "@/components/TagLinks";
 import type { Announcement } from "@/lib/api";
 import { thDate } from "@/lib/format";
 
@@ -107,6 +108,46 @@ export function Feed({ items }: { items: Announcement[] }) {
         />
       ))}
     </div>
+  );
+}
+
+/** Front page: open posts with a tag the visitor follows, whatever the source. */
+export function TaggedStrip({
+  items,
+  tags,
+}: {
+  items: Announcement[];
+  tags: string[];
+}) {
+  const { open, today } = usePreview();
+  return (
+    <section aria-labelledby="tagged-title" className="mb-10">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-line pb-3">
+        <h2
+          id="tagged-title"
+          className="text-xl font-semibold tracking-tight sm:text-2xl"
+        >
+          ตามแท็กที่ติดตาม
+        </h2>
+        <p className="text-sm text-muted">
+          {tags
+            .slice(0, 4)
+            .map((t) => `#${t}`)
+            .join(" ")}
+          {tags.length > 4 ? ` และอีก ${tags.length - 4}` : ""} ·{" "}
+          <Link href="/follow" className="text-brand hover:underline">
+            แก้ไข
+          </Link>
+        </p>
+      </div>
+      <ul className="grid gap-3 md:grid-cols-2">
+        {items.map((a, i) => (
+          <li key={a.id}>
+            <CompactCard a={a} today={today} index={i} onOpen={open} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -267,6 +308,11 @@ function Preview({
             </p>
           )}
         </section>
+        {a.tags?.length ? (
+          <div className="mt-3">
+            <TagLinks a={a} />
+          </div>
+        ) : null}
 
         {!isNews && (
           <section aria-labelledby="pv-elig" className="mt-5">

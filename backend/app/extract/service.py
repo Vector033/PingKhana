@@ -10,11 +10,11 @@ upgrade them to Gemini while budget is left.
 import asyncio
 import logging
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import httpx
-from sqlalchemy import case, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import BANGKOK, get_settings
@@ -45,6 +45,8 @@ class GeminiBudget:
         self.used = 0
         self.tripped = False
         self._last = 0.0
+        # Tags already in use, offered to Gemini so it reuses them instead of inventing synonyms.
+        self.known_tags: list[str] = []
 
     @property
     def available(self) -> bool:
@@ -106,7 +108,9 @@ async def _gemini(
     try:
         # One answer may retry 503/429 across fallback models for minutes; cap it.
         return (
-            await asyncio.wait_for(ex.extract(a.title, a.body_text, ref, poster), CALL_TIMEOUT),
+            await asyncio.wait_for(
+                ex.extract(a.title, a.body_text, ref, poster, budget.known_tags), CALL_TIMEOUT
+            ),
             False,
         )
     except TimeoutError:
@@ -132,6 +136,8 @@ def apply(a: Announcement, r: Extracted) -> None:
     a.eligible_years = r.eligible_years
     a.eligible_majors = r.eligible_majors
     a.min_gpax = Decimal(str(r.min_gpax)) if r.min_gpax is not None else None
+    if r.tags is not None or r.method.startswith("gemini"):
+        a.tags = r.tags
     a.extraction_method = r.method
     a.needs_extraction = False
 
@@ -251,3 +257,51 @@ async def read_posters(session: AsyncSession, budget: GeminiBudget, today: date)
                 break
             await session.commit()
     return found
+
+
+async def popular_tags(session: AsyncSession, limit: int = 40, days: int = 120) -> list[str]:
+    """Most used tags on recent posts, most common first."""
+    since = datetime.now(tz=BANGKOK) - timedelta(days=days)
+    tag = func.unnest(Announcement.tags).label("tag")
+    sub = select(tag).where(Announcement.first_seen_at >= since).subquery()
+    rows = await session.execute(
+        select(sub.c.tag, func.count())
+        .group_by(sub.c.tag)
+        .order_by(func.count().desc())
+        .limit(limit)
+    )
+    return [t for t, _ in rows.all()]
+
+
+async def tag_recent(session: AsyncSession, budget: GeminiBudget, today: date) -> int:
+    """Give tags to recent Gemini results from before tags existed (leftover budget only)."""
+    if not budget.available:
+        return 0
+    rows = (
+        await session.scalars(
+            select(Announcement)
+            .where(
+                Announcement.extraction_method.like("gemini:%"),
+                Announcement.tags.is_(None),
+                Announcement.duplicate_of_id.is_(None),
+                Announcement.first_seen_at >= today - timedelta(days=45),
+            )
+            .order_by(Announcement.id.desc())
+            .limit(budget.left)
+        )
+    ).all()
+    tagged = 0
+    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+        ex = _extractor(client)
+        for a in rows:
+            r, failed = await _gemini(ex, budget, a, _ref(a))
+            if r:
+                apply(a, r)
+                a.tags = r.tags or []  # [] marks "tried", so it is not picked again
+                tagged += bool(r.tags)
+            elif failed:
+                a.tags = []
+            elif not budget.available:
+                break
+            await session.commit()
+    return tagged

@@ -58,6 +58,7 @@ class OpenAICompatExtractor:
             majors=", ".join(k for k in MAJORS if k != "other"),
             title=title,
             body=body[:6000],
+            known_tags="(ยังไม่มี)",
         )
         payload: dict = {
             "model": self.model,

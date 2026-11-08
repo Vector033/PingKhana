@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { CategoryChip, DeadlineBadge } from "@/components/AnnouncementCard";
 import { RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
+import { TagLinks } from "@/components/TagLinks";
 import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
 import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
@@ -144,6 +145,9 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       </div>
       <div className="mt-3">
         <ShareRow a={a} today={today} />
+      </div>
+      <div className="mt-4">
+        <TagLinks a={a} />
       </div>
       <p className="mt-6 text-xs leading-relaxed text-muted">{DISCLAIMER}</p>
     </article>

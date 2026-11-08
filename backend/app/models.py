@@ -105,6 +105,7 @@ class Announcement(Base):
     eligible_years: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
     eligible_majors: Mapped[list[str] | None] = mapped_column(ARRAY(String(64)))
     min_gpax: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(48)))
     extraction_method: Mapped[str | None] = mapped_column(String(64))
     image_url: Mapped[str | None] = mapped_column(Text)
     needs_extraction: Mapped[bool] = mapped_column(Boolean, default=True, index=True)

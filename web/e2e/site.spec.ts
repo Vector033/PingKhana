@@ -125,6 +125,20 @@ test("admin page rejects a wrong token", async ({ page }) => {
   await expect(page.locator("main").getByRole("alert")).toHaveText("รหัสไม่ถูกต้อง");
 });
 
+test("tags: popular chips filter the list, followed tags get their own row", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "#ทุนเรียนดี" }).first().click();
+  await expect(page).toHaveURL(/tag=/);
+  await expect(page.getByRole("heading", { level: 2, name: "#ทุนเรียนดี" })).toBeVisible();
+  await expect(list(page).getByRole("link", { name: /Software Engineer Intern/ })).toHaveCount(0);
+
+  await page.goto("/follow");
+  await page.getByText("#อบรมฟรี").click();
+  await page.getByRole("button", { name: "บันทึก" }).click();
+  const row = page.getByRole("region", { name: "ตามแท็กที่ติดตาม" });
+  await expect(row.getByRole("link", { name: /Workshop: เขียน FastAPI/ })).toBeVisible();
+});
+
 test("interactive controls are at least 44px tall", async ({ page }) => {
   await page.goto("/");
   const small = await page.evaluate(() =>

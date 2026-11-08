@@ -193,6 +193,11 @@ export function AnnouncementCard({
             <span>ชั้นปี {a.eligible_years.join(", ")}</span>
           )}
           {a.min_gpax != null && <span>GPAX ≥ {a.min_gpax.toFixed(2)}</span>}
+          {a.tags?.slice(0, 2).map((t) => (
+            <span key={t} className="text-muted">
+              #{t}
+            </span>
+          ))}
         </div>
       </div>
     </article>

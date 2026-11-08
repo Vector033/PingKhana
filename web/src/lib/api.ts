@@ -21,6 +21,8 @@ export type Announcement = {
   first_seen_at: string;
   /** Thumbnail from the source's list page, if it has one. */
   image_url?: string | null;
+  /** Short topic tags from Gemini, e.g. "สอบครูผู้ช่วย". */
+  tags?: string[] | null;
 };
 
 export type Page = {
@@ -102,4 +104,10 @@ export async function getStats(): Promise<Stats> {
   "use cache";
   cacheLife("minutes");
   return get<Stats>("/api/stats");
+}
+
+export async function getTags(): Promise<{ tag: string; count: number }[]> {
+  "use cache";
+  cacheLife("minutes");
+  return get<{ tag: string; count: number }[]>("/api/tags?limit=40");
 }

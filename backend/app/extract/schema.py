@@ -13,6 +13,7 @@ class Extracted(BaseModel):
     eligible_years: list[int] | None = Field(None, description="ชั้นปีที่สมัครได้ ว่างถ้าไม่จำกัด")
     eligible_majors: list[str] | None = Field(None, description="รหัสสาขาจากรายการที่ให้ ว่างถ้าไม่จำกัด")
     min_gpax: float | None = None
+    tags: list[str] | None = Field(None, description="แท็กสั้นๆ 1-4 อัน")
     method: str = "rules"
 
 
@@ -27,6 +28,7 @@ GEMINI_RESPONSE_SCHEMA = {
         "eligible_years": {"type": "ARRAY", "items": {"type": "INTEGER"}, "nullable": True},
         "eligible_majors": {"type": "ARRAY", "items": {"type": "STRING"}, "nullable": True},
         "min_gpax": {"type": "NUMBER", "nullable": True},
+        "tags": {"type": "ARRAY", "items": {"type": "STRING"}, "nullable": True},
     },
     "required": ["category", "summary_th"],
 }

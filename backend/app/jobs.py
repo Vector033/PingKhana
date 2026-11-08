@@ -15,7 +15,9 @@ from app.db import SessionLocal
 from app.extract.service import (
     extract_pending,
     new_budget,
+    popular_tags,
     read_posters,
+    tag_recent,
     upgrade_rule_results,
 )
 from app.line.client import get_line_client
@@ -33,15 +35,18 @@ async def extract() -> dict:
     budget = new_budget()
     total = 0
     async with SessionLocal() as s:
+        budget.known_tags = await popular_tags(s)
         while n := await extract_pending(s, budget):
             total += n
         today = datetime.now(tz=BANGKOK).date()
         upgraded = await upgrade_rule_results(s, budget, today)
         posters = await read_posters(s, budget, today)
+        tagged = await tag_recent(s, budget, today)
     return {
         "new": total,
         "upgraded": upgraded,
         "deadlines_from_posters": posters,
+        "tagged": tagged,
         "gemini_calls": budget.used,
         "gemini_paused": budget.tripped,
     }

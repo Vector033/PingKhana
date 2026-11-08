@@ -5,9 +5,10 @@ import {
   Feed,
   NewsStrip,
   PreviewProvider,
+  TaggedStrip,
 } from "@/components/Feed";
-import { getAnnouncements, getMeta, getStats } from "@/lib/api";
-import { getFollowed } from "@/lib/follow";
+import { getAnnouncements, getMeta, getStats, getTags } from "@/lib/api";
+import { getFollowed, getFollowedTags } from "@/lib/follow";
 import { minutesSince, todayBangkok } from "@/lib/format";
 
 export type Search = Record<string, string | string[] | undefined>;
@@ -21,6 +22,7 @@ const FILTER_KEYS = [
   "source",
   "sort",
   "pack",
+  "tag",
   "all",
   "page",
 ] as const;
@@ -126,15 +128,18 @@ export async function Listing({
   // The front page (no filter, no search) leads with the deadlines closing soonest.
   const front = Object.keys(current).length === 0;
   // Followed sources (cookie) narrow every list unless the visitor picked a pack or asked for all.
-  const followed = await getFollowed();
+  const [followed, followedTags] = await Promise.all([
+    getFollowed(),
+    getFollowedTags(),
+  ]);
   const follow =
     followed.length > 0 && !current.pack && !current.source && !current.all
       ? followed.join(",")
       : null;
   const withFollow = (qs: string) => (follow ? `${qs}&sources=${follow}` : qs);
-  let data, meta, closing, latestNews;
+  let data, meta, closing, latestNews, popular, tagged;
   try {
-    [data, meta, closing, latestNews] = await Promise.all([
+    [data, meta, closing, latestNews, popular, tagged] = await Promise.all([
       getAnnouncements(
         new URLSearchParams({
           page_size: news ? "21" : "20",
@@ -152,6 +157,12 @@ export async function Listing({
         : null,
       front && !news
         ? getAnnouncements(withFollow("kind=news&page_size=4"))
+        : null,
+      getTags().catch(() => []),
+      front && followedTags.length
+        ? getAnnouncements(
+            `status=open&page_size=4&tags=${encodeURIComponent(followedTags.join(","))}`,
+          )
         : null,
     ]);
   } catch {
@@ -198,14 +209,16 @@ export async function Listing({
     </>
   );
 
-  const heading = current.q
-    ? "ผลการค้นหา"
-    : news
-      ? "ข่าวล่าสุด"
-      : current.category
-        ? (meta.categories.find((c) => c.id === current.category)?.th ??
-          "ประกาศ")
-        : "เปิดรับสมัครล่าสุด";
+  const heading = current.tag
+    ? `#${current.tag}`
+    : current.q
+      ? "ผลการค้นหา"
+      : news
+        ? "ข่าวล่าสุด"
+        : current.category
+          ? (meta.categories.find((c) => c.id === current.category)?.th ??
+            "ประกาศ")
+          : "เปิดรับสมัครล่าสุด";
 
   const packFilter = ((meta.packs?.length ?? 0) > 1 || followed.length > 0) && (
     <FilterGroup title="แหล่ง">
@@ -240,6 +253,9 @@ export async function Listing({
       {closing && closing.items.length > 0 && (
         <ClosingHero items={closing.items} />
       )}
+      {tagged && tagged.items.length > 0 && (
+        <TaggedStrip items={tagged.items} tags={followedTags} />
+      )}
       <section aria-label="รายการประกาศ" aria-live="polite" className="min-w-0">
         <div className="mb-4 border-b border-line pb-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -253,6 +269,24 @@ export async function Listing({
           {/* Category and search live in the header; these narrow the list further. */}
           <div className="mt-3 flex flex-col gap-2 text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-6">
             {packFilter}
+            {popular.length > 0 && (
+              <FilterGroup title="แท็ก">
+                {current.tag && (
+                  <FilterLink href={href({ tag: null })} active={false}>
+                    ล้างแท็ก ×
+                  </FilterLink>
+                )}
+                {popular.slice(0, 10).map((t) => (
+                  <FilterLink
+                    key={t.tag}
+                    href={href({ tag: t.tag })}
+                    active={current.tag === t.tag}
+                  >
+                    #{t.tag}
+                  </FilterLink>
+                ))}
+              </FilterGroup>
+            )}
             {!news && (
               <FilterGroup title="สถานะ">
                 {[

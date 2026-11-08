@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMeta } from "@/lib/api";
-import { FOLLOW_COOKIE } from "@/lib/follow";
+import { FOLLOW_COOKIE, TAGS_COOKIE } from "@/lib/follow";
 
 const YEAR = 60 * 60 * 24 * 365;
 
@@ -22,6 +22,20 @@ export async function saveFollow(form: FormData) {
   }
   ids = ids.filter((id) => known.has(id));
   const jar = await cookies();
+  const tags = form
+    .getAll("tag")
+    .filter((v): v is string => typeof v === "string" && v.length <= 32)
+    .slice(0, 30);
+  if (tags.length && !form.get("clear")) {
+    jar.set(TAGS_COOKIE, encodeURIComponent(tags.join(",")), {
+      maxAge: YEAR,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+  } else if (!preset) {
+    jar.delete(TAGS_COOKIE);
+  }
   if (ids.length === 0 || form.get("clear")) {
     jar.delete(FOLLOW_COOKIE);
   } else {

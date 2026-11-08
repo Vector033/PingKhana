@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { getMeta } from "@/lib/api";
-import { getFollowed } from "@/lib/follow";
+import { getMeta, getTags } from "@/lib/api";
+import { getFollowed, getFollowedTags } from "@/lib/follow";
 import { saveFollow } from "./actions";
 
 export const metadata: Metadata = {
@@ -44,7 +44,13 @@ export default function FollowPage() {
 
 async function FollowForm() {
   await connection();
-  const [meta, followed] = await Promise.all([getMeta(), getFollowed()]);
+  const [meta, followed, tags, followedTags] = await Promise.all([
+    getMeta(),
+    getFollowed(),
+    getTags().catch(() => []),
+    getFollowedTags(),
+  ]);
+  const myTags = new Set(followedTags);
   const packs = meta.packs ?? [];
   const chosen = new Set(followed);
   const all = followed.length === 0;
@@ -92,6 +98,35 @@ async function FollowForm() {
           </div>
         </fieldset>
       ))}
+
+      {tags.length > 0 && (
+        <fieldset className="rounded-2xl border border-line bg-surface p-4">
+          <legend className="px-1 font-medium">แท็กที่สนใจ</legend>
+          <p className="text-sm text-muted">
+            ประกาศที่มีแท็กเหล่านี้จะขึ้นเป็นแถวแยกบนหน้าแรก ไม่ว่ามาจากเว็บไหน
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tags.slice(0, 24).map((t) => (
+              <label
+                key={t.tag}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-3 text-sm has-[:checked]:border-brand has-[:checked]:bg-brand-soft has-[:checked]:text-brand has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand"
+              >
+                <input
+                  type="checkbox"
+                  name="tag"
+                  value={t.tag}
+                  defaultChecked={myTags.has(t.tag)}
+                  className="sr-only"
+                />
+                #{t.tag}
+                <span className="text-xs text-muted tabular-nums">
+                  {t.count}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="flex flex-wrap gap-3">
         <button className="inline-flex min-h-12 items-center rounded-xl bg-brand px-6 font-semibold text-brand-fg active:scale-[0.98]">

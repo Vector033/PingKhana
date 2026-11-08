@@ -15,7 +15,9 @@ from tests import factories as f
 class SlowGemini:
     calls = 0
 
-    async def extract(self, title: str, body: str, ref: date, poster=None) -> Extracted:
+    async def extract(
+        self, title: str, body: str, ref: date, poster=None, known_tags=None
+    ) -> Extracted:
         self.calls += 1
         await asyncio.sleep(10)
         raise AssertionError("should have timed out")
@@ -28,7 +30,9 @@ class FakeGemini:
         self.calls = 0
         self.errors = list(errors or [])
 
-    async def extract(self, title: str, body: str, ref: date, poster=None) -> Extracted:
+    async def extract(
+        self, title: str, body: str, ref: date, poster=None, known_tags=None
+    ) -> Extracted:
         self.calls += 1
         if self.errors:
             raise self.errors.pop(0)
@@ -36,6 +40,7 @@ class FakeGemini:
             category=Category.SCHOLARSHIP,
             summary_th="จาก Gemini",
             deadline=f.TODAY + timedelta(days=9),
+            tags=["ทุนต่างประเทศ"],
             method="gemini:test",
         )
 
@@ -166,3 +171,29 @@ async def test_poster_pass_rereads_gemini_results_without_deadline(
     assert g.calls == 1 and seen == ["https://example.com/p.png"]
     await session.refresh(no_date)
     assert no_date.deadline == f.TODAY + timedelta(days=9)
+
+
+async def test_tag_backfill_tags_recent_gemini_results_once(session, fake) -> None:
+    g = fake(FakeGemini())
+    old = await f.announcement(session, title="ไม่มีแท็ก")
+    old.extraction_method = "gemini:x"
+    ruled = await f.announcement(session, title="ใช้กฎ")
+    ruled.extraction_method = "rules"
+    await session.commit()
+    assert await service.tag_recent(session, GeminiBudget(5), f.TODAY) == 1
+    assert g.calls == 1
+    await session.refresh(old)
+    assert old.tags == ["ทุนต่างประเทศ"]
+    assert await service.tag_recent(session, GeminiBudget(5), f.TODAY) == 0
+
+
+def test_clean_tags() -> None:
+    from app.extract.gemini import clean_tags
+
+    assert clean_tags(["#ทุน ", "ทุน", "Python", "x", "a" * 40, "สอบครูผู้ช่วย", "อบรม", "อื่น"]) == [
+        "ทุน",
+        "python",
+        "สอบครูผู้ช่วย",
+        "อบรม",
+    ]
+    assert clean_tags([]) is None

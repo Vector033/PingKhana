@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import logging
+import re
 from datetime import date
 
 import httpx
@@ -29,6 +30,9 @@ PROMPT = """คุณช่วยสรุปประกาศจากเว�
 - eligible_years: ชั้นปีที่สมัครได้ เช่น [3,4] หรือ null ถ้าไม่จำกัด
 - eligible_majors: รหัสสาขาจากรายการนี้เท่านั้น {majors} หรือ null ถ้าไม่จำกัดสาขา
 - min_gpax: GPAX ขั้นต่ำ หรือ null
+- tags: แท็กภาษาไทยสั้นๆ 1-4 อัน บอกเรื่องหลักที่คนจะค้นหา เช่น ทุนต่างประเทศ, สอบครูผู้ช่วย, อบรมออนไลน์ฟรี
+  ใช้แท็กจากรายการนี้ก่อนถ้าตรง: {known_tags}
+  สร้างแท็กใหม่เฉพาะเมื่อไม่มีอันไหนตรง ไม่ใส่ชื่อหน่วยงาน วันที่ หรือ #
 
 หัวข้อ: {title}
 เนื้อหา:
@@ -59,7 +63,12 @@ class GeminiExtractor:
         self.client = client or httpx.AsyncClient(timeout=120)
 
     async def extract(
-        self, title: str, body: str, ref: date, poster: tuple[bytes, str] | None = None
+        self,
+        title: str,
+        body: str,
+        ref: date,
+        poster: tuple[bytes, str] | None = None,
+        known_tags: list[str] | None = None,
     ) -> Extracted:
         """`poster` is (image bytes, mime type): many posts put the closing date only on it."""
         prompt = PROMPT.format(
@@ -68,6 +77,7 @@ class GeminiExtractor:
             majors=", ".join(k for k in MAJORS if k != "other"),
             title=title,
             body=body[:6000],
+            known_tags=", ".join(known_tags or []) or "(ยังไม่มี)",
         )
         parts: list[dict] = [{"text": prompt}]
         if poster:
@@ -155,4 +165,16 @@ def _sanity(r: Extracted, ref: date) -> Extracted:
         r.eligible_years = sorted({y for y in r.eligible_years if 1 <= y <= 6}) or None
     if r.min_gpax is not None and not 0 < r.min_gpax <= 4:
         r.min_gpax = None
+    r.tags = clean_tags(r.tags)
     return r
+
+
+def clean_tags(tags: list[str] | None) -> list[str] | None:
+    """Short, deduplicated tags: no '#', no spaces at the ends, Latin lower-cased, at most 4."""
+    out: list[str] = []
+    for t in tags or []:
+        t = re.sub(r"\s+", " ", t.replace("#", "")).strip(" .,-")
+        t = t.lower() if t.isascii() else t
+        if 2 <= len(t) <= 32 and t not in out:
+            out.append(t)
+    return out[:4] or None

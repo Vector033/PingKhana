@@ -7,7 +7,8 @@ from typing import Annotated
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import any_, delete, func, literal, or_, select
+from sqlalchemy import String, any_, delete, func, literal, or_, select
+from sqlalchemy.dialects.postgresql import array as pg_array
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import jobs
@@ -103,6 +104,7 @@ class AnnouncementOut(BaseModel):
     published_on: date | None
     first_seen_at: datetime
     image_url: str | None = None
+    tags: list[str] | None = None
 
 
 def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
@@ -123,6 +125,7 @@ def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
         published_on=a.published_on,
         first_seen_at=a.first_seen_at,
         image_url=a.image_url,
+        tags=a.tags or None,
     )
 
 
@@ -152,6 +155,9 @@ async def list_announcements(
     pack: str | None = Query(None, pattern="^(student|teacher|general)$"),
     # Comma-separated source ids: what a visitor follows on the website.
     sources: str | None = Query(None, max_length=1000),
+    tag: str | None = Query(None, max_length=48),
+    # Comma-separated: posts with any of these tags (the tags a visitor follows).
+    tags: str | None = Query(None, max_length=1000),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
 ) -> Page:
@@ -174,6 +180,11 @@ async def list_announcements(
         query = query.where(Announcement.category != Category.GENERAL.value)
     elif kind == "news":
         query = query.where(Announcement.category == Category.GENERAL.value)
+    if tag:
+        query = query.where(literal(tag) == any_(Announcement.tags))
+    if tags:
+        wanted = [t.strip() for t in tags.split(",") if t.strip()][:30]
+        query = query.where(Announcement.tags.op("&&")(pg_array(wanted, type_=String)))
     if sources:
         ids = [s.strip() for s in sources.split(",") if s.strip()][:100]
         query = query.where(Announcement.source_id.in_(ids))
@@ -624,3 +635,18 @@ async def admin_overview(session: Session) -> dict:
         "push_monthly_limit": get_settings().push_monthly_limit,
         "last_run": _last_run,
     }
+
+
+@app.get("/api/tags")
+async def tags(session: Session, limit: int = Query(30, ge=1, le=100)) -> list[dict]:
+    """Popular tags on posts from the last four months, for chips and the follow page."""
+    since = now_bkk() - timedelta(days=120)
+    tag = func.unnest(Announcement.tags).label("tag")
+    sub = visible().with_only_columns(tag).where(Announcement.first_seen_at >= since).subquery()
+    rows = await session.execute(
+        select(sub.c.tag, func.count())
+        .group_by(sub.c.tag)
+        .order_by(func.count().desc(), sub.c.tag)
+        .limit(limit)
+    )
+    return [{"tag": t, "count": n} for t, n in rows.all()]

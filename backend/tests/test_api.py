@@ -187,3 +187,19 @@ async def test_submitted_source_waits_for_admin_then_gets_collected(
     ]
     pending = (await client.get("/api/admin/overview", headers=auth)).json()["pending_sources"]
     assert pending == 0
+
+
+async def test_tags_endpoint_and_filter(session, client) -> None:
+    a = await f.announcement(session, title="ทุน ญี่ปุ่น")
+    a.tags = ["ทุนต่างประเทศ", "ญี่ปุ่น"]
+    b = await f.announcement(session, title="ทุน เกาหลี")
+    b.tags = ["ทุนต่างประเทศ"]
+    await f.announcement(session, title="ไม่มีแท็ก")
+    await session.commit()
+    top = (await client.get("/api/tags")).json()
+    assert top[0] == {"tag": "ทุนต่างประเทศ", "count": 2}
+    r = (await client.get("/api/announcements", params={"tag": "ญี่ปุ่น"})).json()
+    assert [x["title"] for x in r["items"]] == ["ทุน ญี่ปุ่น"]
+    assert r["items"][0]["tags"] == ["ทุนต่างประเทศ", "ญี่ปุ่น"]
+    r = (await client.get("/api/announcements", params={"tags": "ญี่ปุ่น,ไม่มีจริง"})).json()
+    assert r["total"] == 1

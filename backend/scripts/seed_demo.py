@@ -30,6 +30,15 @@ DEMO = [
 ]
 
 
+# Tags as Gemini would give them, so the site's tag features have something to show.
+DEMO_TAGS = {
+    1: ["ทุนเรียนดี", "วิทยาการคอมพิวเตอร์"],
+    2: ["ฝึกงานสายไอที"],
+    3: ["งานพาร์ทไทม์"],
+    4: ["อบรมฟรี"],
+}
+
+
 async def main() -> None:
     now = datetime.now(tz=BANGKOK)
     today = now.date()
@@ -61,6 +70,7 @@ async def main() -> None:
                     needs_extraction=False,
                     extraction_method="demo",
                     matched_at=now,
+                    tags=DEMO_TAGS.get(i),
                 )
             )
         await s.commit()
