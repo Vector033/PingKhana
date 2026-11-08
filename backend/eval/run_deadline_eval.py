@@ -54,7 +54,9 @@ def load_cases(case_set: str = "dev") -> list[dict]:
 FREELLMAPI_URL = "http://127.0.0.1:31415/v1"
 
 
-async def run(method: str, case_set: str = "dev", llm: str | None = None) -> dict:
+async def run(
+    method: str, case_set: str = "dev", llm: str | None = None, save: bool = True
+) -> dict:
     cases = load_cases(case_set)
     extractor = None
     if llm:
@@ -123,6 +125,8 @@ async def run(method: str, case_set: str = "dev", llm: str | None = None) -> dic
         },
         "failures": [r for r in rows if not r["ok"]],
     }
+    if not save:
+        return summary
     out = ROOT / "results"
     out.mkdir(exist_ok=True)
     (out / f"{method}-{case_set}.json").write_text(
