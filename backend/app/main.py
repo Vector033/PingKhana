@@ -19,7 +19,7 @@ from app.db import SessionLocal, get_session
 from app.line.client import LineApiError, get_line_client, verify_liff_id_token, verify_signature
 from app.line.handlers import get_or_create_user, handle_event
 from app.models import CATEGORY_TH, Announcement, Category, Delivery, Reminder, Source, User
-from app.queries import still_open, visible
+from app.queries import recent_if_undated, still_open, visible
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("pingkhana")
@@ -199,7 +199,7 @@ async def list_announcements(
             Announcement.source_id.in_(select(Source.id).where(Source.pack == pack))
         )
     if status == "open":
-        query = query.where(still_open(today))
+        query = query.where(still_open(today), recent_if_undated(today))
     elif status == "closing":
         query = query.where(
             Announcement.deadline >= today, Announcement.deadline <= today + timedelta(days=14)
