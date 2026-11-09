@@ -49,6 +49,30 @@ def for_user(user: User | None):
     return and_(true(), *conds)
 
 
+def recent_if_undated(today: date):
+    """A post without a deadline counts as current only if it is recent.
+
+    Sites keep old posts on their list pages, and the collector sees them for the first time
+    on its first run, so first_seen alone is not enough: the publish date must be recent, or,
+    when the site shows none, the title must not name only past Buddhist years ("... 2567").
+    """
+    be = today.year + 543
+    past_years = "|".join(str(y) for y in range(be - 15, be))
+    current = f"{be}|{be + 1}"
+    return or_(
+        Announcement.deadline.is_not(None),
+        Announcement.published_on >= today - timedelta(days=120),
+        and_(
+            Announcement.published_on.is_(None),
+            Announcement.first_seen_at >= today - timedelta(days=45),
+            or_(
+                ~Announcement.title.op("~")(f"({past_years})"),
+                Announcement.title.op("~")(f"({current})"),
+            ),
+        ),
+    )
+
+
 def open_in_category(category: Category, today: date, user: User | None, limit: int = 10):
     """Open announcements with a deadline first (soonest first), then recent ones without one."""
     return (
@@ -57,11 +81,7 @@ def open_in_category(category: Category, today: date, user: User | None, limit: 
             Announcement.category == category.value,
             still_open(today),
             for_user(user),
-            # Without a deadline, only recent posts count as "open".
-            or_(
-                Announcement.deadline.is_not(None),
-                Announcement.first_seen_at >= today - timedelta(days=45),
-            ),
+            recent_if_undated(today),
         )
         .order_by(Announcement.deadline.asc().nulls_last(), Announcement.id.desc())
         .limit(limit)
@@ -71,7 +91,12 @@ def open_in_category(category: Category, today: date, user: User | None, limit: 
 def latest_in_category(category: Category, today: date, user: User | None, limit: int = 10):
     return (
         visible()
-        .where(Announcement.category == category.value, still_open(today), for_user(user))
+        .where(
+            Announcement.category == category.value,
+            still_open(today),
+            for_user(user),
+            recent_if_undated(today),
+        )
         .order_by(Announcement.published_on.desc().nulls_last(), Announcement.id.desc())
         .limit(limit)
     )

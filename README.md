@@ -23,6 +23,20 @@
 |---|---|
 | ![Carousel](docs/screenshots/line-carousel.png) | ![Chat](docs/screenshots/line-chat.png) |
 
+## LINE bot walkthrough
+
+Real chat with the deployed bot (`@524osura`), in order. Script: [docs/line-demo.md](docs/line-demo.md).
+
+| | |
+|---|---|
+| **1. Add the bot**: welcome, settings link, commands, quick replies<br>![Welcome](docs/screenshots/line-demo/01-welcome.png) | **2. `ทุนที่เปิดอยู่`**: open scholarships as a carousel, each with the source link<br>![Scholarships](docs/screenshots/line-demo/02-scholarships.png) |
+| **3. `ใกล้ปิดรับ`**: closing within 14 days, soonest first, red when 3 days or less<br>![Closing soon](docs/screenshots/line-demo/03-closing-soon.png) | **4. Press เตือนฉัน**: reminders 3 days and 1 day before<br>![Remind](docs/screenshots/line-demo/04-remind-button.png) |
+| **5. From the website**: the green button opens LINE with `เตือน 42` typed in<br>![Remind from web](docs/screenshots/line-demo/05-remind-from-web.png) | **6. `เตือนของฉัน`**: my reminders, with ยกเลิกเตือน<br>![My reminders](docs/screenshots/line-demo/06-my-reminders.png) |
+| **7. `กิจกรรมล่าสุด`**: latest by category<br>![Categories](docs/screenshots/line-demo/07-categories.png) | **8. `ตั้งค่า`** (LIFF): packs (นักศึกษา / ครู), categories, year, major<br>![Settings](docs/screenshots/line-demo/08-settings.png) |
+| **9. Link the website account**: a code from /account, typed as `ผูก 263649`<br>![Link account](docs/screenshots/line-demo/11-link-account.png) | **10. Anything else → help**, and **`ยกเลิก` deletes everything**<br>![Help](docs/screenshots/line-demo/12-help.png)<br>![Delete](docs/screenshots/line-demo/13-delete-my-data.png) |
+
+Every answer above is a reply message (free). Only reminders and one daily digest use the monthly push quota.
+
 ## How it grew
 
 PingKhana started as a bot for one faculty's announcements. Then a teacher asked for the

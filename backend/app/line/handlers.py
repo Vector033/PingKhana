@@ -18,12 +18,14 @@ from app.queries import closing_soon, latest_in_category, open_in_category
 log = logging.getLogger(__name__)
 
 HELP = (
-    "PingKhana รวมประกาศทุน สหกิจ งาน และกิจกรรมจากเว็บคณะ/มหาวิทยาลัย\n\n"
+    "PingKhana รวมประกาศทุน สหกิจ งาน กิจกรรม และข่าวการศึกษา"
+    " จากเว็บมหาวิทยาลัยและหน่วยงานการศึกษา สำหรับนักศึกษาและครู\n\n"
     "พิมพ์คำสั่ง:\n"
     "• ทุนที่เปิดอยู่\n• สหกิจล่าสุด\n• งานล่าสุด\n• กิจกรรมล่าสุด\n• ใกล้ปิดรับ\n"
     "• เตือนของฉัน — ประกาศที่กดให้เตือน\n"
-    "• ตั้งค่า — เลือกประเภท ชั้นปี สาขา\n"
+    "• ตั้งค่า — เลือกกลุ่มข่าว (นักศึกษา / ครู) ประเภท ชั้นปี สาขา\n"
     "• ยกเลิก — ลบข้อมูลของคุณทั้งหมด\n\n"
+    "ดูทุกประกาศ ค้นหา และเลือกแหล่งข่าวได้ที่ https://pingkhana.vercel.app\n\n"
     f"{msg.DISCLAIMER}"
 )
 
@@ -217,8 +219,9 @@ async def handle_event(session: AsyncSession, line: LineClient, event: dict, now
     if etype == "follow":
         answer = [
             msg.text(
-                "สวัสดี! PingKhana จะช่วยแจ้งประกาศทุน สหกิจ งาน และเตือนกำหนดส่งให้\n"
-                f"เริ่มจากตั้งค่าประเภทที่สนใจ ชั้นปี และสาขา: {settings_link()}\n\n{HELP}"
+                "สวัสดี! PingKhana จะช่วยแจ้งประกาศทุน สหกิจ งาน กิจกรรม และข่าวการศึกษา"
+                " แล้วเตือนก่อนปิดรับให้\n"
+                f"เริ่มจากตั้งค่ากลุ่มข่าว (นักศึกษา / ครู) และประเภทที่สนใจ: {settings_link()}\n\n{HELP}"
             )
         ]
     elif etype == "message" and event.get("message", {}).get("type") == "text":

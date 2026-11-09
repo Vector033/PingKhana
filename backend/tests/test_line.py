@@ -161,3 +161,16 @@ async def test_bot_lists_follow_the_users_packs(session) -> None:
     await handle_event(session, line, ev(text="ใกล้ปิดรับ", uid="U-student"), f.NOW)
     text = all_text(line.outbox[-1].messages)
     assert "อบรมครู" in text and "ทุนนักศึกษา" not in text
+
+
+async def test_old_undated_posts_drop_out_of_latest_lists(session) -> None:
+    for title in ("สัปดาห์วิทยาศาสตร์แห่งชาติ ประจำปี 2568", "ค่ายปิดเทอม ปี 2569", "อบรม Python"):
+        await f.announcement(session, title=title, category=Category.ACTIVITY)
+    old = await f.announcement(session, title="งานเก่ามีวันที่", category=Category.ACTIVITY)
+    old.published_on = f.TODAY - timedelta(days=400)
+    await session.commit()
+    line = LineClient()
+    await handle_event(session, line, ev(text="กิจกรรมล่าสุด"), f.NOW)
+    text = all_text(line.outbox[-1].messages)
+    assert "ค่ายปิดเทอม ปี 2569" in text and "อบรม Python" in text
+    assert "2568" not in text and "งานเก่ามีวันที่" not in text
