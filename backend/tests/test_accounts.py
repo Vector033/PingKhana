@@ -22,6 +22,7 @@ async def client(monkeypatch):
         return {"sub": "g-123", "email": "teacher@example.com", "name": "ครูสมใจ"}
 
     monkeypatch.setattr(accounts, "verify_google", fake_verify)
+    monkeypatch.setattr(accounts, "verify_google_access_token", fake_verify)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
         yield c
 
@@ -71,3 +72,9 @@ async def test_sign_in_off_without_settings(monkeypatch) -> None:
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
         r = await c.post("/api/auth/google", json={"credential": "x" * 40})
     assert r.status_code == 503
+
+
+async def test_sign_in_with_access_token(client) -> None:
+    r = await client.post("/api/auth/google", json={"access_token": "y" * 40})
+    assert r.status_code == 200 and r.json()["account"]["email"] == "teacher@example.com"
+    assert (await client.post("/api/auth/google", json={})).status_code == 422

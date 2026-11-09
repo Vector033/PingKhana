@@ -86,6 +86,29 @@ async def verify_google(credential: str, client_id: str) -> dict:
     return info
 
 
+async def verify_google_access_token(token: str, client_id: str) -> dict:
+    """Check the token was issued to our client (tokeninfo), then read the profile."""
+    async with httpx.AsyncClient(timeout=15) as http:
+        r = await http.get(
+            "https://oauth2.googleapis.com/tokeninfo", params={"access_token": token}
+        )
+        if r.status_code != 200:
+            raise HTTPException(401, "Google sign-in failed")
+        info = r.json()
+        if client_id not in (info.get("aud"), info.get("azp")) or not info.get("sub"):
+            raise HTTPException(401, "token is not for this site")
+        u = await http.get(
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    profile = u.json() if u.status_code == 200 else {}
+    return {
+        "sub": info["sub"],
+        "email": profile.get("email") or info.get("email", ""),
+        "name": profile.get("name"),
+    }
+
+
 async def current_account(
     session: Session, authorization: Annotated[str | None, Header()] = None
 ) -> Account:
@@ -120,13 +143,20 @@ def _out(a: Account) -> AccountOut:
 
 
 class GoogleIn(BaseModel):
-    credential: str = Field(min_length=20, max_length=4096)
+    # Either an ID token (Google's button) or an access token (our own button + Google's popup).
+    credential: str | None = Field(None, min_length=20, max_length=4096)
+    access_token: str | None = Field(None, min_length=20, max_length=4096)
 
 
 @router.post("/api/auth/google")
 async def sign_in(body: GoogleIn, session: Session) -> dict:
     client_id, secret = _enabled()
-    info = await verify_google(body.credential, client_id)
+    if body.access_token:
+        info = await verify_google_access_token(body.access_token, client_id)
+    elif body.credential:
+        info = await verify_google(body.credential, client_id)
+    else:
+        raise HTTPException(422, "credential or access_token")
     account = await session.scalar(select(Account).where(Account.google_sub == info["sub"]))
     if account is None:
         account = Account(google_sub=info["sub"], email=info.get("email", ""))

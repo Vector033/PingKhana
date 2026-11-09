@@ -14,25 +14,29 @@ import {
   setToken,
 } from "@/lib/account";
 
+// Google Identity Services, token flow: our own button opens Google's popup and we get an
+// access token. (Google's ready-made button is an iframe whose backdrop turns white in some
+// dark-mode setups, which we cannot style.)
+type TokenClient = { requestAccessToken: () => void };
 type Gsi = {
   accounts: {
-    id: {
-      initialize: (o: {
+    oauth2: {
+      initTokenClient: (o: {
         client_id: string;
-        callback: (r: { credential: string }) => void;
-      }) => void;
-      renderButton: (el: HTMLElement, o: Record<string, unknown>) => void;
+        scope: string;
+        callback: (r: { access_token?: string; error?: string }) => void;
+      }) => TokenClient;
     };
   };
 };
 
 export function AccountPanel() {
   const router = useRouter();
-  const button = useRef<HTMLDivElement>(null);
+  const client = useRef<TokenClient | null>(null);
   const [me, setMe] = useState<AccountInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
-  const [gsiReady, setGsiReady] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const loadMe = useCallback(async () => {
     try {
@@ -46,15 +50,19 @@ export function AccountPanel() {
     if (getToken()) queueMicrotask(() => void loadMe());
   }, [loadMe]);
 
-  const onCredential = useCallback(
-    async ({ credential }: { credential: string }) => {
+  const onToken = useCallback(
+    async ({ access_token }: { access_token?: string; error?: string }) => {
       setError(null);
+      if (!access_token) {
+        setBusy(false);
+        return; // closed the popup
+      }
       try {
         const r = await api<{ token: string; account: AccountInfo }>(
           "/api/auth/google",
           {
             method: "POST",
-            body: JSON.stringify({ credential }),
+            body: JSON.stringify({ access_token }),
           },
         );
         setToken(r.token);
@@ -73,29 +81,30 @@ export function AccountPanel() {
         router.refresh();
       } catch {
         setError("เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง");
+      } finally {
+        setBusy(false);
       }
     },
     [router],
   );
 
-  useEffect(() => {
+  function initGoogle() {
     const g = (window as unknown as { google?: Gsi }).google;
-    if (!gsiReady || me || !g || !button.current) return;
-    g.accounts.id.initialize({
+    if (!g) return;
+    client.current = g.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      callback: onCredential,
+      scope: "openid email profile",
+      callback: onToken,
     });
-    g.accounts.id.renderButton(button.current, {
-      // Google's dark button in dark mode; the light outline one otherwise.
-      theme: window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "filled_black"
-        : "outline",
-      size: "large",
-      shape: "pill",
-      text: "signin_with",
-      locale: "th",
-    });
-  }, [gsiReady, me, onCredential]);
+  }
+
+  function signIn() {
+    if (!client.current) initGoogle();
+    if (!client.current)
+      return setError("โหลดระบบของ Google ไม่สำเร็จ ลองรีเฟรชหน้า");
+    setBusy(true);
+    client.current.requestAccessToken();
+  }
 
   if (!GOOGLE_CLIENT_ID) {
     return (
@@ -112,15 +121,17 @@ export function AccountPanel() {
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
-          onReady={() => setGsiReady(true)}
+          onReady={initGoogle}
         />
-        {/* Google draws the button in a light-scheme iframe. If its parent's color-scheme
-            differs (our dark mode), the browser paints an opaque white box behind it. */}
-        <div
-          ref={button}
-          className="min-h-11"
-          style={{ colorScheme: "light" }}
-        />
+        <button
+          type="button"
+          onClick={signIn}
+          disabled={busy}
+          className="inline-flex min-h-12 items-center gap-3 rounded-full border border-line-strong bg-surface px-5 font-medium text-fg shadow-sm transition hover:border-brand active:scale-[0.98] disabled:opacity-60"
+        >
+          <GoogleG />
+          {busy ? "กำลังเปิดหน้าต่าง Google…" : "เข้าสู่ระบบด้วย Google"}
+        </button>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
@@ -202,5 +213,29 @@ export function AccountPanel() {
         </button>
       </div>
     </div>
+  );
+}
+
+/** Google's "G" mark, as Google's sign-in branding asks for on custom buttons. */
+function GoogleG() {
+  return (
+    <svg aria-hidden viewBox="0 0 48 48" className="size-5">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
+    </svg>
   );
 }
