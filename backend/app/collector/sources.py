@@ -44,6 +44,8 @@ class SourceConfig(BaseModel):
     homepage: str | None = None
     # RSS items whose <category> contains one of these are skipped (procurement reports etc.)
     skip_categories: list[str] = []
+    # Shown to the admin, e.g. why a source is switched off.
+    note: str | None = None
 
 
 def load_sources(path: Path = SOURCES_FILE) -> list[SourceConfig]:

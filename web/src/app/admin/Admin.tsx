@@ -289,6 +289,9 @@ export function Admin() {
                           : s.status === "pending"
                             ? "รอตรวจ"
                             : "ปิดอยู่"}
+                        {s.note && !s.user_added && (
+                          <span className="mt-0.5 block text-xs">{s.note}</span>
+                        )}
                       </span>
                     ) : s.healthy ? (
                       <span className="text-brand">ปกติ</span>

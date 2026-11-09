@@ -78,6 +78,7 @@ sources:
     url: https://www.moe.go.th/feed/
     homepage: https://www.moe.go.th/
     enabled: false
+    note: ปิดไว้ เพราะ moe.go.th ไม่ให้เข้าจากต่างประเทศ ใช้ข่าวเดียวกันจาก ศธ.360 องศา (moe360) แทน
     pack: teacher
     skip_categories: [หนังสืออิเล็กทรอนิกส์]
 
@@ -94,6 +95,7 @@ sources:
     url: https://www.ksp.or.th/feed/
     homepage: https://www.ksp.or.th/
     enabled: false
+    note: ปิดไว้ เพราะ ksp.or.th ไม่ให้เข้าจากต่างประเทศ (เซิร์ฟเวอร์ PingKhana อยู่สิงคโปร์)
     pack: teacher
     skip_categories: [จัดซื้อจัดจ้าง]
 
@@ -110,4 +112,13 @@ sources:
     kind: rss
     url: https://www.krupatom.com/feed/
     homepage: https://www.krupatom.com/
+    pack: teacher
+
+  # The ministry's own news blog (ข่าว ศธ. 360 องศา), same posts as moe.go.th but hosted on
+  # WordPress.com, so it is reachable from abroad. Added 2026-11-09.
+  - id: moe360
+    name: กระทรวงศึกษาธิการ (ข่าว ศธ. 360 องศา)
+    kind: rss
+    url: https://moe360.blog/feed/
+    homepage: https://moe360.blog/
     pack: teacher

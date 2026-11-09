@@ -71,6 +71,7 @@ async def sync_sources(session: AsyncSession, configs: list[SourceConfig]) -> No
         # The stored URL is what people see; feeds point them at the site, not the XML.
         src.name, src.url, src.enabled = cfg.name, cfg.homepage or cfg.url, cfg.enabled
         src.pack = cfg.pack
+        src.note = cfg.note
     await session.commit()
 
 

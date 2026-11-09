@@ -32,7 +32,7 @@ def test_feed_images_and_bodies() -> None:
 
 
 def test_teacher_sources_are_in_the_teacher_pack() -> None:
-    for sid in ("moe", "obec", "ksp", "kruachieve", "krupatom"):
+    for sid in ("moe", "obec", "ksp", "kruachieve", "krupatom", "moe360"):
         cfg = SOURCES[sid]
         assert cfg.kind == "rss" and cfg.pack == "teacher" and cfg.homepage
     assert SOURCES["cs_cmu"].pack == "student"
@@ -71,3 +71,9 @@ def test_pdf_attachments() -> None:
     html = (FIXTURES / "cmu_jobs_detail_1.html").read_text(encoding="utf-8")
     d = parse_detail(html, cfg, "t", date(2026, 11, 4), "https://www.cmu.ac.th/th/article/x")
     assert d.attachment is None
+
+
+def test_moe360_carries_the_ministry_news() -> None:
+    got = items("moe360")
+    assert len(got) == 10 and all(i.image for i in got)
+    assert SOURCES["moe360"].enabled and "ต่างประเทศ" in (SOURCES["moe"].note or "")
