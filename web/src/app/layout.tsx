@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <header className="z-20 bg-bg px-3 pt-3 md:sticky md:top-0 md:px-4">
           <div className="mx-auto max-w-6xl">
-            <div className="bar flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2 shadow-card sm:px-4">
+            <div className="bar flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-4 rounded-2xl px-3 py-2 shadow-card sm:px-4">
               <Link
                 href="/"
                 className="-ml-1 flex min-h-11 shrink-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
@@ -79,13 +79,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <div className="ml-auto flex items-center text-sm text-white/75">
                 <Link
                   href="/follow"
-                  className="inline-flex min-h-11 items-center px-2.5 hover:text-white"
+                  className="inline-flex min-h-11 items-center px-2 hover:text-white sm:px-2.5"
                 >
                   ติดตาม
                 </Link>
                 <Link
                   href="/sources"
-                  className="inline-flex min-h-11 items-center px-2.5 hover:text-white"
+                  className="inline-flex min-h-11 items-center px-2 hover:text-white sm:px-2.5"
                 >
                   แหล่งข้อมูล
                 </Link>

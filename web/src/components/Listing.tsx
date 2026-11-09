@@ -81,7 +81,7 @@ export async function StatsStrip() {
           </dd>
         </div>
         <div>
-          <dt className="inline">ยังเปิดรับ </dt>
+          <dt className="inline">มีวันปิดรับ </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
             {s.open_with_deadline}
           </dd>
@@ -391,8 +391,12 @@ function FilterGroup({
   return (
     // One row per group; scrolls sideways on phones instead of wrapping.
     <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0">
-      <h3 className="shrink-0 text-xs text-muted">{title}</h3>
-      <div className="flex shrink-0 gap-1.5 whitespace-nowrap">{children}</div>
+      <h3 className="shrink-0 text-xs text-muted md:self-start md:leading-11">
+        {title}
+      </h3>
+      <div className="flex shrink-0 gap-1.5 whitespace-nowrap md:shrink md:flex-wrap">
+        {children}
+      </div>
     </div>
   );
 }

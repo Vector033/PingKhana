@@ -23,3 +23,6 @@ next-env.d.ts
 
 # Vercel CLI link
 .vercel
+
+# Google OAuth client download (secret)
+client_secret*.json

@@ -42,7 +42,7 @@ export function DeadlineBadge({
   const n = daysLeft(deadline, today);
   if (n >= 0 && n <= 3) {
     return (
-      <span className="animate-urgency inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-sm font-semibold text-danger">
+      <span className="animate-urgency inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-sm font-semibold whitespace-nowrap text-danger tabular-nums">
         <ClockIcon />
         {daysLeftLabel(n)}
         <span className="font-normal">· {thDate(deadline)}</span>
@@ -59,7 +59,7 @@ export function DeadlineBadge({
   }
   if (onImage) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-sm text-white backdrop-blur-sm">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-sm whitespace-nowrap text-white tabular-nums backdrop-blur-sm">
         <ClockIcon />
         <span className="font-semibold">ปิดรับ {thDate(deadline)}</span>
         <span className="text-white/80">· {daysLeftLabel(n)}</span>
@@ -67,13 +67,13 @@ export function DeadlineBadge({
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm">
+    <span className="inline-flex flex-wrap items-center gap-x-1.5 text-sm tabular-nums">
       <ClockIcon />
       {/* Marker-pen highlight: the one thing to remember from the card. */}
-      <span className="marker font-semibold text-fg">
+      <span className="marker font-semibold whitespace-nowrap text-fg">
         ปิดรับ {thDate(deadline)}
       </span>
-      <span className="text-muted">· {daysLeftLabel(n)}</span>
+      <span className="whitespace-nowrap text-muted">· {daysLeftLabel(n)}</span>
     </span>
   );
 }
@@ -192,7 +192,9 @@ export function AnnouncementCard({
           {a.eligible_years && (
             <span>ชั้นปี {a.eligible_years.join(", ")}</span>
           )}
-          {a.min_gpax != null && <span>GPAX ≥ {a.min_gpax.toFixed(2)}</span>}
+          {a.min_gpax != null && (
+            <span className="tabular-nums">GPAX ≥ {a.min_gpax.toFixed(2)}</span>
+          )}
           {a.tags?.slice(0, 2).map((t) => (
             <span key={t} className="text-muted">
               #{t}
