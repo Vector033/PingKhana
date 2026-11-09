@@ -86,7 +86,10 @@ export function AccountPanel() {
       callback: onCredential,
     });
     g.accounts.id.renderButton(button.current, {
-      theme: "outline",
+      // Google's dark button in dark mode; the light outline one otherwise.
+      theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "filled_black"
+        : "outline",
       size: "large",
       shape: "pill",
       text: "signin_with",
@@ -111,7 +114,13 @@ export function AccountPanel() {
           strategy="afterInteractive"
           onReady={() => setGsiReady(true)}
         />
-        <div ref={button} className="min-h-11" />
+        {/* Google draws the button in a light-scheme iframe. If its parent's color-scheme
+            differs (our dark mode), the browser paints an opaque white box behind it. */}
+        <div
+          ref={button}
+          className="min-h-11"
+          style={{ colorScheme: "light" }}
+        />
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
