@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Listing, ListSkeleton, StatsStrip } from "@/components/Listing";
+import { RadarShader } from "@/components/RadarShader";
 
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
@@ -10,6 +11,8 @@ export default function Home({ searchParams }: PageProps<"/">) {
           aria-hidden="true"
           className="radar-grain-tint pointer-events-none absolute inset-0"
         />
+        {/* GPU WebGL fragment shader: DotOrbit + radar sweep masked top-right (speed=0 on reduced motion / offscreen) */}
+        <RadarShader speed={0.3} />
         <svg
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 size-full opacity-[0.045] mix-blend-multiply dark:opacity-[0.06] dark:mix-blend-soft-light"
