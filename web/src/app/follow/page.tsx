@@ -19,14 +19,14 @@ export default function FollowPage() {
       </h1>
       <p className="mt-2 text-pretty text-muted">
         เลือกเว็บที่อยากเห็น หน้าแรกและหน้าข่าวสารจะแสดงเฉพาะเว็บเหล่านี้
-        จำไว้ในเบราว์เซอร์นี้ ไม่ต้องสมัครสมาชิก ส่วนใน LINE
+        จำไว้ในเบราว์เซอร์นี้ ไม่ต้องสมัครสมาชิก ส่วนใน{"\u00A0"}LINE
         เลือกได้ที่เมนูตั้งค่าของบอท
       </p>
-      <p className="mt-2 text-sm">
+      <p className="mt-2 text-sm text-pretty">
         ไม่เจอเว็บที่อยากติดตาม?{" "}
         <Link
           href="/sources/new"
-          className="font-medium text-brand underline underline-offset-4"
+          className="font-medium whitespace-nowrap text-brand underline underline-offset-4"
         >
           เสนอแหล่งข่าวใหม่
         </Link>
@@ -83,14 +83,14 @@ async function FollowForm() {
               .map((s) => (
                 <label
                   key={s.id}
-                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm hover:bg-surface-2"
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm leading-snug text-pretty hover:bg-surface-2"
                 >
                   <input
                     type="checkbox"
                     name="source"
                     value={s.id}
                     defaultChecked={all || chosen.has(s.id)}
-                    className="size-4 accent-[var(--brand)]"
+                    className="size-4 shrink-0 accent-[var(--brand)]"
                   />
                   {s.name}
                 </label>
@@ -102,7 +102,7 @@ async function FollowForm() {
       {tags.length > 0 && (
         <fieldset className="rounded-2xl border border-line bg-surface p-4">
           <legend className="px-1 font-medium">แท็กที่สนใจ</legend>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-balance text-muted">
             ประกาศที่มีแท็กเหล่านี้จะขึ้นเป็นแถวแยกบนหน้าแรก ไม่ว่ามาจากเว็บไหน
           </p>
           <div className="mt-2 flex flex-wrap gap-2">

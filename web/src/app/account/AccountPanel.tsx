@@ -108,7 +108,7 @@ export function AccountPanel() {
 
   if (!GOOGLE_CLIENT_ID) {
     return (
-      <p className="mt-6 rounded-xl bg-surface-2 p-4 text-sm text-muted">
+      <p className="mt-6 rounded-xl bg-surface-2 p-4 text-sm leading-relaxed text-pretty text-muted">
         ยังไม่ได้เปิดการเข้าสู่ระบบบนเว็บนี้ ใช้งานแบบไม่ล็อกอินได้ทุกอย่าง
         การติดตามจะจำไว้ในเบราว์เซอร์นี้
       </p>
@@ -127,18 +127,18 @@ export function AccountPanel() {
           type="button"
           onClick={signIn}
           disabled={busy}
-          className="inline-flex min-h-12 items-center gap-3 rounded-full border border-line-strong bg-surface px-5 font-medium text-fg shadow-sm transition hover:border-brand active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex min-h-12 items-center gap-3 rounded-full border border-line-strong bg-surface px-5 font-medium whitespace-nowrap text-fg shadow-sm transition hover:border-brand active:scale-[0.98] disabled:opacity-60"
         >
           <GoogleG />
           {busy ? "กำลังเปิดหน้าต่าง Google…" : "เข้าสู่ระบบด้วย Google"}
         </button>
         {error && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-sm text-pretty text-danger">
             {error}
           </p>
         )}
-        <p className="text-sm text-muted">
-          เก็บแค่อีเมลและชื่อจาก Google เพื่อจำแหล่งข่าวที่ติดตาม
+        <p className="text-sm text-balance text-muted">
+          เก็บแค่อีเมลและชื่อจาก{"\u00A0"}Google เพื่อจำแหล่งข่าวที่ติดตาม
           ลบบัญชีได้ทุกเมื่อ
         </p>
       </div>
@@ -149,23 +149,32 @@ export function AccountPanel() {
     <div className="mt-6 space-y-6">
       <div className="rounded-2xl border border-line bg-surface p-5">
         <p className="font-semibold">{me.name ?? me.email}</p>
-        <p className="text-sm text-muted">{me.email}</p>
-        <p className="mt-3 text-sm">
-          ติดตาม {me.sources.length} แหล่ง · {me.tags.length} แท็ก
+        <p className="text-sm break-all text-muted">{me.email}</p>
+        <p className="mt-3 text-sm text-pretty">
+          <span className="whitespace-nowrap tabular-nums">
+            ติดตาม {me.sources.length} แหล่ง
+          </span>{" "}
+          ·{" "}
+          <span className="whitespace-nowrap tabular-nums">
+            {me.tags.length} แท็ก
+          </span>{" "}
           (ตรงกันทุกเครื่องที่ล็อกอิน)
         </p>
       </div>
 
       <div className="rounded-2xl border border-line bg-surface p-5">
-        <h2 className="font-medium">ผูกกับ LINE</h2>
+        <h2 className="font-medium">ผูกกับ{"\u00A0"}LINE</h2>
         {me.line_linked ? (
-          <p className="mt-1 text-sm text-muted">
-            ผูกแล้ว บอทใน LINE จะส่งข่าวตามกลุ่มของแหล่งที่ติดตามบนเว็บ
+          <p className="mt-1 text-sm text-pretty text-muted">
+            ผูกแล้ว บอทใน{"\u00A0"}LINE
+            จะส่งข่าวตามกลุ่มของแหล่งที่ติดตามบนเว็บ
           </p>
         ) : code ? (
-          <p className="mt-1 text-sm">
-            พิมพ์ <b className="font-mono text-base">ผูก {code}</b> ในแชทบอท
-            PingKhana ภายใน 10 นาที
+          <p className="mt-1 text-sm text-pretty">
+            พิมพ์{" "}
+            <b className="font-mono text-base whitespace-nowrap">ผูก {code}</b>{" "}
+            ในแชทบอท{"\u00A0"}PingKhana ภายใน{"\u00A0"}
+            <span className="whitespace-nowrap tabular-nums">10 นาที</span>
           </p>
         ) : (
           <button

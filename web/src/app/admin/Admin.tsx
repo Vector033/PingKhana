@@ -204,8 +204,8 @@ export function Admin() {
               className="rounded-2xl border border-line bg-surface p-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold">{s.name}</p>
-                <span className="text-xs text-muted">
+                <p className="font-semibold text-pretty">{s.name}</p>
+                <span className="text-xs whitespace-nowrap text-muted tabular-nums">
                   ส่งเมื่อ {fmt(s.submitted_at)}
                 </span>
               </div>
@@ -259,7 +259,7 @@ export function Admin() {
         </h2>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-line text-muted">
+            <thead className="border-b border-line whitespace-nowrap text-muted">
               <tr>
                 <th className="px-3 py-2 font-medium">ชื่อ</th>
                 <th className="px-3 py-2 font-medium">กลุ่ม</th>
@@ -270,18 +270,18 @@ export function Admin() {
             <tbody>
               {sources.map((s) => (
                 <tr key={s.id} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2">
+                  <td className="min-w-[12rem] px-3 py-2 text-pretty">
                     {s.name}
                     {s.user_added && (
-                      <span className="ml-1 text-xs text-muted">
+                      <span className="ml-1 text-xs whitespace-nowrap text-muted">
                         (ผู้ใช้เสนอ)
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-muted">
+                  <td className="px-3 py-2 whitespace-nowrap text-muted">
                     {PACK_TH[s.pack] ?? s.pack}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     {!s.enabled ? (
                       <span className="text-muted">
                         {s.status === "rejected"
@@ -290,7 +290,9 @@ export function Admin() {
                             ? "รอตรวจ"
                             : "ปิดอยู่"}
                         {s.note && !s.user_added && (
-                          <span className="mt-0.5 block text-xs">{s.note}</span>
+                          <span className="mt-0.5 block text-xs whitespace-normal">
+                            {s.note}
+                          </span>
                         )}
                       </span>
                     ) : s.healthy ? (
@@ -304,7 +306,7 @@ export function Admin() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-muted">
+                  <td className="px-3 py-2 whitespace-nowrap text-muted tabular-nums">
                     {fmt(s.last_success_at)}
                   </td>
                 </tr>

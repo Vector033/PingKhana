@@ -71,8 +71,8 @@ export function Thumb({
 export function Highlight({ text, q }: { text: string; q?: string }) {
   const needle = q?.trim();
   if (!needle) return <>{text}</>;
-  const lower = text.toLowerCase();
-  const n = needle.toLowerCase();
+  const lower = text.replaceAll("\u00A0", " ").toLowerCase();
+  const n = needle.replaceAll("\u00A0", " ").toLowerCase();
   const parts: React.ReactNode[] = [];
   let i = 0;
   let k = 0;

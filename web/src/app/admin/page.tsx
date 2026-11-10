@@ -12,8 +12,8 @@ export default function AdminPage() {
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
         แอดมิน
       </h1>
-      <p className="mt-2 text-muted">
-        ตรวจแหล่งข่าวที่ผู้ใช้เสนอ ดูสุขภาพของแต่ละแหล่ง และโควตา LINE
+      <p className="mt-2 text-pretty text-muted">
+        ตรวจแหล่งข่าวที่ผู้ใช้เสนอ ดูสุขภาพของแต่ละแหล่ง และโควตา{"\u00A0"}LINE
       </p>
       <Admin />
     </div>

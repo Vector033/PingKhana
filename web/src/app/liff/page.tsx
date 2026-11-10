@@ -9,8 +9,8 @@ export default function LiffPage() {
       <h1 className="text-xl font-semibold tracking-tight">
         ตั้งค่าการแจ้งเตือน
       </h1>
-      <p className="mt-1 mb-6 text-sm text-muted">
-        เลือกสิ่งที่อยากรู้ แล้ว PingKhana จะส่งเฉพาะประกาศที่ตรงกับคุณ
+      <p className="mt-1 mb-6 text-sm text-pretty text-muted">
+        เลือกสิ่งที่อยากรู้ แล้ว{"\u00A0"}PingKhana จะส่งเฉพาะประกาศที่ตรงกับคุณ
       </p>
       <SettingsForm />
     </div>

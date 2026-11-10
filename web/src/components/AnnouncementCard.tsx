@@ -2,7 +2,13 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import { Highlight, Thumb } from "@/components/Thumb";
 import type { Announcement } from "@/lib/api";
-import { CATEGORY_STYLE, daysLeft, daysLeftLabel, thDate } from "@/lib/format";
+import {
+  CATEGORY_STYLE,
+  daysLeft,
+  daysLeftLabel,
+  thDate,
+  tidyWrap,
+} from "@/lib/format";
 
 export function CategoryChip({
   category,
@@ -131,7 +137,7 @@ function Meta({ a }: { a: Announcement }) {
         {a.source_name}
       </span>
       {a.published_on && (
-        <span className="tabular-nums">
+        <span className="whitespace-nowrap tabular-nums">
           <span aria-hidden>· </span>
           {thDate(a.published_on)}
         </span>
@@ -166,22 +172,22 @@ function EligibilityChips({
         </span>
       ))}
       {majorLabels.length > 2 && (
-        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 tabular-nums">
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 whitespace-nowrap tabular-nums">
           +{majorLabels.length - 2} สาขา
         </span>
       )}
       {a.eligible_years && a.eligible_years.length > 0 && (
-        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium text-fg/85 tabular-nums">
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium whitespace-nowrap text-fg/85 tabular-nums">
           ชั้นปี {a.eligible_years.join(", ")}
         </span>
       )}
       {a.min_gpax != null && (
-        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium text-fg/85 tabular-nums">
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium whitespace-nowrap text-fg/85 tabular-nums">
           GPAX ≥ {a.min_gpax.toFixed(2)}
         </span>
       )}
       {a.tags?.slice(0, 2).map((t) => (
-        <span key={t} className="px-0.5 text-muted">
+        <span key={t} className="px-0.5 whitespace-nowrap text-muted">
           #{t}
         </span>
       ))}
@@ -199,6 +205,8 @@ export function AnnouncementCard({
   onOpen,
 }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
+  const title = tidyWrap(a.title);
+  const summary = a.summary_th ? tidyWrap(a.summary_th) : null;
   return (
     <article
       style={{ "--i": index } as React.CSSProperties}
@@ -226,18 +234,18 @@ export function AnnouncementCard({
       </div>
       <div className="relative z-[1] flex flex-1 flex-col p-4">
         <Meta a={a} />
-        <h3 className="mt-1.5 line-clamp-3 text-base leading-snug font-semibold [overflow-wrap:anywhere] group-hover:text-brand">
+        <h3 className="mt-1.5 line-clamp-3 text-base leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
             href={`/a/${a.id}`}
             onClick={opener(a, onOpen)}
             className={STRETCH}
           >
-            <Highlight text={a.title} q={q} />
+            <Highlight text={title} q={q} />
           </Link>
         </h3>
-        {a.summary_th && (
-          <p className="mt-1.5 line-clamp-2 text-sm text-muted [overflow-wrap:anywhere]">
-            <Highlight text={a.summary_th} q={q} />
+        {summary && (
+          <p className="mt-1.5 line-clamp-2 text-sm text-pretty text-muted [overflow-wrap:anywhere]">
+            <Highlight text={summary} q={q} />
           </p>
         )}
         <div className="mt-auto space-y-2.5 pt-3.5 text-xs text-muted">
@@ -286,7 +294,9 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
           <CategoryChip category={a.category} label={a.category_th} />
           <span className="font-medium text-fg/85">{a.source_name}</span>
           {a.published_on && (
-            <span className="tabular-nums">· {thDate(a.published_on)}</span>
+            <span className="whitespace-nowrap tabular-nums">
+              · {thDate(a.published_on)}
+            </span>
           )}
         </div>
         <h3 className="mt-2 line-clamp-3 text-xl leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
@@ -295,12 +305,12 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
             onClick={opener(a, onOpen)}
             className={STRETCH}
           >
-            {a.title}
+            {tidyWrap(a.title)}
           </Link>
         </h3>
         {a.summary_th && (
-          <p className="mt-2 line-clamp-2 max-w-2xl text-muted">
-            {a.summary_th}
+          <p className="mt-2 line-clamp-2 max-w-2xl text-pretty text-muted">
+            {tidyWrap(a.summary_th)}
           </p>
         )}
         <div className="mt-3">
@@ -334,13 +344,13 @@ export function CompactCard({ a, today, index = 0, onOpen }: CardProps) {
       />
       <div className="relative z-[1] min-w-0 flex-1 py-0.5 pr-1">
         <Meta a={a} />
-        <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-semibold [overflow-wrap:anywhere] group-hover:text-brand">
+        <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
             href={`/a/${a.id}`}
             onClick={opener(a, onOpen)}
             className={STRETCH}
           >
-            {a.title}
+            {tidyWrap(a.title)}
           </Link>
         </h3>
         {a.deadline && (

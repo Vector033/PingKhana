@@ -22,7 +22,7 @@ import { RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
 import { TagLinks } from "@/components/TagLinks";
 import type { Announcement } from "@/lib/api";
-import { thDate } from "@/lib/format";
+import { thDate, tidyWrap } from "@/lib/format";
 
 type Ctx = {
   open: (a: Announcement) => void;
@@ -179,13 +179,16 @@ export function TaggedStrip({
         >
           ตามแท็กที่ติดตาม
         </h2>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-pretty text-muted">
           {tags
             .slice(0, 4)
             .map((t) => `#${t}`)
             .join(" ")}
-          {tags.length > 4 ? ` และอีก ${tags.length - 4}` : ""} ·{" "}
-          <Link href="/follow" className="text-brand hover:underline">
+          {tags.length > 4 ? ` และอีก\u00A0${tags.length - 4}` : ""} ·{" "}
+          <Link
+            href="/follow"
+            className="whitespace-nowrap text-brand hover:underline"
+          >
             แก้ไข
           </Link>
         </p>
@@ -215,7 +218,7 @@ export function NewsStrip({ items }: { items: Announcement[] }) {
         </h2>
         <Link
           href="/news"
-          className="inline-flex min-h-11 items-center text-sm font-medium text-brand hover:underline"
+          className="inline-flex min-h-11 items-center text-sm font-medium whitespace-nowrap text-brand hover:underline"
         >
           ดูข่าวทั้งหมด →
         </Link>
@@ -241,17 +244,17 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
       <div className="mb-3 flex items-end justify-between gap-3">
         <h2
           id="closing-title"
-          className="text-xl font-semibold tracking-tight sm:text-2xl"
+          className="inline-flex items-center text-xl font-semibold tracking-tight whitespace-nowrap sm:text-2xl"
         >
           <span
-            className="live-dot relative mr-2.5 inline-block size-2.5 translate-y-[-2px] rounded-full bg-danger align-middle"
+            className="live-dot relative mr-2.5 inline-block size-2.5 shrink-0 rounded-full bg-danger"
             aria-hidden
           />
           ใกล้ปิดรับ
         </h2>
         <Link
           href="/?status=closing&sort=deadline"
-          className="inline-flex min-h-11 items-center text-sm font-medium text-brand hover:underline"
+          className="inline-flex min-h-11 items-center text-sm font-medium whitespace-nowrap text-brand hover:underline"
         >
           ดูทั้งหมด →
         </Link>
@@ -314,9 +317,9 @@ function Preview({
               id="preview-title"
               tabIndex={-1}
               title={a.title}
-              className="mt-2 line-clamp-4 text-lg leading-snug font-semibold outline-none [overflow-wrap:anywhere]"
+              className="mt-2 line-clamp-4 text-lg leading-snug font-semibold text-balance outline-none [overflow-wrap:anywhere]"
             >
-              {a.title}
+              {tidyWrap(a.title)}
             </h2>
           </div>
           <button
@@ -355,14 +358,16 @@ function Preview({
             สรุป
           </h3>
           {points.length > 1 ? (
-            <ul className="mt-1.5 list-disc space-y-1.5 pl-5 leading-relaxed marker:text-brand [overflow-wrap:anywhere]">
+            <ul className="mt-1.5 list-disc space-y-1.5 pl-5 leading-relaxed text-pretty marker:text-brand [overflow-wrap:anywhere]">
               {points.slice(0, 3).map((p, idx) => (
-                <li key={`${idx}-${p}`}>{p}</li>
+                <li key={`${idx}-${p}`}>{tidyWrap(p)}</li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1.5 leading-relaxed [overflow-wrap:anywhere]">
-              {points[0] ?? "ยังไม่มีสรุป เปิดอ่านที่ประกาศต้นทาง"}
+            <p className="mt-1.5 leading-relaxed text-pretty [overflow-wrap:anywhere]">
+              {points[0]
+                ? tidyWrap(points[0])
+                : "ยังไม่มีสรุป เปิดอ่านที่ประกาศต้นทาง"}
             </p>
           )}
         </section>
@@ -410,7 +415,7 @@ function Preview({
                 </Row>
                 {a.published_on && (
                   <Row label="ประกาศเมื่อ">
-                    <span className="tabular-nums">
+                    <span className="whitespace-nowrap tabular-nums">
                       {thDate(a.published_on)}
                     </span>
                   </Row>
@@ -444,19 +449,19 @@ function Preview({
             href={a.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium hover:border-brand hover:text-brand"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap hover:border-brand hover:text-brand"
           >
             ประกาศต้นทาง ↗
           </a>
           <Link
             href={`/a/${a.id}`}
             onClick={onClose}
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium hover:border-brand hover:text-brand"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap hover:border-brand hover:text-brand"
           >
             หน้าเต็ม
           </Link>
         </div>
-        <p className="text-xs text-muted">
+        <p className="text-xs text-balance text-muted">
           อ่านจากเว็บอัตโนมัติ ไม่ใช่ช่องทางทางการ ตรวจที่ประกาศต้นทางก่อนสมัคร
         </p>
       </div>
@@ -475,7 +480,7 @@ function Row({
     <tr>
       <th
         scope="row"
-        className="w-28 py-2.5 pr-3 text-left align-top font-normal text-muted"
+        className="w-28 py-2.5 pr-3 text-left align-top font-normal whitespace-nowrap text-muted"
       >
         {label}
       </th>

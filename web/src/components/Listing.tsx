@@ -66,34 +66,34 @@ export async function StatsStrip() {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5">
+        <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5 whitespace-nowrap">
           <span
             aria-hidden
-            className={`relative size-2 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
+            className={`relative size-2 shrink-0 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
           />
           {minutes == null
             ? "ยังไม่เคยดึงข้อมูล"
-            : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"} ${agoLabel(minutes)}`}
+            : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"}\u00A0${agoLabel(minutes)}`}
         </p>
         <RadarMatrixStrip fresh={fresh} />
       </div>
       <dl className="flex flex-wrap gap-x-5 gap-y-1">
-        <div>
+        <div className="whitespace-nowrap">
           <dt className="inline">ประกาศ </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
             {s.announcements}
           </dd>
         </div>
-        <div>
+        <div className="whitespace-nowrap">
           <dt className="inline">มีวันปิดรับ </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
             {s.open_with_deadline}
           </dd>
         </div>
-        <div>
+        <div className="whitespace-nowrap">
           <dt className="inline">จาก </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
-            {s.sources.length} เว็บ
+            {s.sources.length}{"\u00A0"}เว็บ
           </dd>
         </div>
       </dl>
@@ -266,8 +266,11 @@ export async function Listing({
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
               {heading}
             </h2>
-            <p className="text-sm text-muted [overflow-wrap:anywhere]">
-              พบ {data.total} ประกาศ{current.q && <> สำหรับ “{current.q}”</>}
+            <p className="text-sm text-pretty text-muted [overflow-wrap:anywhere]">
+              <span className="whitespace-nowrap tabular-nums">
+                พบ {data.total} ประกาศ
+              </span>
+              {current.q && <> สำหรับ “{current.q}”</>}
             </p>
           </div>
           {/* Category and search live in the header; these narrow the list further. */}
@@ -339,10 +342,10 @@ export async function Listing({
         </div>
         {data.items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
-            <p>ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
+            <p className="text-pretty">ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
             <Link
               href={base}
-              className="mt-2 inline-flex min-h-11 items-center px-3 font-medium text-brand underline underline-offset-4"
+              className="mt-2 inline-flex min-h-11 items-center px-3 font-medium whitespace-nowrap text-brand underline underline-offset-4"
             >
               ล้างตัวกรองทั้งหมด
             </Link>
@@ -362,7 +365,7 @@ export async function Listing({
             ) : (
               <span />
             )}
-            <span className="text-muted tabular-nums">
+            <span className="whitespace-nowrap text-muted tabular-nums">
               หน้า {page} / {pages}
             </span>
             {page < pages ? (
@@ -383,7 +386,7 @@ export async function Listing({
 }
 
 const PAGER =
-  "inline-flex min-h-11 items-center rounded-xl border border-line-strong bg-surface px-4 transition-colors hover:border-brand hover:text-brand";
+  "inline-flex min-h-11 items-center rounded-xl border border-line-strong bg-surface px-4 whitespace-nowrap transition-colors hover:border-brand hover:text-brand";
 
 function FilterGroup({
   title,

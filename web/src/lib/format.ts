@@ -78,3 +78,30 @@ export const CATEGORIES = [
   { id: "activity", th: "กิจกรรม" },
   { id: "general", th: "ประกาศทั่วไป" },
 ] as const;
+
+const NBSP = "\u00A0";
+
+/**
+ * Joins short atomic Thai/English pairs and number+unit tokens with non-breaking spaces
+ * so headlines and body text do not split mid-phrase across lines (e.g. "ปี 3", "กับ LINE").
+ */
+export function tidyWrap(text: string): string {
+  return text
+    .replace(
+      /(\d[\d,.]*)\s+(วัน|อัตรา|บาท|ชั่วโมง|เดือน|ปี|คน|ที่นั่ง|ทุน|ฉบับ|เรื่อง|ชุด|ข้อ|ครั้ง|แห่ง|เว็บ|ประกาศ|ข้อความ|นาที)/g,
+      `$1${NBSP}$2`,
+    )
+    .replace(
+      /(ชั้นปี|ปี|ป\.|ม\.|เขต|ครั้งที่|รุ่นที่|ชุดที่|ภาคเรียนที่|พ\.ศ\.|ค\.ศ\.|เวลา)\s+(\d[\d./:-]*)/g,
+      `$1${NBSP}$2`,
+    )
+    .replace(/(\d{1,2}[:.]\d{2})\s+(น\.)/g, `$1${NBSP}$2`)
+    .replace(
+      /(กับ|ใน|ของ|ด้วย|จาก|ผ่าน|ทาง|ที่|บน|สู่|โดย|ถึง|แบบ)\s+([A-Za-z][A-Za-z0-9.+-]{1,14})\b/g,
+      `$1${NBSP}$2`,
+    )
+    .replace(
+      /\b(LINE|PET|CMU|AI|IT|HR|PR|Eng|Sci)\s+([A-Za-z0-9]{2,10})\b/g,
+      `$1${NBSP}$2`,
+    );
+}

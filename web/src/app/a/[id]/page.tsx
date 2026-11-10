@@ -9,7 +9,7 @@ import { ShareRow } from "@/components/ShareRow";
 import { TagLinks } from "@/components/TagLinks";
 import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
-import { DISCLAIMER, thDate, todayBangkok } from "@/lib/format";
+import { DISCLAIMER, thDate, tidyWrap, todayBangkok } from "@/lib/format";
 
 export async function generateMetadata({
   params,
@@ -55,21 +55,21 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
     <article className="mx-auto max-w-2xl">
       <Link
         href="/"
-        className="-ml-2 inline-flex min-h-11 items-center px-2 text-sm text-muted hover:text-fg"
+        className="-ml-2 inline-flex min-h-11 items-center px-2 text-sm whitespace-nowrap text-muted hover:text-fg"
       >
         ← ประกาศทั้งหมด
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <CategoryChip category={a.category} label={a.category_th} />
-        <span className="text-sm text-muted">{a.source_name}</span>
+        <span className="text-sm font-medium text-fg/85">{a.source_name}</span>
         {a.published_on && (
-          <span className="text-sm text-muted">
+          <span className="text-sm whitespace-nowrap text-muted tabular-nums">
             · ประกาศ {thDate(a.published_on)}
           </span>
         )}
       </div>
       <h1 className="mt-3 text-2xl leading-snug font-semibold tracking-tight text-balance [overflow-wrap:anywhere]">
-        {a.title}
+        {tidyWrap(a.title)}
       </h1>
 
       {a.image_url && (
@@ -86,8 +86,8 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       {a.summary_th && (
         <section className="mt-5">
           <h2 className="text-sm font-medium text-muted">สรุป</h2>
-          <p className="mt-1 leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">
-            {a.summary_th}
+          <p className="mt-1 leading-relaxed text-pretty whitespace-pre-line [overflow-wrap:anywhere]">
+            {tidyWrap(a.summary_th)}
           </p>
         </section>
       )}
@@ -126,7 +126,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <div>
           <dt className="text-muted">GPAX ขั้นต่ำ</dt>
-          <dd className="mt-0.5">
+          <dd className="mt-0.5 tabular-nums">
             {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
           </dd>
         </div>
@@ -138,7 +138,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           href={a.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line-strong bg-surface px-5 font-medium hover:border-brand hover:text-brand"
+          className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line-strong bg-surface px-5 font-medium whitespace-nowrap hover:border-brand hover:text-brand"
         >
           เปิดประกาศต้นทาง ↗
         </a>
@@ -150,7 +150,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         <TagLinks a={a} />
       </div>
       {a.also_on && (
-        <p className="mt-4 text-sm text-muted">
+        <p className="mt-4 text-sm text-pretty text-muted">
           ประกาศนี้ลงในเว็บอื่นด้วย:{" "}
           {a.also_on.map((o, i) => (
             <span key={o.url}>
@@ -167,7 +167,9 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           ))}
         </p>
       )}
-      <p className="mt-6 text-xs leading-relaxed text-muted">{DISCLAIMER}</p>
+      <p className="mt-6 text-xs leading-relaxed text-balance text-muted">
+        {DISCLAIMER}
+      </p>
     </article>
   );
 }

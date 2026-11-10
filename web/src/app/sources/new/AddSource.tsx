@@ -122,7 +122,7 @@ export function AddSource() {
         />
         <button
           disabled={busy}
-          className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-6 font-semibold text-brand-fg disabled:opacity-60"
+          className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-6 font-semibold whitespace-nowrap text-brand-fg disabled:opacity-60"
         >
           {busy && !found ? "กำลังดูเว็บ…" : "ค้นหาข่าวจากเว็บนี้"}
         </button>
@@ -131,7 +131,7 @@ export function AddSource() {
       {error && (
         <p
           role="alert"
-          className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger"
+          className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-pretty text-danger"
         >
           {error}
         </p>
@@ -142,9 +142,11 @@ export function AddSource() {
           aria-label="ผลที่เจอ"
           className="space-y-4 rounded-2xl border border-line bg-surface p-5"
         >
-          <p className="text-sm text-muted">{HOW[found.method] ?? ""}</p>
+          <p className="text-sm text-pretty text-muted">
+            {HOW[found.method] ?? ""}
+          </p>
           {found.existing ? (
-            <p className="text-sm">
+            <p className="text-sm text-pretty">
               มีเว็บนี้ในระบบแล้ว: <b>{found.existing.name}</b>
               {found.existing.status === "pending" ? " (รอแอดมินตรวจ)" : ""}
             </p>
@@ -221,10 +223,10 @@ export function AddSource() {
       {sent && (
         <p
           role="status"
-          className="rounded-xl bg-brand-soft px-4 py-3 text-sm text-brand"
+          className="rounded-xl bg-brand-soft px-4 py-3 text-sm text-pretty text-brand"
         >
           {sent === "pending"
-            ? "ส่งแล้ว แอดมินจะตรวจก่อนเปิดให้ทุกคนเห็น ปกติไม่เกิน 1–2 วัน"
+            ? "ส่งแล้ว แอดมินจะตรวจก่อนเปิดให้ทุกคนเห็น ปกติไม่เกิน 1–2\u00A0วัน"
             : "มีเว็บนี้ในระบบแล้ว ไม่ต้องส่งซ้ำ"}
         </p>
       )}

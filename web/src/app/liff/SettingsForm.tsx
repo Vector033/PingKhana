@@ -84,19 +84,19 @@ export function SettingsForm() {
   if (state.kind === "loading") return <p className="text-muted">กำลังโหลด…</p>;
   if (state.kind === "outside-line")
     return (
-      <p className="text-muted">
-        เปิดหน้านี้จากเมนู “ตั้งค่า” ในแชท LINE ของ PingKhana
+      <p className="text-pretty text-muted">
+        เปิดหน้านี้จากเมนู “ตั้งค่า” ในแชท{"\u00A0"}LINE ของ{"\u00A0"}PingKhana
       </p>
     );
   if (state.kind === "error")
     return (
-      <p className="text-danger">
+      <p className="text-pretty text-danger">
         โหลดการตั้งค่าไม่สำเร็จ ({state.message}) ลองปิดแล้วเปิดใหม่
       </p>
     );
   if (state.kind === "deleted")
     return (
-      <p className="rounded-xl border border-line bg-surface p-5">
+      <p className="rounded-xl border border-line bg-surface p-5 text-pretty">
         ลบข้อมูลของคุณเรียบร้อยแล้ว จะไม่มีการแจ้งเตือนอีก ถ้าอยากกลับมาใช้
         เปิดหน้านี้แล้วบันทึกใหม่ได้เลย
       </p>
@@ -253,12 +253,12 @@ export function SettingsForm() {
           </select>
         </label>
       </div>
-      <p className="-mt-3 text-xs text-muted">
+      <p className="-mt-3 text-xs text-pretty text-muted">
         ใช้กรองประกาศที่จำกัดชั้นปีหรือสาขา
         ถ้าไม่ระบุจะได้ทุกประกาศในประเภทที่เลือก
       </p>
 
-      <label className="flex items-start gap-2 text-sm">
+      <label className="flex items-start gap-2 text-sm text-pretty">
         <input
           type="checkbox"
           checked={prefs.notify_new}
@@ -266,7 +266,8 @@ export function SettingsForm() {
           className="mt-1 accent-[var(--brand)]"
         />
         <span>
-          ส่งสรุปประกาศใหม่ที่ตรงกับฉัน (วันละไม่เกิน 1 ข้อความ)
+          ส่งสรุปประกาศใหม่ที่ตรงกับฉัน (วันละไม่เกิน{"\u00A0"}
+          <span className="whitespace-nowrap">1 ข้อความ</span>)
           <span className="block text-xs text-muted">
             การเตือนกำหนดส่งที่กด “เตือนฉัน” ไว้จะยังส่งตามปกติ
           </span>
@@ -301,7 +302,7 @@ export function SettingsForm() {
                 <button
                   type="button"
                   onClick={() => void removeReminder(r.id)}
-                  className="text-xs text-muted hover:text-danger"
+                  className="shrink-0 text-xs whitespace-nowrap text-muted hover:text-danger"
                 >
                   เลิกเตือน
                 </button>
@@ -309,7 +310,7 @@ export function SettingsForm() {
             ))}
           </ul>
         ) : (
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-pretty text-muted">
             ยังไม่มี กด “เตือนฉัน” ใต้ประกาศในแชทได้เลย
           </p>
         )}
@@ -323,9 +324,10 @@ export function SettingsForm() {
         >
           ลบข้อมูลทั้งหมดของฉัน
         </button>
-        <p className="mt-1 text-xs text-muted">
-          เหมือนพิมพ์ “ยกเลิก” ในแชท เราเก็บแค่ LINE userId ชั้นปี สาขา ประเภท
-          และรายการเตือน
+        <p className="mt-1 text-xs text-pretty text-muted">
+          เหมือนพิมพ์ “ยกเลิก” ในแชท เราเก็บแค่{" "}
+          <span className="whitespace-nowrap">LINE userId</span> ชั้นปี สาขา
+          ประเภท และรายการเตือน
         </p>
       </section>
     </form>

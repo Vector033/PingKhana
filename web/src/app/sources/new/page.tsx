@@ -14,12 +14,13 @@ export default function NewSourcePage() {
       </h1>
       <p className="mt-2 text-pretty text-muted">
         วางลิงก์เว็บอะไรก็ได้ เช่น เว็บโรงเรียน เขตพื้นที่การศึกษา หรือคณะ
-        ระบบจะหาข่าวในเว็บนั้นให้เอง ไม่ต้องรู้จัก RSS
+        ระบบจะหาข่าวในเว็บนั้นให้เอง ไม่ต้องรู้จัก{"\u00A0"}RSS
         แอดมินจะตรวจก่อนเปิดให้ทุกคนเห็น
       </p>
       <AddSource />
-      <p className="mt-8 text-xs leading-relaxed text-muted">
-        PingKhana อ่านเฉพาะหน้าเว็บสาธารณะ เคารพ robots.txt ของแต่ละเว็บ
+      <p className="mt-8 text-xs leading-relaxed text-pretty text-muted">
+        PingKhana อ่านเฉพาะหน้าเว็บสาธารณะ เคารพ{" "}
+        <span className="whitespace-nowrap">robots.txt</span> ของแต่ละเว็บ
         และไม่อ่านหน้าที่ต้องล็อกอิน
         เว็บที่ปิดกั้นการเข้าจากต่างประเทศจะติดตามไม่ได้
         เพราะเซิร์ฟเวอร์อยู่สิงคโปร์

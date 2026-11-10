@@ -79,13 +79,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <div className="ml-auto flex items-center text-sm text-white/75">
                 <Link
                   href="/follow"
-                  className="inline-flex min-h-11 items-center px-2 hover:text-white sm:px-2.5"
+                  className="inline-flex min-h-11 items-center px-2 whitespace-nowrap hover:text-white sm:px-2.5"
                 >
                   ติดตาม
                 </Link>
                 <Link
                   href="/sources"
-                  className="inline-flex min-h-11 items-center px-2 hover:text-white sm:px-2.5"
+                  className="inline-flex min-h-11 items-center px-2 whitespace-nowrap hover:text-white sm:px-2.5"
                 >
                   แหล่งข้อมูล
                 </Link>
@@ -106,11 +106,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <footer className="border-t border-line">
           <div className="mx-auto max-w-6xl px-4 py-6 text-xs leading-relaxed text-muted">
-            <p>{DISCLAIMER}</p>
-            <p className="mt-1">
+            <p className="text-balance">{DISCLAIMER}</p>
+            <p className="mt-1 text-pretty">
               โปรเจกต์นักศึกษา · โค้ด{" "}
               <a
-                className="underline underline-offset-2 hover:text-fg"
+                className="whitespace-nowrap underline underline-offset-2 hover:text-fg"
                 href="https://github.com/Vector033/PingKhana"
               >
                 github.com/Vector033/PingKhana
