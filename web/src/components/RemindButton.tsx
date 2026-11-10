@@ -34,7 +34,7 @@ export function RemindButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`bell-trigger inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-line-green px-5 font-semibold text-line-green-fg shadow-sm transition hover:brightness-105 active:scale-[0.98] ${className}`}
+      className={`bell-trigger inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-line-green px-5 font-semibold text-line-green-fg shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:brightness-105 active:scale-[0.98] ${className}`}
     >
       <BellIcon />
       ให้ LINE เตือนก่อนปิดรับ

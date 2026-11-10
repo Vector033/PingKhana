@@ -5,6 +5,7 @@ import {
   Feed,
   NewsStrip,
   PreviewProvider,
+  RadarMatrixStrip,
   TaggedStrip,
 } from "@/components/Feed";
 import { getAnnouncements, getMeta, getStats, getTags } from "@/lib/api";
@@ -63,16 +64,19 @@ export async function StatsStrip() {
   // The collector runs hourly; older than 3 hours means it has stalled, so stop pulsing.
   const fresh = minutes != null && minutes <= 180;
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
-      <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5">
-        <span
-          aria-hidden
-          className={`relative size-2 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
-        />
-        {minutes == null
-          ? "ยังไม่เคยดึงข้อมูล"
-          : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"} ${agoLabel(minutes)}`}
-      </p>
+    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5">
+          <span
+            aria-hidden
+            className={`relative size-2 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
+          />
+          {minutes == null
+            ? "ยังไม่เคยดึงข้อมูล"
+            : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"} ${agoLabel(minutes)}`}
+        </p>
+        <RadarMatrixStrip fresh={fresh} />
+      </div>
       <dl className="flex flex-wrap gap-x-5 gap-y-1">
         <div>
           <dt className="inline">ประกาศ </dt>

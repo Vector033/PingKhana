@@ -99,6 +99,7 @@ type CardProps = {
   today: string;
   index?: number;
   q?: string;
+  majors?: Record<string, string>;
   onOpen?: (a: Announcement) => void;
 };
 
@@ -126,13 +127,64 @@ const STRETCH =
 function Meta({ a }: { a: Announcement }) {
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
-      <span className="min-w-0 break-words">{a.source_name}</span>
+      <span className="min-w-0 break-words font-medium text-fg/85">
+        {a.source_name}
+      </span>
       {a.published_on && (
-        <span>
+        <span className="tabular-nums">
           <span aria-hidden>· </span>
           {thDate(a.published_on)}
         </span>
       )}
+    </div>
+  );
+}
+
+function EligibilityChips({
+  a,
+  majors,
+}: {
+  a: Announcement;
+  majors?: Record<string, string>;
+}) {
+  const majorLabels = (a.eligible_majors ?? []).map((m) => majors?.[m] ?? m);
+  const hasMeta =
+    majorLabels.length > 0 ||
+    Boolean(a.eligible_years?.length) ||
+    a.min_gpax != null ||
+    Boolean(a.tags?.length);
+  if (!hasMeta) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-[11px] leading-tight text-muted">
+      {majorLabels.slice(0, 2).map((label) => (
+        <span
+          key={label}
+          className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium text-fg/85"
+        >
+          {label}
+        </span>
+      ))}
+      {majorLabels.length > 2 && (
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 tabular-nums">
+          +{majorLabels.length - 2} สาขา
+        </span>
+      )}
+      {a.eligible_years && a.eligible_years.length > 0 && (
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium text-fg/85 tabular-nums">
+          ชั้นปี {a.eligible_years.join(", ")}
+        </span>
+      )}
+      {a.min_gpax != null && (
+        <span className="inline-flex items-center rounded-md border border-line bg-surface-2/80 px-2 py-0.5 font-medium text-fg/85 tabular-nums">
+          GPAX ≥ {a.min_gpax.toFixed(2)}
+        </span>
+      )}
+      {a.tags?.slice(0, 2).map((t) => (
+        <span key={t} className="px-0.5 text-muted">
+          #{t}
+        </span>
+      ))}
     </div>
   );
 }
@@ -143,17 +195,22 @@ export function AnnouncementCard({
   today,
   index = 0,
   q,
+  majors,
   onOpen,
 }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
   return (
     <article
       style={{ "--i": index } as React.CSSProperties}
-      className={`animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border bg-surface transition-[transform,box-shadow,border-color] duration-200 hover:shadow-card hover:ring-4 hover:ring-[var(--brand-ring)] motion-safe:hover:-translate-y-1 ${
-        urgent ? "border-danger/40" : "border-line hover:border-brand/60"
-      }`}
+      className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-200 hover:border-brand/55 hover:shadow-md hover:ring-4 hover:ring-[var(--brand-ring)] motion-safe:hover:-translate-y-1"
     >
-      <div className="relative">
+      {urgent && (
+        <div
+          aria-hidden="true"
+          className="thermal-urgent pointer-events-none absolute inset-0 z-0"
+        />
+      )}
+      <div className="relative z-[1]">
         <Thumb
           src={a.image_url}
           category={a.category}
@@ -167,7 +224,7 @@ export function AnnouncementCard({
           className="absolute top-3 left-3 shadow-sm"
         />
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="relative z-[1] flex flex-1 flex-col p-4">
         <Meta a={a} />
         <h3 className="mt-1.5 line-clamp-3 text-base leading-snug font-semibold [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
@@ -183,23 +240,15 @@ export function AnnouncementCard({
             <Highlight text={a.summary_th} q={q} />
           </p>
         )}
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 text-xs text-muted">
-          {a.deadline ? (
-            <DeadlineBadge deadline={a.deadline} today={today} />
-          ) : a.category === "general" ? null : (
-            <span>ไม่ระบุวันปิดรับ</span>
-          )}
-          {a.eligible_years && (
-            <span>ชั้นปี {a.eligible_years.join(", ")}</span>
-          )}
-          {a.min_gpax != null && (
-            <span className="tabular-nums">GPAX ≥ {a.min_gpax.toFixed(2)}</span>
-          )}
-          {a.tags?.slice(0, 2).map((t) => (
-            <span key={t} className="text-muted">
-              #{t}
-            </span>
-          ))}
+        <div className="mt-auto space-y-2.5 pt-3.5 text-xs text-muted">
+          <div>
+            {a.deadline ? (
+              <DeadlineBadge deadline={a.deadline} today={today} />
+            ) : a.category === "general" ? null : (
+              <span>ไม่ระบุวันปิดรับ</span>
+            )}
+          </div>
+          <EligibilityChips a={a} majors={majors} />
         </div>
       </div>
     </article>
@@ -207,10 +256,17 @@ export function AnnouncementCard({
 }
 
 /** Front-page lead: a large poster, then a big title. Posters are mostly text, so no text on top. */
-export function LeadCard({ a, today, onOpen }: CardProps) {
+export function LeadCard({ a, today, majors, onOpen }: CardProps) {
+  const urgent = isUrgent(a.deadline, today);
   return (
-    <article className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-[box-shadow,border-color] duration-200 hover:border-brand/60 hover:ring-4 hover:ring-[var(--brand-ring)]">
-      <div className="relative">
+    <article className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-200 hover:border-brand/55 hover:shadow-md hover:ring-4 hover:ring-[var(--brand-ring)] motion-safe:hover:-translate-y-1">
+      {urgent && (
+        <div
+          aria-hidden="true"
+          className="thermal-urgent pointer-events-none absolute inset-0 z-0"
+        />
+      )}
+      <div className="relative z-[1]">
         <Thumb
           src={a.image_url}
           category={a.category}
@@ -225,10 +281,13 @@ export function LeadCard({ a, today, onOpen }: CardProps) {
           </div>
         )}
       </div>
-      <div className="p-5 sm:p-6">
+      <div className="relative z-[1] p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
-          <span>{a.source_name}</span>
+          <span className="font-medium text-fg/85">{a.source_name}</span>
+          {a.published_on && (
+            <span className="tabular-nums">· {thDate(a.published_on)}</span>
+          )}
         </div>
         <h3 className="mt-2 line-clamp-3 text-xl leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
           <Link
@@ -244,6 +303,9 @@ export function LeadCard({ a, today, onOpen }: CardProps) {
             {a.summary_th}
           </p>
         )}
+        <div className="mt-3">
+          <EligibilityChips a={a} majors={majors} />
+        </div>
       </div>
     </article>
   );
@@ -251,19 +313,26 @@ export function LeadCard({ a, today, onOpen }: CardProps) {
 
 /** Side list next to the lead: small poster, title, deadline. */
 export function CompactCard({ a, today, index = 0, onOpen }: CardProps) {
+  const urgent = isUrgent(a.deadline, today);
   return (
     <article
       style={{ "--i": index } as React.CSSProperties}
-      className="animate-card-enter group relative flex gap-3 rounded-2xl border border-line bg-surface p-2.5 transition-colors hover:border-brand/60"
+      className="animate-card-enter group relative flex gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-2 transition-all duration-200 hover:border-brand/55 hover:shadow-sm"
     >
+      {urgent && (
+        <div
+          aria-hidden="true"
+          className="thermal-urgent pointer-events-none absolute inset-0 z-0"
+        />
+      )}
       <Thumb
         src={a.image_url}
         category={a.category}
         label={a.category_th}
         sizes="128px"
-        className="aspect-[4/3] w-28 shrink-0 rounded-xl sm:w-32"
+        className="relative z-[1] aspect-[4/3] w-28 shrink-0 rounded-lg sm:w-32"
       />
-      <div className="min-w-0 flex-1 py-0.5">
+      <div className="relative z-[1] min-w-0 flex-1 py-0.5 pr-1">
         <Meta a={a} />
         <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-semibold [overflow-wrap:anywhere] group-hover:text-brand">
           <Link

@@ -40,7 +40,7 @@ export function HeaderSearch({ className = "" }: { className?: string }) {
         enterKeyHint="search"
         defaultValue={onHome ? (params.get("q") ?? "") : ""}
         placeholder="ค้นหาประกาศ เช่น ทุน, Python, SCB"
-        className="min-h-11 w-full rounded-full border border-white/15 bg-white/10 pr-12 pl-4 text-base text-white outline-none placeholder:text-white/60 focus:border-teal-300 focus:bg-white/15 focus:ring-4 focus:ring-teal-300/25 md:text-sm"
+        className="min-h-11 w-full rounded-full border border-white/15 bg-white/10 pr-12 pl-4 text-base text-white transition-[background-color,border-color,box-shadow] duration-150 outline-none placeholder:text-white/70 focus:border-teal-300 focus:bg-white/15 focus:ring-4 focus:ring-teal-300/25 md:text-sm"
       />
       {keep.map(([k, v]) => (
         <input key={k} type="hidden" name={k} value={v} />
@@ -48,7 +48,7 @@ export function HeaderSearch({ className = "" }: { className?: string }) {
       <button
         type="submit"
         aria-label="ค้นหา"
-        className="absolute top-1/2 right-0 grid size-11 -translate-y-1/2 place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+        className="absolute top-1/2 right-0 grid size-11 -translate-y-1/2 place-items-center rounded-full text-white/75 transition-colors hover:bg-white/10 hover:text-white"
       >
         <svg
           aria-hidden
@@ -91,7 +91,7 @@ export function CategoryTabs() {
     <nav
       ref={nav}
       aria-label="หมวดประกาศ"
-      className="-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none]"
+      className="-mb-px flex gap-1 overflow-x-auto py-1 [scrollbar-width:none]"
     >
       {tabs.map((c) => {
         const on = active === c.id;
@@ -100,24 +100,24 @@ export function CategoryTabs() {
             key={c.id || "all"}
             href={hrefWith(base, { category: c.id || null })}
             aria-current={on ? "page" : undefined}
-            className={`relative inline-flex min-h-11 shrink-0 items-center px-3 text-sm whitespace-nowrap transition-colors active:scale-95 ${
+            className={`relative inline-flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap transition-[background-color,color,transform] duration-150 active:scale-95 ${
               on
-                ? "font-semibold text-fg after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
-                : "text-muted hover:text-fg"
+                ? "bg-brand-soft/80 font-semibold text-brand after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
+                : "text-muted hover:bg-surface-2/80 hover:text-fg"
             }`}
           >
             {c.th}
           </Link>
         );
       })}
-      <span aria-hidden className="mx-1 my-3 w-px shrink-0 bg-line-strong" />
+      <span aria-hidden className="mx-1.5 my-3 w-px shrink-0 bg-line-strong" />
       <Link
         href="/news"
         aria-current={path === "/news" ? "page" : undefined}
-        className={`relative inline-flex min-h-11 shrink-0 items-center px-3 text-sm whitespace-nowrap transition-colors active:scale-95 ${
+        className={`relative inline-flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap transition-[background-color,color,transform] duration-150 active:scale-95 ${
           path === "/news"
-            ? "font-semibold text-fg after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
-            : "text-muted hover:text-fg"
+            ? "bg-brand-soft/80 font-semibold text-brand after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
+            : "text-muted hover:bg-surface-2/80 hover:text-fg"
         }`}
       >
         ข่าวสาร

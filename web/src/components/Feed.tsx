@@ -24,7 +24,12 @@ import { TagLinks } from "@/components/TagLinks";
 import type { Announcement } from "@/lib/api";
 import { thDate } from "@/lib/format";
 
-type Ctx = { open: (a: Announcement) => void; today: string; q?: string };
+type Ctx = {
+  open: (a: Announcement) => void;
+  today: string;
+  majors: Record<string, string>;
+  q?: string;
+};
 const PreviewCtx = createContext<Ctx | null>(null);
 
 function usePreview(): Ctx {
@@ -62,7 +67,10 @@ export function PreviewProvider({
     opener.current = document.activeElement as HTMLElement | null;
     setCurrent(a);
   }, []);
-  const ctx = useMemo(() => ({ open, today, q }), [open, today, q]);
+  const ctx = useMemo(
+    () => ({ open, today, majors, q }),
+    [open, today, majors, q],
+  );
 
   function close() {
     dialog.current?.close();
@@ -92,9 +100,50 @@ export function PreviewProvider({
   );
 }
 
-/** The main list: image cards, two columns from tablet up. */
+const MATRIX_CELLS = [
+  0, 1, 0, 2, 0, 1, 0,
+  1, 0, 2, 3, 2, 0, 1,
+  0, 1, 0, 2, 0, 1, 0,
+] as const;
+
+/** #22 ASCII and Pixels: tiny decorative live radar matrix strip paired with the crawler pulse. */
+export function RadarMatrixStrip({ fresh }: { fresh: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/80 px-2.5 py-1.5 font-mono text-[11px] leading-none tracking-wider text-muted select-none"
+    >
+      <span className="grid grid-cols-7 gap-[2px]">
+        {MATRIX_CELLS.map((tier, idx) => {
+          const lit = fresh && tier >= 2;
+          const dim = fresh && tier === 1;
+          return (
+            <span
+              key={idx}
+              style={
+                lit ? ({ "--p": idx % 5 } as React.CSSProperties) : undefined
+              }
+              className={`size-[3px] rounded-[0.5px] ${
+                tier === 3 && fresh
+                  ? "radar-pixel-active bg-live"
+                  : lit
+                    ? "radar-pixel-active bg-brand"
+                    : dim
+                      ? "bg-brand/40"
+                      : "bg-line-strong/70"
+              }`}
+            />
+          );
+        })}
+      </span>
+      <span>{fresh ? "[::.:] SCAN 1H" : "[....] IDLE"}</span>
+    </span>
+  );
+}
+
+/** The main list: image cards, three columns on desktop. */
 export function Feed({ items }: { items: Announcement[] }) {
-  const { open, today, q } = usePreview();
+  const { open, today, majors, q } = usePreview();
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((a, i) => (
@@ -104,6 +153,7 @@ export function Feed({ items }: { items: Announcement[] }) {
           today={today}
           index={i}
           q={q}
+          majors={majors}
           onOpen={open}
         />
       ))}
@@ -183,7 +233,7 @@ export function NewsStrip({ items }: { items: Announcement[] }) {
 
 /** Front-page lead: the soonest deadline as a big poster, the next few beside it. */
 export function ClosingHero({ items }: { items: Announcement[] }) {
-  const { open, today } = usePreview();
+  const { open, today, majors } = usePreview();
   const [lead, ...rest] = items;
   if (!lead) return null;
   return (
@@ -194,7 +244,7 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
           className="text-xl font-semibold tracking-tight sm:text-2xl"
         >
           <span
-            className="mr-2 inline-block size-2.5 translate-y-[-2px] rounded-full bg-danger align-middle"
+            className="live-dot relative mr-2.5 inline-block size-2.5 translate-y-[-2px] rounded-full bg-danger align-middle"
             aria-hidden
           />
           ใกล้ปิดรับ
@@ -211,7 +261,7 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
           rest.length ? "grid gap-4 lg:grid-cols-[1.4fr_1fr]" : "max-w-3xl"
         }
       >
-        <LeadCard a={lead} today={today} onOpen={open} />
+        <LeadCard a={lead} today={today} majors={majors} onOpen={open} />
         {rest.length > 0 && (
           <ol className="grid content-start gap-3">
             {rest.map((a, i) => (
@@ -239,47 +289,55 @@ function Preview({
 }) {
   // General news has no deadline, eligibility or reminder to show.
   const isNews = a.category === "general" && !a.deadline;
-  // Summaries are 2-3 lines; show each line as its own point when the model wrote several.
+  // Summaries are 2-3 lines; show up to 3 clean bullets when multiple lines exist.
   const points = (a.summary_th ?? "")
     .split(/\n+/)
-    .map((s) => s.trim())
+    .map((s) => s.replace(/^[-•*]\s*/, "").trim())
     .filter(Boolean);
 
   return (
     <>
-      <div className="flex items-start gap-3 border-b border-line px-5 pt-4 pb-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <CategoryChip category={a.category} label={a.category_th} />
-            <span className="break-words">{a.source_name}</span>
+      <div className="sticky top-0 z-10 border-b border-line bg-surface/95 px-5 pt-2.5 pb-3 backdrop-blur-md md:pt-4">
+        <div
+          aria-hidden="true"
+          className="mx-auto mb-2 h-1 w-10 rounded-full bg-line-strong md:hidden"
+        />
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <CategoryChip category={a.category} label={a.category_th} />
+              <span className="break-words font-medium text-fg/85">
+                {a.source_name}
+              </span>
+            </div>
+            <h2
+              id="preview-title"
+              tabIndex={-1}
+              title={a.title}
+              className="mt-2 line-clamp-4 text-lg leading-snug font-semibold outline-none [overflow-wrap:anywhere]"
+            >
+              {a.title}
+            </h2>
           </div>
-          <h2
-            id="preview-title"
-            tabIndex={-1}
-            title={a.title}
-            className="mt-2 line-clamp-4 text-lg leading-snug font-semibold outline-none [overflow-wrap:anywhere]"
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="ปิด"
+            className="-mt-1 -mr-2 grid size-11 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
-            {a.title}
-          </h2>
+            <svg
+              aria-hidden
+              viewBox="0 0 20 20"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            >
+              <path d="M5 5l10 10M15 5L5 15" />
+            </svg>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="ปิด"
-          className="-mt-1 -mr-2 grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
-        >
-          <svg
-            aria-hidden
-            viewBox="0 0 20 20"
-            className="size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          >
-            <path d="M5 5l10 10M15 5L5 15" />
-          </svg>
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
@@ -297,9 +355,9 @@ function Preview({
             สรุป
           </h3>
           {points.length > 1 ? (
-            <ul className="mt-1.5 list-disc space-y-1 pl-5 leading-relaxed [overflow-wrap:anywhere]">
-              {points.slice(0, 3).map((p) => (
-                <li key={p}>{p}</li>
+            <ul className="mt-1.5 list-disc space-y-1.5 pl-5 leading-relaxed marker:text-brand [overflow-wrap:anywhere]">
+              {points.slice(0, 3).map((p, idx) => (
+                <li key={`${idx}-${p}`}>{p}</li>
               ))}
             </ul>
           ) : (
@@ -334,9 +392,11 @@ function Preview({
                   )}
                 </Row>
                 <Row label="ชั้นปี">
-                  {a.eligible_years
-                    ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
-                    : "ไม่จำกัด / ไม่ระบุ"}
+                  <span className="tabular-nums">
+                    {a.eligible_years
+                      ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
+                      : "ไม่จำกัด / ไม่ระบุ"}
+                  </span>
                 </Row>
                 <Row label="สาขา">
                   {a.eligible_majors
@@ -344,10 +404,16 @@ function Preview({
                     : "ไม่จำกัด / ไม่ระบุ"}
                 </Row>
                 <Row label="GPAX ขั้นต่ำ">
-                  {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
+                  <span className="tabular-nums">
+                    {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
+                  </span>
                 </Row>
                 {a.published_on && (
-                  <Row label="ประกาศเมื่อ">{thDate(a.published_on)}</Row>
+                  <Row label="ประกาศเมื่อ">
+                    <span className="tabular-nums">
+                      {thDate(a.published_on)}
+                    </span>
+                  </Row>
                 )}
               </tbody>
             </table>
@@ -358,7 +424,7 @@ function Preview({
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-line bg-surface px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="space-y-2 border-t border-line bg-surface/95 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md">
         {isNews ? (
           a.published_on && (
             <p className="text-sm text-muted">

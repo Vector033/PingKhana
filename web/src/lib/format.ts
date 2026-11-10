@@ -42,7 +42,7 @@ export const CATEGORY_STYLE: Record<string, string> = {
     "bg-emerald-50 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-200",
   internship:
     "bg-blue-50 text-blue-800 ring-blue-600/20 dark:bg-blue-950 dark:text-blue-200",
-  job: "bg-violet-50 text-violet-800 ring-violet-600/20 dark:bg-violet-950 dark:text-violet-200",
+  job: "bg-teal-50 text-teal-800 ring-teal-600/20 dark:bg-teal-950 dark:text-teal-200",
   activity:
     "bg-orange-50 text-orange-800 ring-orange-600/20 dark:bg-orange-950 dark:text-orange-200",
   general:
@@ -63,7 +63,7 @@ export const CATEGORY_TINT: Record<string, string> = {
     "from-emerald-100 to-emerald-200 text-emerald-700 dark:from-emerald-950 dark:to-emerald-900 dark:text-emerald-300",
   internship:
     "from-blue-100 to-blue-200 text-blue-700 dark:from-blue-950 dark:to-blue-900 dark:text-blue-300",
-  job: "from-violet-100 to-violet-200 text-violet-700 dark:from-violet-950 dark:to-violet-900 dark:text-violet-300",
+  job: "from-teal-100 to-teal-200 text-teal-700 dark:from-teal-950 dark:to-teal-900 dark:text-teal-300",
   activity:
     "from-orange-100 to-orange-200 text-orange-700 dark:from-orange-950 dark:to-orange-900 dark:text-orange-300",
   general:
