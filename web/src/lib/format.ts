@@ -13,10 +13,19 @@ const TH_MONTHS = [
   "ธ.ค.",
 ];
 
+const TH_DAYS = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+
 /** "2026-10-20" -> "20 ต.ค. 69" (Buddhist-era year, as Thai students read dates). */
 export function thDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
   return `${d} ${TH_MONTHS[m - 1]} ${String((y + 543) % 100).padStart(2, "0")}`;
+}
+
+/** "2026-11-14" -> "ส. 14 พ.ย." (Thai day-of-week + date for instant deadline scanning). */
+export function thDayDate(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return `${TH_DAYS[dow]} ${d} ${TH_MONTHS[m - 1]}`;
 }
 
 /** Today in Bangkok as YYYY-MM-DD. */

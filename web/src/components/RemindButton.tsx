@@ -56,26 +56,60 @@ export function remindBlockedReason(
   return null;
 }
 
-/** The LINE button, or a one-line reason in its place. */
+/** Transparent 3-step safety net so students know exactly when LINE pings. */
+export function RemindSafetyTimeline({
+  className = "",
+}: {
+  className?: string;
+}) {
+  return (
+    <p
+      className={`flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[11px] leading-snug text-pretty text-muted ${className}`}
+    >
+      <span className="inline-flex items-center gap-1 font-medium whitespace-nowrap text-fg/85">
+        <span aria-hidden className="size-1.5 rounded-full bg-line-green" />
+        กดเตือน
+      </span>
+      <span aria-hidden className="text-muted/70">
+        →
+      </span>
+      <span className="whitespace-nowrap">เตือนก่อนปิด 3 วัน</span>
+      <span aria-hidden className="text-muted/70">
+        →
+      </span>
+      <span className="whitespace-nowrap">เตือนซ้ำก่อนปิด 1 วัน</span>
+      <span className="whitespace-nowrap">· ยกเลิกได้ตลอด</span>
+    </p>
+  );
+}
+
+/** The LINE button + transparent 3-step safety timeline, or a one-line reason in its place. */
 export function RemindSlot({
   id,
   deadline,
   today,
   className = "",
+  showTimeline = true,
 }: {
   id: number;
   deadline: string | null;
   today: string;
   className?: string;
+  showTimeline?: boolean;
 }) {
   const reason = remindBlockedReason(deadline, today);
   if (reason) {
     return (
-      <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-sm text-muted">
+      <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-sm text-pretty text-muted">
         <BellIcon className="mt-0.5 size-4 opacity-70" />
         {reason}
       </p>
     );
   }
-  return <RemindButton id={id} className={className} />;
+  return (
+    <div className="space-y-1.5">
+      <RemindButton id={id} className={className} />
+      {showTimeline && <RemindSafetyTimeline />}
+    </div>
+  );
 }

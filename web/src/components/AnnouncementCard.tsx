@@ -7,21 +7,46 @@ import {
   daysLeft,
   daysLeftLabel,
   thDate,
+  thDayDate,
   tidyWrap,
 } from "@/lib/format";
+
+const CATEGORY_DOT: Record<string, string> = {
+  scholarship: "bg-emerald-400",
+  internship: "bg-sky-400",
+  job: "bg-teal-400",
+  activity: "bg-orange-400",
+  general: "bg-slate-300",
+};
 
 export function CategoryChip({
   category,
   label,
+  onImage = false,
   className = "",
 }: {
   category: string;
   label: string;
+  /** High-contrast dark frosted backing pill for floating over bright poster thumbnails. */
+  onImage?: boolean;
   className?: string;
 }) {
+  if (onImage) {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full bg-slate-950/80 px-2.5 py-1 text-xs font-medium tracking-[0.02em] text-white shadow-sm ring-1 ring-white/20 backdrop-blur-md ${className}`}
+      >
+        <span
+          aria-hidden
+          className={`size-1.5 shrink-0 rounded-full ${CATEGORY_DOT[category] ?? CATEGORY_DOT.general}`}
+        />
+        {label}
+      </span>
+    );
+  }
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${CATEGORY_STYLE[category] ?? CATEGORY_STYLE.general} ${className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tracking-[0.02em] ring-1 ring-inset ${CATEGORY_STYLE[category] ?? CATEGORY_STYLE.general} ${className}`}
     >
       {label}
     </span>
@@ -42,22 +67,29 @@ export function DeadlineBadge({
 }: {
   deadline: string;
   today: string;
-  /** White text for use over a dark photo gradient. */
+  /** Frosted dark high-contrast pill for floating over bright faculty posters. */
   onImage?: boolean;
 }) {
   const n = daysLeft(deadline, today);
+  const dayDate = thDayDate(deadline);
   if (n >= 0 && n <= 3) {
     return (
-      <span className="animate-urgency inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-sm font-semibold whitespace-nowrap text-danger tabular-nums">
-        <ClockIcon />
-        {daysLeftLabel(n)}
-        <span className="font-normal">· {thDate(deadline)}</span>
+      <span
+        className={`animate-urgency inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums sm:text-[13px] ${
+          onImage
+            ? "bg-red-950/90 text-red-50 shadow-md ring-1 ring-red-300/45 backdrop-blur-md"
+            : "bg-danger-soft text-danger ring-1 ring-danger/25"
+        }`}
+      >
+        <AlertClockIcon />
+        <span className="whitespace-nowrap">ปิด {dayDate}</span>{" "}
+        <span className="whitespace-nowrap">· {daysLeftLabel(n)}</span>
       </span>
     );
   }
   if (n < 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-muted line-through decoration-1">
+      <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap text-muted line-through decoration-1 tabular-nums">
         <ClockIcon />
         ปิดรับ {thDate(deadline)}
       </span>
@@ -65,20 +97,22 @@ export function DeadlineBadge({
   }
   if (onImage) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-sm whitespace-nowrap text-white tabular-nums backdrop-blur-sm">
+      <span className="inline-flex flex-wrap items-center gap-x-1.5 rounded-full bg-slate-950/80 px-2.5 py-1 text-xs text-white shadow-sm ring-1 ring-white/20 backdrop-blur-md tabular-nums sm:text-[13px]">
         <ClockIcon />
-        <span className="font-semibold">ปิดรับ {thDate(deadline)}</span>
-        <span className="text-white/80">· {daysLeftLabel(n)}</span>
+        <span className="font-semibold whitespace-nowrap">ปิด {dayDate}</span>{" "}
+        <span className="whitespace-nowrap text-white/85">
+          · {daysLeftLabel(n)}
+        </span>
       </span>
     );
   }
   return (
-    <span className="inline-flex flex-wrap items-center gap-x-1.5 text-sm tabular-nums">
+    <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm tabular-nums">
       <ClockIcon />
-      {/* Marker-pen highlight: the one thing to remember from the card. */}
+      {/* #3 Human Touch: student highlighter underline on exact closing day & date. */}
       <span className="marker font-semibold whitespace-nowrap text-fg">
-        ปิดรับ {thDate(deadline)}
-      </span>
+        ปิด {dayDate}
+      </span>{" "}
       <span className="whitespace-nowrap text-muted">· {daysLeftLabel(n)}</span>
     </span>
   );
@@ -92,11 +126,72 @@ function ClockIcon() {
       className="size-3.5 shrink-0"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <circle cx="8" cy="8" r="6.25" />
-      <path d="M8 4.5V8l2.25 1.5" strokeLinecap="round" />
+      <path d="M8 4.5V8l2.25 1.5" />
     </svg>
+  );
+}
+
+function AlertClockIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 16 16"
+      className="size-3.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="M8 4.75v3.5M8 10.75h.01" />
+    </svg>
+  );
+}
+
+function VerifiedSourceIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 16 16"
+      className="size-3 shrink-0 text-brand"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 1.75 13 3.75v4c0 3.1-2.1 5.6-5 6.5-2.9-.9-5-3.4-5-6.5v-4l5-2Z" />
+      <path d="m5.75 8.1 1.5 1.5 3-3.1" />
+    </svg>
+  );
+}
+
+/** Official faculty / department trust pill paired with optional publish date. */
+export function SourceTrustPill({
+  name,
+  publishedOn,
+}: {
+  name: string;
+  publishedOn?: string | null;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+      <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md border border-line bg-surface-2/85 px-2 py-0.5 text-[11px] font-medium text-fg/90">
+        <VerifiedSourceIcon />
+        <span className="truncate">{name}</span>
+      </span>
+      {publishedOn && (
+        <span className="whitespace-nowrap tabular-nums">
+          {thDate(publishedOn)}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -131,19 +226,7 @@ const STRETCH =
   "outline-none after:absolute after:inset-0 after:z-10 after:rounded-[inherit] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-brand";
 
 function Meta({ a }: { a: Announcement }) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
-      <span className="min-w-0 break-words font-medium text-fg/85">
-        {a.source_name}
-      </span>
-      {a.published_on && (
-        <span className="whitespace-nowrap tabular-nums">
-          <span aria-hidden>· </span>
-          {thDate(a.published_on)}
-        </span>
-      )}
-    </div>
-  );
+  return <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />;
 }
 
 function EligibilityChips({
@@ -229,12 +312,13 @@ export function AnnouncementCard({
         <CategoryChip
           category={a.category}
           label={a.category_th}
-          className="absolute top-3 left-3 shadow-sm"
+          onImage
+          className="absolute top-3 left-3"
         />
       </div>
       <div className="relative z-[1] flex flex-1 flex-col p-4">
         <Meta a={a} />
-        <h3 className="mt-1.5 line-clamp-3 text-base leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand">
+        <h3 className="mt-2 line-clamp-3 text-base leading-[1.3] font-semibold tracking-[-0.01em] text-balance [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
             href={`/a/${a.id}`}
             onClick={opener(a, onOpen)}
@@ -244,7 +328,7 @@ export function AnnouncementCard({
           </Link>
         </h3>
         {summary && (
-          <p className="mt-1.5 line-clamp-2 text-sm text-pretty text-muted [overflow-wrap:anywhere]">
+          <p className="mt-1.5 line-clamp-2 text-sm leading-[1.6] text-pretty text-muted [overflow-wrap:anywhere]">
             <Highlight text={summary} q={q} />
           </p>
         )}
@@ -292,14 +376,12 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
       <div className="relative z-[1] p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
-          <span className="font-medium text-fg/85">{a.source_name}</span>
-          {a.published_on && (
-            <span className="whitespace-nowrap tabular-nums">
-              · {thDate(a.published_on)}
-            </span>
-          )}
+          <SourceTrustPill
+            name={a.source_name}
+            publishedOn={a.published_on}
+          />
         </div>
-        <h3 className="mt-2 line-clamp-3 text-xl leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
+        <h3 className="mt-2.5 line-clamp-3 text-xl leading-[1.3] font-semibold tracking-[-0.02em] text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
           <Link
             href={`/a/${a.id}`}
             onClick={opener(a, onOpen)}
@@ -309,7 +391,7 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
           </Link>
         </h3>
         {a.summary_th && (
-          <p className="mt-2 line-clamp-2 max-w-2xl text-pretty text-muted">
+          <p className="mt-2 line-clamp-2 max-w-[65ch] leading-[1.6] text-pretty text-muted">
             {tidyWrap(a.summary_th)}
           </p>
         )}
@@ -344,7 +426,7 @@ export function CompactCard({ a, today, index = 0, onOpen }: CardProps) {
       />
       <div className="relative z-[1] min-w-0 flex-1 py-0.5 pr-1">
         <Meta a={a} />
-        <h3 className="mt-1 line-clamp-2 text-sm leading-snug font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand">
+        <h3 className="mt-1.5 line-clamp-2 text-sm leading-[1.3] font-semibold text-balance [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
             href={`/a/${a.id}`}
             onClick={opener(a, onOpen)}

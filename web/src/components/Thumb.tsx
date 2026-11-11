@@ -27,20 +27,28 @@ export function Thumb({
   const [failed, setFailed] = useState(false);
   const show = Boolean(src) && !failed;
   return (
-    <div className={`relative overflow-hidden bg-surface-2 ${className}`}>
+    <div
+      className={`relative overflow-hidden bg-surface-2 after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-inset after:ring-black/10 dark:after:ring-white/10 ${className}`}
+    >
       {show ? (
-        <Image
-          src={src!}
-          alt=""
-          fill
-          sizes={sizes}
-          priority={priority}
-          // A host we have not listed (e.g. a newly added source) loads directly instead of
-          // crashing the page on next/image's host check.
-          unoptimized={!optimizable(src!)}
-          onError={() => setFailed(true)}
-          className="object-cover object-top transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
-        />
+        <>
+          <Image
+            src={src!}
+            alt=""
+            fill
+            sizes={sizes}
+            priority={priority}
+            // A host we have not listed (e.g. a newly added source) loads directly instead of
+            // crashing the page on next/image's host check.
+            unoptimized={!optimizable(src!)}
+            onError={() => setFailed(true)}
+            className="object-cover object-top transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/30 to-transparent"
+          />
+        </>
       ) : (
         <div
           aria-hidden

@@ -261,7 +261,7 @@ export async function Listing({
         <TaggedStrip items={tagged.items} tags={followedTags} />
       )}
       <section aria-label="รายการประกาศ" aria-live="polite" className="min-w-0">
-        <div className="mb-4 border-b border-line pb-3">
+        <div className="mb-6 border-b border-line pb-4 sm:mb-8">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
               {heading}

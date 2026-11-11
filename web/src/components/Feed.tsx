@@ -16,6 +16,7 @@ import {
   CompactCard,
   DeadlineBadge,
   LeadCard,
+  SourceTrustPill,
 } from "@/components/AnnouncementCard";
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
@@ -141,11 +142,11 @@ export function RadarMatrixStrip({ fresh }: { fresh: boolean }) {
   );
 }
 
-/** The main list: image cards, three columns on desktop. */
+/** The main list: image cards, three columns on desktop with uniform 16px/24px alignment rails. */
 export function Feed({ items }: { items: Announcement[] }) {
   const { open, today, majors, q } = usePreview();
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
       {items.map((a, i) => (
         <AnnouncementCard
           key={a.id}
@@ -261,7 +262,9 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
       </div>
       <div
         className={
-          rest.length ? "grid gap-4 lg:grid-cols-[1.4fr_1fr]" : "max-w-3xl"
+          rest.length
+            ? "grid gap-4 sm:gap-6 lg:grid-cols-[1.4fr_1fr]"
+            : "max-w-3xl"
         }
       >
         <LeadCard a={lead} today={today} majors={majors} onOpen={open} />
@@ -309,15 +312,13 @@ function Preview({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <CategoryChip category={a.category} label={a.category_th} />
-              <span className="break-words font-medium text-fg/85">
-                {a.source_name}
-              </span>
+              <SourceTrustPill name={a.source_name} />
             </div>
             <h2
               id="preview-title"
               tabIndex={-1}
               title={a.title}
-              className="mt-2 line-clamp-4 text-lg leading-snug font-semibold text-balance outline-none [overflow-wrap:anywhere]"
+              className="mt-2 line-clamp-4 text-lg leading-[1.3] font-semibold tracking-[-0.015em] text-balance outline-none [overflow-wrap:anywhere]"
             >
               {tidyWrap(a.title)}
             </h2>
@@ -358,13 +359,16 @@ function Preview({
             สรุป
           </h3>
           {points.length > 1 ? (
-            <ul className="mt-1.5 list-disc space-y-1.5 pl-5 leading-relaxed text-pretty marker:text-brand [overflow-wrap:anywhere]">
+            <ul className="mt-2 max-w-[65ch] space-y-2 leading-[1.6] text-pretty [overflow-wrap:anywhere]">
               {points.slice(0, 3).map((p, idx) => (
-                <li key={`${idx}-${p}`}>{tidyWrap(p)}</li>
+                <li key={`${idx}-${p}`} className="flex items-start gap-2">
+                  <BulletCheckIcon />
+                  <span>{tidyWrap(p)}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1.5 leading-relaxed text-pretty [overflow-wrap:anywhere]">
+            <p className="mt-2 max-w-[65ch] leading-[1.6] text-pretty [overflow-wrap:anywhere]">
               {points[0]
                 ? tidyWrap(points[0])
                 : "ยังไม่มีสรุป เปิดอ่านที่ประกาศต้นทาง"}
@@ -486,5 +490,23 @@ function Row({
       </th>
       <td className="py-2.5 align-top [overflow-wrap:anywhere]">{children}</td>
     </tr>
+  );
+}
+
+function BulletCheckIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 16 16"
+      className="mt-1 size-4 shrink-0 text-brand"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="m5.5 8.2 1.6 1.6 3.4-3.5" />
+    </svg>
   );
 }

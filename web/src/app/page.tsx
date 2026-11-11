@@ -5,7 +5,7 @@ import { RadarShader } from "@/components/RadarShader";
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <>
-      <section className="relative mb-6 overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-card sm:mb-8 sm:p-7">
+      <section className="relative mb-8 overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-7">
         {/* #9 Grainy Gradient: restrained teal tint (--brand at 6%) + SVG feTurbulence noise */}
         <div
           aria-hidden="true"
@@ -81,14 +81,17 @@ export default function Home({ searchParams }: PageProps<"/">) {
         </div>
 
         <div className="relative z-10">
-          <h1 className="max-w-3xl text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl">
+          <h1 className="max-w-3xl text-2xl leading-[1.3] font-semibold tracking-[-0.02em] text-balance sm:text-3xl">
             ทุน สหกิจ งาน และกิจกรรมที่เปิดรับ ในที่เดียว
           </h1>
-          <p className="mt-2 hidden max-w-2xl text-balance text-muted sm:block">
-            ดึงจากเว็บมหาวิทยาลัยและหน่วยงานการศึกษาทุกชั่วโมง สรุปสั้นๆ
-            พร้อมวันปิดรับ กดประกาศที่สนใจแล้วให้{"\u00A0"}LINE เตือนก่อนปิดรับ{" "}
-            <span className="whitespace-nowrap">3 วัน</span>และ{" "}
-            <span className="whitespace-nowrap">1 วัน</span>
+          <p className="mt-2 hidden max-w-[65ch] text-base leading-[1.6] text-balance text-muted sm:block">
+            ไม่พลาดทุน สหกิจ และงานสำคัญจากเว็บมหาวิทยาลัย{" "}
+            <span className="marker font-medium text-fg">
+              <span className="whitespace-nowrap">เตือนก่อนปิดรับ</span>{" "}
+              <span className="whitespace-nowrap">3 วัน</span>และ{" "}
+              <span className="whitespace-nowrap">1 วัน</span>
+            </span>{" "}
+            ใน{"\u00A0"}LINE อัปเดตอัตโนมัติทุกชั่วโมง
           </p>
           <Suspense fallback={<div className="mt-4 h-9" />}>
             <StatsStrip />
