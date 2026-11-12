@@ -14,14 +14,15 @@ export function Thumb({
   category,
   label,
   sizes,
-  priority = false,
+  eager = false,
   className = "",
 }: {
   src?: string | null;
   category: string;
   label: string;
   sizes: string;
-  priority?: boolean;
+  /** Above the fold: load now at high priority instead of lazily (the LCP poster). */
+  eager?: boolean;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -37,7 +38,8 @@ export function Thumb({
             alt=""
             fill
             sizes={sizes}
-            priority={priority}
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
             // A host we have not listed (e.g. a newly added source) loads directly instead of
             // crashing the page on next/image's host check.
             unoptimized={!optimizable(src!)}

@@ -11,7 +11,7 @@ export function TagLinks({ a }: { a: Announcement }) {
         <li key={t}>
           <Link
             href={`${base}?tag=${encodeURIComponent(t)}`}
-            className="inline-flex min-h-9 items-center rounded-full bg-surface-2 px-3 text-sm text-muted hover:text-brand"
+            className="inline-flex min-h-11 items-center rounded-full bg-surface-2 px-3 text-sm text-muted hover:text-brand"
           >
             #{t}
           </Link>

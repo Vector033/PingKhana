@@ -144,24 +144,14 @@ body {
 
 /* ---------- Live Intelligence Radar surfaces ---------- */
 
-/* #18 Square-Dot Grid: 20px grid using --line at 40% opacity. */
+/* #18 Square-Dot Grid: 2px coordinate dots every 20px. Dots only: ruled lines read as graph paper
+   and fight the radar rings. */
 .radar-dot-grid {
-  background-image:
-    conic-gradient(
-      from 270deg at 3px 3px,
-      color-mix(in srgb, var(--line) 40%, transparent) 90deg,
-      transparent 0
-    ),
-    linear-gradient(
-      to right,
-      color-mix(in srgb, var(--line) 40%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--line) 40%, transparent) 1px,
-      transparent 1px
-    );
+  background-image: conic-gradient(
+    from 270deg at 2px 2px,
+    var(--line-strong) 90deg,
+    transparent 0
+  );
   background-size: 20px 20px;
 }
 
@@ -283,25 +273,10 @@ body {
   animation: livePing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
-@keyframes radarPixel {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  45% {
-    opacity: 1;
-  }
-}
-
 .bell-trigger:hover .bell,
 .bell-trigger:focus-visible .bell {
   animation: bellRing 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97);
   transform-origin: 50% 10%;
-}
-
-.radar-pixel-active {
-  animation: radarPixel 2.4s ease-in-out infinite;
-  animation-delay: calc(var(--p, 0) * 280ms);
 }
 
 /* ---------- Quick preview drawer (native <dialog>) ---------- */
@@ -362,7 +337,6 @@ body {
   .animate-card-enter,
   .animate-urgency,
   .live-dot::after,
-  .radar-pixel-active,
   .drawer[open],
   .drawer::backdrop,
   .bell-trigger:hover .bell,

@@ -99,7 +99,9 @@ export function DeadlineBadge({
     return (
       <span className="inline-flex flex-wrap items-center gap-x-1.5 rounded-full bg-slate-950/80 px-2.5 py-1 text-xs text-white shadow-sm ring-1 ring-white/20 backdrop-blur-md tabular-nums sm:text-[13px]">
         <ClockIcon />
-        <span className="font-semibold whitespace-nowrap">ปิด {dayDate}</span>{" "}
+        <span className="font-semibold whitespace-nowrap">
+          ปิด {dayDate}
+        </span>{" "}
         <span className="whitespace-nowrap text-white/85">
           · {daysLeftLabel(n)}
         </span>
@@ -144,12 +146,31 @@ function AlertClockIcon() {
       className="size-3.5 shrink-0"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
       <circle cx="8" cy="8" r="6.25" />
       <path d="M8 4.75v3.5M8 10.75h.01" />
+    </svg>
+  );
+}
+
+/** Bullet for summary lines in the drawer and on the full page. */
+export function BulletCheckIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 16 16"
+      className="mt-1 size-4 shrink-0 text-brand"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="m5.5 8.2 1.6 1.6 3.4-3.5" />
     </svg>
   );
 }
@@ -202,6 +223,8 @@ type CardProps = {
   q?: string;
   majors?: Record<string, string>;
   onOpen?: (a: Announcement) => void;
+  /** First row of a page: load the poster eagerly. */
+  eager?: boolean;
 };
 
 /** Plain click opens the quick preview; new-tab / new-window clicks go to the full page. */
@@ -286,6 +309,7 @@ export function AnnouncementCard({
   q,
   majors,
   onOpen,
+  eager,
 }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
   const title = tidyWrap(a.title);
@@ -293,7 +317,7 @@ export function AnnouncementCard({
   return (
     <article
       style={{ "--i": index } as React.CSSProperties}
-      className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-200 hover:border-brand/55 hover:shadow-md hover:ring-4 hover:ring-[var(--brand-ring)] motion-safe:hover:-translate-y-1"
+      className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-[transform,box-shadow,border-color] duration-200 hover:border-brand/55 hover:shadow-card motion-safe:hover:-translate-y-1"
     >
       {urgent && (
         <div
@@ -307,6 +331,7 @@ export function AnnouncementCard({
           category={a.category}
           label={a.category_th}
           sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
+          eager={eager}
           className="aspect-[16/9]"
         />
         <CategoryChip
@@ -351,7 +376,7 @@ export function AnnouncementCard({
 export function LeadCard({ a, today, majors, onOpen }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
   return (
-    <article className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-200 hover:border-brand/55 hover:shadow-md hover:ring-4 hover:ring-[var(--brand-ring)] motion-safe:hover:-translate-y-1">
+    <article className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:border-brand/55 hover:shadow-card motion-safe:hover:-translate-y-1">
       {urgent && (
         <div
           aria-hidden="true"
@@ -364,7 +389,7 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
           category={a.category}
           label={a.category_th}
           sizes="(min-width: 1024px) 680px, 100vw"
-          priority
+          eager
           className="aspect-[16/9]"
         />
         {a.deadline && (
@@ -376,10 +401,7 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
       <div className="relative z-[1] p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
-          <SourceTrustPill
-            name={a.source_name}
-            publishedOn={a.published_on}
-          />
+          <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
         </div>
         <h3 className="mt-2.5 line-clamp-3 text-xl leading-[1.3] font-semibold tracking-[-0.02em] text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
           <Link
@@ -409,7 +431,7 @@ export function CompactCard({ a, today, index = 0, onOpen }: CardProps) {
   return (
     <article
       style={{ "--i": index } as React.CSSProperties}
-      className="animate-card-enter group relative flex gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-2 transition-all duration-200 hover:border-brand/55 hover:shadow-sm"
+      className="animate-card-enter group relative flex gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-2 transition-[box-shadow,border-color] duration-200 hover:border-brand/55 hover:shadow-sm"
     >
       {urgent && (
         <div

@@ -31,9 +31,7 @@ const DARK_PALETTE: Palette = {
 
 function hexToRgb(hex: string): RGB {
   const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(
-    (v) => v / 255,
-  ) as RGB;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255) as RGB;
 }
 
 const VERT_SRC = `
@@ -234,7 +232,9 @@ export function RadarShader({ speed = 0.3, className = "" }: RadarShaderProps) {
     function syncSize() {
       if (!container || !canvas || !gl) return;
       const rect = container.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // The output is a soft glow: 1 canvas pixel per CSS pixel looks the same and shades
+      // up to 9x fewer fragments than a 3x phone screen would.
+      const dpr = 1;
       const w = Math.max(1, Math.round(rect.width * dpr));
       const h = Math.max(1, Math.round(rect.height * dpr));
       if (canvas.width !== w || canvas.height !== h) {
@@ -266,16 +266,18 @@ export function RadarShader({ speed = 0.3, className = "" }: RadarShaderProps) {
     }
 
     function tick(now: number) {
-      const dt = Math.min(0.1, (now - lastNow) / 1000);
-      lastNow = now;
       const spd = effectiveSpeed();
       if (spd === 0) {
         rafId = 0;
         return;
       }
+      rafId = window.requestAnimationFrame(tick);
+      // The sweep is slow: ~30 fps is indistinguishable and halves GPU wake-ups on battery.
+      if (now - lastNow < 30) return;
+      const dt = Math.min(0.1, (now - lastNow) / 1000);
+      lastNow = now;
       simTime += dt * (spd / 0.3);
       drawFrame();
-      rafId = window.requestAnimationFrame(tick);
     }
 
     function updatePlayback(redrawStatic = false) {

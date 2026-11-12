@@ -5,7 +5,6 @@ import {
   Feed,
   NewsStrip,
   PreviewProvider,
-  RadarMatrixStrip,
   TaggedStrip,
 } from "@/components/Feed";
 import { getAnnouncements, getMeta, getStats, getTags } from "@/lib/api";
@@ -65,18 +64,15 @@ export async function StatsStrip() {
   const fresh = minutes != null && minutes <= 180;
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5 whitespace-nowrap">
-          <span
-            aria-hidden
-            className={`relative size-2 shrink-0 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
-          />
-          {minutes == null
-            ? "ยังไม่เคยดึงข้อมูล"
-            : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"}\u00A0${agoLabel(minutes)}`}
-        </p>
-        <RadarMatrixStrip fresh={fresh} />
-      </div>
+      <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5 whitespace-nowrap tabular-nums">
+        <span
+          aria-hidden
+          className={`relative size-2 shrink-0 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
+        />
+        {minutes == null
+          ? "ยังไม่เคยดึงข้อมูล"
+          : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"}\u00A0${agoLabel(minutes)}`}
+      </p>
       <dl className="flex flex-wrap gap-x-5 gap-y-1">
         <div className="whitespace-nowrap">
           <dt className="inline">ประกาศ </dt>
@@ -93,7 +89,8 @@ export async function StatsStrip() {
         <div className="whitespace-nowrap">
           <dt className="inline">จาก </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
-            {s.sources.length}{"\u00A0"}เว็บ
+            {s.sources.length}
+            {"\u00A0"}เว็บ
           </dd>
         </div>
       </dl>
@@ -351,7 +348,10 @@ export async function Listing({
             </Link>
           </div>
         ) : (
-          <Feed items={data.items} />
+          <Feed
+            items={data.items}
+            eager={!closing?.items.length && !tagged?.items.length}
+          />
         )}
         {pages > 1 && (
           <nav
@@ -434,12 +434,23 @@ function FilterLink({
 
 export function ListSkeleton() {
   return (
-    <div className="space-y-3" aria-hidden>
-      {Array.from({ length: 4 }).map((_, i) => (
+    // Same grid and card shape as <Feed>, so nothing jumps when the list arrives.
+    <div
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+      aria-hidden
+    >
+      {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="h-32 animate-pulse rounded-xl border border-line bg-surface motion-reduce:animate-none"
-        />
+          className="animate-pulse overflow-hidden rounded-2xl border border-line bg-surface motion-reduce:animate-none"
+        >
+          <div className="aspect-[16/9] bg-surface-2" />
+          <div className="space-y-2.5 p-4">
+            <div className="h-3 w-1/3 rounded bg-surface-2" />
+            <div className="h-4 w-11/12 rounded bg-surface-2" />
+            <div className="h-4 w-2/3 rounded bg-surface-2" />
+          </div>
+        </div>
       ))}
     </div>
   );

@@ -34,7 +34,7 @@ export function RemindButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`bell-trigger inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-line-green px-5 font-semibold text-line-green-fg shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:brightness-105 active:scale-[0.98] ${className}`}
+      className={`bell-trigger inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-line-green px-5 font-semibold text-line-green-fg shadow-sm transition-all duration-200 hover:shadow-md motion-safe:hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98] ${className}`}
     >
       <BellIcon />
       ให้ LINE เตือนก่อนปิดรับ
@@ -51,8 +51,7 @@ export function remindBlockedReason(
     return "ประกาศนี้ไม่ระบุวันปิดรับ จึงตั้งเตือนไม่ได้ ดูรายละเอียดที่ประกาศต้นทาง";
   const n = daysLeft(deadline, today);
   if (n < 0) return "ประกาศนี้ปิดรับไปแล้ว";
-  if (n === 0)
-    return "ปิดรับวันนี้ เตือนล่วงหน้าไม่ทันแล้ว ถ้าสนใจให้สมัครที่ประกาศต้นทางเลย";
+  if (n === 0) return "ปิดรับวันนี้ เตือนล่วงหน้าไม่ทันแล้ว ถ้าสนใจให้สมัครที่ประกาศต้นทางเลย";
   return null;
 }
 

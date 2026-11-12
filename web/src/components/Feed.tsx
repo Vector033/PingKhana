@@ -12,6 +12,7 @@ import {
 } from "react";
 import {
   AnnouncementCard,
+  BulletCheckIcon,
   CategoryChip,
   CompactCard,
   DeadlineBadge,
@@ -101,50 +102,17 @@ export function PreviewProvider({
   );
 }
 
-// prettier-ignore
-const MATRIX_CELLS = [
-  0, 1, 0, 2, 0, 1, 0,
-  1, 0, 2, 3, 2, 0, 1,
-  0, 1, 0, 2, 0, 1, 0,
-] as const;
-
-/** #22 ASCII and Pixels: tiny decorative live radar matrix strip paired with the crawler pulse. */
-export function RadarMatrixStrip({ fresh }: { fresh: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/80 px-2.5 py-1.5 font-mono text-[11px] leading-none tracking-wider text-muted select-none"
-    >
-      <span className="grid grid-cols-7 gap-[2px]">
-        {MATRIX_CELLS.map((tier, idx) => {
-          const lit = fresh && tier >= 2;
-          const dim = fresh && tier === 1;
-          return (
-            <span
-              key={idx}
-              style={
-                lit ? ({ "--p": idx % 5 } as React.CSSProperties) : undefined
-              }
-              className={`size-[3px] rounded-[0.5px] ${
-                tier === 3 && fresh
-                  ? "radar-pixel-active bg-live"
-                  : lit
-                    ? "radar-pixel-active bg-brand"
-                    : dim
-                      ? "bg-brand/40"
-                      : "bg-line-strong/70"
-              }`}
-            />
-          );
-        })}
-      </span>
-      <span>{fresh ? "[::.:] SCAN 1H" : "[....] IDLE"}</span>
-    </span>
-  );
-}
-
-/** The main list: image cards, three columns on desktop with uniform 16px/24px alignment rails. */
-export function Feed({ items }: { items: Announcement[] }) {
+/**
+ * The main list: image cards, three columns on desktop with uniform 16px/24px alignment rails.
+ * `eager`: this list starts the page (nothing above it), so its first row holds the LCP poster.
+ */
+export function Feed({
+  items,
+  eager = false,
+}: {
+  items: Announcement[];
+  eager?: boolean;
+}) {
   const { open, today, majors, q } = usePreview();
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
@@ -157,6 +125,7 @@ export function Feed({ items }: { items: Announcement[] }) {
           q={q}
           majors={majors}
           onOpen={open}
+          eager={eager && i < 3}
         />
       ))}
     </div>
@@ -336,7 +305,7 @@ function Preview({
               className="size-5"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.8"
+              strokeWidth="1.5"
               strokeLinecap="round"
             >
               <path d="M5 5l10 10M15 5L5 15" />
@@ -489,23 +458,5 @@ function Row({
       </th>
       <td className="py-2.5 align-top [overflow-wrap:anywhere]">{children}</td>
     </tr>
-  );
-}
-
-function BulletCheckIcon() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className="mt-1 size-4 shrink-0 text-brand"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="8" cy="8" r="6.25" />
-      <path d="m5.5 8.2 1.6 1.6 3.4-3.5" />
-    </svg>
   );
 }

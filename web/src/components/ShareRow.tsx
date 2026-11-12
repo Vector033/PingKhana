@@ -49,7 +49,7 @@ function CalendarIcon() {
       className="size-4"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.7"
+      strokeWidth="1.9"
     >
       <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
       <path d="M3 8.5h14M7 3v3M13 3v3" strokeLinecap="round" />
@@ -65,7 +65,7 @@ function ShareIcon() {
       className="size-4"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.7"
+      strokeWidth="1.9"
       strokeLinecap="round"
     >
       <path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5" />

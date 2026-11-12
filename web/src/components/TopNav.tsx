@@ -102,7 +102,7 @@ export function CategoryTabs() {
             aria-current={on ? "page" : undefined}
             className={`relative inline-flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap transition-[background-color,color,transform] duration-150 active:scale-95 ${
               on
-                ? "bg-brand-soft/80 font-semibold text-brand after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
+                ? "bg-brand-soft/80 font-semibold text-brand"
                 : "text-muted hover:bg-surface-2/80 hover:text-fg"
             }`}
           >
@@ -116,7 +116,7 @@ export function CategoryTabs() {
         aria-current={path === "/news" ? "page" : undefined}
         className={`relative inline-flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap transition-[background-color,color,transform] duration-150 active:scale-95 ${
           path === "/news"
-            ? "bg-brand-soft/80 font-semibold text-brand after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand"
+            ? "bg-brand-soft/80 font-semibold text-brand"
             : "text-muted hover:bg-surface-2/80 hover:text-fg"
         }`}
       >

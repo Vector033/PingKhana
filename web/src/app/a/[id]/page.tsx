@@ -4,11 +4,12 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import {
+  BulletCheckIcon,
   CategoryChip,
   DeadlineBadge,
   SourceTrustPill,
 } from "@/components/AnnouncementCard";
-import { RemindSlot } from "@/components/RemindButton";
+import { remindBlockedReason, RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
 import { TagLinks } from "@/components/TagLinks";
 import { Thumb } from "@/components/Thumb";
@@ -54,6 +55,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   await connection(); // "today" must be computed per request, not at build time
   const today = todayBangkok();
   const majorNames = new Map(meta.majors.map((m) => [m.id, m.th]));
+  const canRemind = remindBlockedReason(a.deadline, today) === null;
 
   const points = (a.summary_th ?? "")
     .split(/\n+/)
@@ -82,7 +84,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           category={a.category}
           label={a.category_th}
           sizes="(min-width: 768px) 672px, 100vw"
-          priority
+          eager
           className="mt-6 aspect-[16/9] rounded-2xl border border-line"
         />
       )}
@@ -99,7 +101,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
             <ul className="mt-2 max-w-[65ch] space-y-2 leading-[1.6] text-pretty [overflow-wrap:anywhere]">
               {points.map((p, idx) => (
                 <li key={`${idx}-${p}`} className="flex items-start gap-2.5">
-                  <SummaryBulletIcon />
+                  <BulletCheckIcon />
                   <span>{tidyWrap(p)}</span>
                 </li>
               ))}
@@ -130,7 +132,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <div>
           <dt className="text-muted">ชั้นปีที่สมัครได้</dt>
-          <dd className="mt-0.5">
+          <dd className="mt-0.5 tabular-nums">
             {a.eligible_years
               ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
               : "ไม่จำกัด / ไม่ระบุ"}
@@ -153,7 +155,16 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       </dl>
 
       <div className="contents sm:mt-6 sm:flex sm:flex-row sm:items-start sm:gap-3">
-        <div className="sticky bottom-3 z-10 mt-6 rounded-2xl border border-line bg-surface/95 p-3 shadow-card backdrop-blur-md sm:static sm:mt-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none">
+        {/* Phones: the LINE button rides the bottom edge. A "cannot remind" note is not an
+            action, so it stays in the flow instead of floating over the text.
+            Bar radius = button radius (12px) + padding (12px). */}
+        <div
+          className={
+            canRemind
+              ? "sticky bottom-3 z-10 mt-6 rounded-3xl border border-line bg-surface/95 p-3 shadow-card backdrop-blur-md sm:static sm:mt-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none"
+              : "mt-6 sm:mt-0"
+          }
+        >
           <RemindSlot
             id={a.id}
             deadline={a.deadline}
@@ -198,23 +209,5 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         {DISCLAIMER}
       </p>
     </article>
-  );
-}
-
-function SummaryBulletIcon() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className="mt-1 size-4 shrink-0 text-brand"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="8" cy="8" r="6.25" />
-      <path d="m5.5 8.2 1.6 1.6 3.4-3.5" />
-    </svg>
   );
 }
