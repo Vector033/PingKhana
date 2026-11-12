@@ -101,6 +101,7 @@ export function PreviewProvider({
   );
 }
 
+// prettier-ignore
 const MATRIX_CELLS = [
   0, 1, 0, 2, 0, 1, 0,
   1, 0, 2, 3, 2, 0, 1,
@@ -146,7 +147,7 @@ export function RadarMatrixStrip({ fresh }: { fresh: boolean }) {
 export function Feed({ items }: { items: Announcement[] }) {
   const { open, today, majors, q } = usePreview();
   return (
-    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
       {items.map((a, i) => (
         <AnnouncementCard
           key={a.id}
@@ -194,7 +195,7 @@ export function TaggedStrip({
           </Link>
         </p>
       </div>
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {items.map((a, i) => (
           <li key={a.id}>
             <CompactCard a={a} today={today} index={i} onOpen={open} />
@@ -224,7 +225,7 @@ export function NewsStrip({ items }: { items: Announcement[] }) {
           ดูข่าวทั้งหมด →
         </Link>
       </div>
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {items.map((a, i) => (
           <li key={a.id}>
             <CompactCard a={a} today={today} index={i} onOpen={open} />
@@ -263,13 +264,13 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
       <div
         className={
           rest.length
-            ? "grid gap-4 sm:gap-6 lg:grid-cols-[1.4fr_1fr]"
+            ? "grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
             : "max-w-3xl"
         }
       >
         <LeadCard a={lead} today={today} majors={majors} onOpen={open} />
         {rest.length > 0 && (
-          <ol className="grid content-start gap-3">
+          <ol className="grid grid-cols-1 content-start gap-3">
             {rest.map((a, i) => (
               <li key={a.id}>
                 <CompactCard a={a} today={today} index={i + 1} onOpen={open} />
@@ -369,9 +370,7 @@ function Preview({
             </ul>
           ) : (
             <p className="mt-2 max-w-[65ch] leading-[1.6] text-pretty [overflow-wrap:anywhere]">
-              {points[0]
-                ? tidyWrap(points[0])
-                : "ยังไม่มีสรุป เปิดอ่านที่ประกาศต้นทาง"}
+              {points[0] ? tidyWrap(points[0]) : "ยังไม่มีสรุป เปิดอ่านที่ประกาศต้นทาง"}
             </p>
           )}
         </section>
