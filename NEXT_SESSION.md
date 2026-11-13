@@ -1,11 +1,11 @@
-# PingKhana: เริ่ม session ใหม่ (2026-11-09)
+# PingKhana: เริ่ม session ใหม่ (2026-11-13)
 
 อ่านไฟล์นี้ก่อน แล้วอ่าน `HANDOFF.md` (สถานะ live + วิธีรันบนเครื่อง) และ `CLAUDE.md`
 
 ## วิธีทำงานกับผู้ใช้
 - ตอบภาษาไทย สั้น ประหยัดโทเคน: เปิด skill **`caveman:caveman`** ตั้งแต่ข้อความแรก
 - เขียนโค้ด/แก้บั๊ก: ใช้ **`ponytail:ponytail`** (แก้น้อยที่สุดที่แก้ได้จริง ไม่ over-engineer) · รีวิว: `ponytail:ponytail-review`
-- งานหน้าเว็บ/ดีไซน์: ใช้ **`landing-page-design`** (ชุด elayadesign/ai-design-skills) + **`no-ai-design-slop`** (กันหน้าตาแบบ AI ทั่วไป) + `audit-ai-design-slop` (ตรวจ) และ `impeccable:impeccable` ถ้าต้อง polish
+- งานหน้าเว็บ/ดีไซน์: อ่าน **`CLAUDE_DESIGN_GUIDE.md`** ก่อน (เป็นข้อกำหนดหลัก) แล้วใช้ **`landing-page-design`** (ชุด elayadesign/ai-design-skills) + **`no-ai-design-slop`** (กันหน้าตาแบบ AI ทั่วไป) + `audit-ai-design-slop` (ตรวจ) และ `impeccable:impeccable` ถ้าต้อง polish
 - ห้ามขอ secret ในแชท · ห้าม broadcast ใน LINE · ผู้ใช้อนุญาตให้ commit + push main ได้ (Render/Vercel deploy เอง)
 - ถ้าผู้ใช้สั่ง "ทำต่อไปเรื่อยๆ" ให้ตัดสินใจเองตามความเหมาะสมของเว็บ ไม่ต้องถามทีละข้อ
 
@@ -20,7 +20,16 @@
 8. **ภาพ portfolio**: `docs/screenshots/` + ภาพแชทบอทที่ครอปแล้ว 11 ภาพใน `docs/screenshots/line-demo/` (ตัดชื่อ/อีเมลผู้ใช้ออก) แสดงใน README หัวข้อ LINE bot walkthrough
 9. **แก้ล่าสุด**: ประกาศเก่าที่ไม่มีวันปิดรับ (ปี 2566–2568) ไม่โผล่ใน "ทุนที่เปิดอยู่"/"กิจกรรมล่าสุด" และตัวกรอง "ยังเปิดรับ" อีก (`recent_if_undated` ใน `backend/app/queries.py`) · pytest 115 ผ่าน
 
+## Session ล่าสุด (2026-11-10 ถึง 13): ดีไซน์หน้าเว็บ
+1. Gemini redesign ธีม "Live Intelligence Radar" + `RadarShader` (WebGL) ใน hero แล้วตรวจบั๊กและแก้ล้นจอมือถือ
+2. ขัดตาม `CLAUDE_DESIGN_GUIDE.md` (`4f93204`): ถอดของประดับที่ไม่ผ่าน removal test (แถบ SCAN 1H, noise, เส้นโค้ง), shader ถูกลง, แก้ LCP ของโปสเตอร์, แถบปุ่ม LINE ติดล่างจอมือถือ, แท็ก 44px, skeleton รูปการ์ด · ผู้ใช้เลือก **เก็บ shader ไว้**
+3. แก้คู่มือให้ตรงกับของจริง (`bad7248`) และแคปภาพหน้าจอใหม่ขึ้น GitHub (`d6e4fdc`)
+4. ตรวจผ่าน: ไม่ล้นจอทุก route ที่ 360–1280, contrast AA ทั้ง light/dark, keyboard focus, reduced-motion, eslint/tsc/build, Playwright 32/32, CI เขียว, Vercel deploy แล้ว
+
 ## บทเรียนที่ต้องจำ
+- Next 16: `<Image priority>` เลิกใช้แล้ว ใช้ `loading="eager"` + `fetchPriority="high"` (ดู `node_modules/next/dist/docs/` ก่อนใช้ API ของ Next เสมอ)
+- ตรวจหน้าเว็บด้วยสคริปต์ Playwright ของเราเอง ไม่พึ่ง Browser pane ที่ซ่อนอยู่ (รายละเอียดใน HANDOFF.md หัวข้อข้อควรรู้)
+- removal test: ซ่อนเลเยอร์ตกแต่งทีละชั้นทั้ง light/dark ถ้าไม่มีใครสังเกตเห็นให้ลบ
 - moe.go.th, ksp.or.th บล็อก IP ต่างประเทศ → ปิดไว้ ใช้ moe360.blog แทน
 - Gemini: ใช้ `gemini-3.6-flash` เป็นหลัก (`flash-latest` ค้าง)
 - Vercel Hobby บางทีไม่ build หลัง push ถี่ๆ → `npx vercel deploy --prod` จากโฟลเดอร์ repo
@@ -33,4 +42,6 @@
 - รัน eval โมเดลอื่นอีกครั้งเมื่อโควตาฟรีกลับมา
 - ตัวดึงข้อมูลที่รันในไทยสำหรับเว็บราชการที่บล็อกต่างประเทศ
 - ชวนผู้ใช้จริงแล้วใส่ตัวเลขใน README
-- ใช้ `landing-page-design` + `no-ai-design-slop` ตรวจหน้าเว็บอีกรอบ
+- วัด shader บนมือถือจริง + ตรวจ Safari/iOS
+- แคปภาพแชท LINE ชุดใหม่ (ชุดปัจจุบันจาก 2026-11-08)
+- Prettier ไฟล์ที่ Gemini เขียนเมื่อแก้ไฟล์นั้น (รายชื่อใน HANDOFF.md)
