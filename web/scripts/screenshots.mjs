@@ -37,6 +37,14 @@ async function settle(page) {
   );
 }
 
+// First card whose deadline badge reads "เหลือ N วัน"; the lead may close today (no reminder).
+const remindable = (page) =>
+  page
+    .locator("article")
+    .filter({ hasText: /เหลือ\s\d+\sวัน/ })
+    .first()
+    .locator("h3 a");
+
 for (const scheme of ["light", "dark"]) {
   const ctx = await browser.newContext({
     viewport: { width: 1280, height: 860 },
@@ -58,8 +66,9 @@ for (const scheme of ["light", "dark"]) {
   await page.screenshot({ path: out(`grid-${scheme}.png`) });
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  // Quick-preview drawer on the soonest open deadline (the front-page lead).
-  await page.locator("article a").first().click();
+  // Quick-preview drawer on a post that can still get a LINE reminder (2+ days left),
+  // so the shot shows the green button and its 3-step timeline.
+  await remindable(page).click();
   await page.getByRole("dialog").waitFor();
   await settle(page);
   await page.screenshot({ path: out(`drawer-${scheme}.png`) });
@@ -90,13 +99,16 @@ for (const [path, name] of [
   await page.screenshot({ path: out(name) });
 }
 
-const phone = await browser.newContext({ ...devices["Pixel 7"], colorScheme: "dark" });
+const phone = await browser.newContext({
+  ...devices["Pixel 7"],
+  colorScheme: "dark",
+});
 page = await phone.newPage();
 await page.goto(`${BASE}/`);
 await page.locator("article").first().waitFor({ timeout: 90_000 });
 await settle(page);
 await page.screenshot({ path: out("mobile-feed.png") });
-await page.locator("article a").first().click();
+await remindable(page).click();
 await page.getByRole("dialog").waitFor();
 await settle(page);
 await page.screenshot({ path: out("mobile-sheet.png") });
