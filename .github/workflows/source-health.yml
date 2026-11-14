@@ -1,0 +1,23 @@
+name: Source health
+
+# Fails when a source has not been read for 6 hours or has failed 3 runs in a row, so GitHub
+# emails the repo owner (a faculty site changed its layout, blocked us, or went down).
+# Reads the public /api/stats; needs only the repository variable API_URL.
+
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: ${{ vars.API_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Every source read in the last 6 hours
+        working-directory: backend
+        run: python -m scripts.source_health "${{ vars.API_URL }}"

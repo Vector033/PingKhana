@@ -169,3 +169,29 @@ async def test_name_lists_keep_no_body_text(session) -> None:
         await collect_source(session, CFG, fetcher(), NOW)
     a = await session.scalar(select(Announcement).where(Announcement.url == f"{BASE}/p/1"))
     assert a.body_text == ""
+
+
+def test_procurement_titles_are_skipped() -> None:
+    from app.collector.pipeline import PROCUREMENT
+
+    for t in (
+        "ขอรายงานผลการจัดซื้อจัดจ้างประจาเดือน",
+        "ประกาศผู้ชนะการเสนอราคา ซื้อครุภัณฑ์โฆษณา",
+        "ประกาศประกวดราคาจ้างปรับปรุงห้องศาลจำลอง",
+        "ประกาศสรุปผลการจัดซื้อจัดจ้างรายเดือน (แบบสขร.1)",
+    ):
+        assert PROCUREMENT.search(t), t
+    for t in (
+        "เปิดรับสมัครนักศึกษาแลกเปลี่ยน ณ Oita University",
+        "ทุนการศึกษามูลนิธิ ประจำปี 2569",
+        "รับสมัครพนักงานมหาวิทยาลัย ตำแหน่ง นักจัดการงานทั่วไป",
+        "CMU ZERO-WASTE HACKATHON 2026",
+    ):
+        assert not PROCUREMENT.search(t), t
+
+
+def test_hiring_posts_are_not_mistaken_for_procurement() -> None:
+    from app.collector.pipeline import PROCUREMENT
+
+    # "จัดจ้าง" alone also means hiring a person, so it must not be a skip word.
+    assert not PROCUREMENT.search("ประกาศรับสมัครบุคคลเพื่อจัดจ้างเป็นลูกจ้างชั่วคราว")

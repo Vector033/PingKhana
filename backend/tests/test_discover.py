@@ -79,6 +79,23 @@ async def test_no_feed_asks_gemini_for_selectors_and_checks_them(monkeypatch) ->
 
 
 @respx.mock
+async def test_bare_name_without_dns_tries_www(monkeypatch) -> None:
+    async def only_www(url: str) -> None:
+        if not url.startswith("https://www."):
+            try:
+                raise d.socket.gaierror("no such host")
+            except d.socket.gaierror as e:
+                raise d.DiscoveryError("หาเว็บนี้ไม่เจอ ตรวจชื่อเว็บอีกครั้ง") from e
+
+    monkeypatch.setattr(d, "ensure_public", only_www)
+    respx.get("https://www.faculty.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    xml = (FIX / "kruachieve_feed.xml").read_text(encoding="utf-8")
+    respx.get("https://www.faculty.example.org/").mock(return_value=httpx.Response(200, text=xml))
+    got = await d.discover("faculty.example.org", fetcher())
+    assert got.url.rstrip("/") == "https://www.faculty.example.org" and got.kind == "rss"
+
+
+@respx.mock
 async def test_robots_disallow_is_refused() -> None:
     respx.get("https://closed.example.org/robots.txt").mock(
         return_value=httpx.Response(200, text="User-agent: *\nDisallow: /")

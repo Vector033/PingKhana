@@ -67,6 +67,35 @@ sources:
       date: "#cphPageContent_wucArticleView_lbDate"
     link_must_contain: [/th/article/]
 
+  # ---------- More CMU faculties (RSS), added 2026-11-14 ----------
+  # Found by typing the bare site name into /sources/new (feed autodiscovery); robots.txt allows
+  # the feeds. Their procurement notices are dropped by title (PROCUREMENT in pipeline.py).
+  # Survey of the faculties without a feed: docs/sources.md.
+  - id: eng_cmu
+    name: คณะวิศวกรรมศาสตร์ มช.
+    kind: rss
+    url: https://eng.cmu.ac.th/?feed=rss2
+    homepage: https://eng.cmu.ac.th/
+
+  - id: camt_cmu
+    name: วิทยาลัยศิลปะ สื่อ และเทคโนโลยี มช. (CAMT)
+    kind: rss
+    url: https://camt.cmu.ac.th/feed/
+    homepage: https://camt.cmu.ac.th/
+
+  - id: law_cmu
+    name: คณะนิติศาสตร์ มช.
+    kind: rss
+    url: https://www.law.cmu.ac.th/site/feed/
+    homepage: https://www.law.cmu.ac.th/
+    skip_categories: [ข่าวสำหรับผู้บริหาร]
+
+  - id: finearts_cmu
+    name: คณะวิจิตรศิลป์ มช.
+    kind: rss
+    url: https://www.finearts.cmu.ac.th/feed/
+    homepage: https://www.finearts.cmu.ac.th/
+
   # ---------- Teachers / education (pack: teacher), added 2026-11-09 on request of a teacher ----------
   # WordPress sites with an RSS feed; robots.txt only blocks /wp-admin/.
   # moe.go.th and ksp.or.th refuse connections from outside Thailand (tested 2026-11-09 from

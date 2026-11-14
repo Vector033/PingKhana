@@ -27,6 +27,10 @@ NAME_LIST = re.compile(
     r"ประกาศรายชื่อ|รายชื่อผู้(?:ได้รับ|มีสิทธิ|ผ่าน|สอบ)|ผลการคัดเลือก|list of (?:winners|candidates)", re.I
 )
 
+# Faculty feeds mix in procurement notices (จัดซื้อจัดจ้าง, ประกวดราคา, แบบ สขร.1). Nobody follows
+# PingKhana for those, and some feeds file them under a general category, so match the title.
+PROCUREMENT = re.compile(r"จัดซื้อ|ประกวดราคา|เสนอราคา|สอบราคา|สขร\.?\s*1")
+
 # After this many failures in a row a source is reported as broken on /api/health.
 BROKEN_AFTER = 3
 
@@ -99,12 +103,12 @@ async def collect_source(
         page = await fetcher.get(cfg.url)
         run.http_status = page.status
         items = parse_list(page.text, cfg, page.url, today)
-        if cfg.skip_categories:
-            items = [
-                i
-                for i in items
-                if not any(s in c for c in i.categories for s in cfg.skip_categories)
-            ]
+        items = [
+            i
+            for i in items
+            if not PROCUREMENT.search(i.title)
+            and not any(s in c for c in i.categories for s in cfg.skip_categories)
+        ]
         result.seen = len(items)
 
         known = {

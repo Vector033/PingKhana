@@ -1,4 +1,4 @@
-# PingKhana: เริ่ม session ใหม่ (2026-11-13)
+# PingKhana: เริ่ม session ใหม่ (2026-11-14)
 
 อ่านไฟล์นี้ก่อน แล้วอ่าน `HANDOFF.md` (สถานะ live + วิธีรันบนเครื่อง) และ `CLAUDE.md`
 
@@ -26,9 +26,13 @@
 3. แก้คู่มือให้ตรงกับของจริง (`bad7248`) และแคปภาพหน้าจอใหม่ขึ้น GitHub (`d6e4fdc`)
 4. ตรวจผ่าน: ไม่ล้นจอทุก route ที่ 360–1280, contrast AA ทั้ง light/dark, keyboard focus, reduced-motion, eslint/tsc/build, Playwright 32/32, CI เขียว, Vercel deploy แล้ว
 
+## 2026-11-14
+เพิ่ม 4 คณะ มช. (RSS), ตัดประกาศจัดซื้อจัดจ้าง, แจ้งเตือนแหล่งพังผ่าน GitHub Actions, เอาตัวกรองชั้นปีออก (รายละเอียดใน HANDOFF.md)
+
 ## บทเรียนที่ต้องจำ
 - Next 16: `<Image priority>` เลิกใช้แล้ว ใช้ `loading="eager"` + `fetchPriority="high"` (ดู `node_modules/next/dist/docs/` ก่อนใช้ API ของ Next เสมอ)
 - ตรวจหน้าเว็บด้วยสคริปต์ Playwright ของเราเอง ไม่พึ่ง Browser pane ที่ซ่อนอยู่ (รายละเอียดใน HANDOFF.md หัวข้อข้อควรรู้)
+- ทดสอบ discovery กับเว็บจริง: รัน `discover()` จาก `backend/` ด้วย `PYTHONPATH=.` (ปิดขั้น Gemini ได้ถ้าไม่อยากเปลืองโควตา) · บน Windows curl ส่งภาษาไทยใน query ผิด ให้ใช้ Python/httpx
 - removal test: ซ่อนเลเยอร์ตกแต่งทีละชั้นทั้ง light/dark ถ้าไม่มีใครสังเกตเห็นให้ลบ
 - moe.go.th, ksp.or.th บล็อก IP ต่างประเทศ → ปิดไว้ ใช้ moe360.blog แทน
 - Gemini: ใช้ `gemini-3.6-flash` เป็นหลัก (`flash-latest` ค้าง)

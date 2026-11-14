@@ -1,4 +1,4 @@
-# PingKhana: สถานะส่งต่อ (2026-11-13)
+# PingKhana: สถานะส่งต่อ (2026-11-14)
 
 ## Live
 - เว็บ: https://pingkhana.vercel.app (Vercel, deploy เองเมื่อ push main) · API: https://pingkhana-api.onrender.com (Render, auto-deploy, migration รันตอนเริ่ม)
@@ -44,6 +44,13 @@
    - ไอคอนเป็น inline SVG แบบ Lucide (ไม่ลง `lucide-react`) · สี chip หมวดยังเป็นสี Tailwind ตรงๆ (ตั้งใจ)
 4. **ภาพหน้าจอใหม่** (`d6e4fdc`): `docs/screenshots/` จากเว็บ live · สคริปต์เลือกประกาศที่ยังตั้งเตือนได้ ภาพ drawer จึงมีปุ่ม LINE
 
+## ทำแล้ว (2026-11-14): แหล่งข้อมูลเพิ่ม + แจ้งเตือนแหล่งพัง
+1. **เพิ่ม 4 คณะ มช. แบบ RSS**: `eng_cmu`, `camt_cmu`, `law_cmu`, `finearts_cmu` (ผลสำรวจและเว็บที่ไม่เอาอยู่ใน `docs/sources.md` หัวข้อ Second survey)
+2. **ตัดประกาศจัดซื้อจัดจ้างทุกแหล่ง** ด้วยหัวข้อ (`PROCUREMENT` ใน `pipeline.py`) · ห้ามใส่คำว่า "จัดจ้าง" เดี่ยวๆ เพราะประกาศรับสมัครงานใช้คำนี้
+3. **หา RSS จากชื่อเว็บ**: ใส่แค่ `eng.cmu.ac.th` ก็เจอ feed · แก้ให้ลอง `www.` เมื่อชื่อเว็บไม่มี DNS (เช่น econ.cmu.ac.th) · ใส่ชื่อหน่วยงาน (ไม่ใช่โดเมน) ยังหาไม่ได้
+4. **Source health** (`.github/workflows/source-health.yml` + `backend/scripts/source_health.py`): ทุก 3 ชม. ถ้าแหล่งไหนไม่ได้ดึงสำเร็จเกิน 6 ชม. หรือล้มเหลว 3 รอบติด workflow จะล้ม แล้ว GitHub ส่งอีเมลหาเจ้าของ repo
+5. **เอาตัวกรองชั้นปีออกจากหน้าเว็บ**: ประกาศที่เปิดอยู่ระบุชั้นปีแค่ 1/49 และชุดครูไม่มีชั้นปี · หน้าตั้งค่า LINE ยังใช้ชั้นปีคัดสิ่งที่ส่ง
+
 ## ผู้ใช้ต้องทำเอง
 - ไม่มีค้าง (ดูสรุป session ล่าสุดใน `NEXT_SESSION.md`)
 
@@ -53,9 +60,11 @@
 - ตัวดึงข้อมูลที่รันในไทย สำหรับเว็บราชการที่ปิดกั้นต่างประเทศ (moe, ksp, สพป. บางเขต)
 - วัด `RadarShader` บนมือถือจริง (ตัวเลขจาก Chromium headless เป็น software GL ใช้ยืนยันไม่ได้) และตรวจ Safari/iOS
 - ภาพแชท LINE ใน `docs/screenshots/line-demo/` ยังเป็นชุด 2026-11-08 (ต้องแคปจากมือถือ)
+- คณะที่ไม่มี RSS (econ, pharmacy, nurse, ams, vet, edu, soc, agro, dent, med) ต้องเขียน HTML selector เอง
 - 8 ไฟล์ที่ Gemini เขียนยังไม่ผ่าน Prettier (`account/*`, `follow`, `liff/*`, `news`, `sources/*`) CI ไม่ตรวจ ให้ format เมื่อแก้ไฟล์นั้น
 
 ## ข้อควรรู้บนเครื่อง
+- Docker Desktop อยู่ที่ `%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe` (ต้องเปิดก่อน `docker start`)
 - Postgres: Docker `pingkhana_db` port 54532 (มี DB `pingkhana`, `pingkhana_test`, `pingkhana_e2e`)
 - Playwright:
   1. `cd backend` → `alembic upgrade head` + `python -m scripts.seed_demo` (ใช้ DATABASE_URL ของ `pingkhana_e2e`)

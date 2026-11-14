@@ -87,6 +87,34 @@ All 5 were approved by the project owner on 2026-11-04.
 | https://www.grad.cmu.ac.th/, https://grad.cmu.ac.th/ | DNS does not resolve from this machine (8.8.8.8 resolves grad.cmu.ac.th; retry from the server) |
 | Facebook pages (ทุนการศึกษา มช., CMU Job Search, cmucoopfan) | login/JS-only, out of scope |
 
+## Second survey: more CMU faculties (2026-11-14)
+
+Method: each bare site name was typed into the add-source discovery (`app/collector/discover.py`,
+the same code behind `/sources/new`) with the Gemini step switched off, so only RSS was looked for.
+Run from a Thai network; Render (Singapore) may see some hosts differently.
+
+Added (RSS, robots.txt allows, posts dated, faculty news with some exchange / scholarship / job /
+camp calls). Procurement notices in these feeds are dropped by title (`PROCUREMENT` in
+`pipeline.py`), since CAMT files them under the general "ข่าวประกาศ" category.
+
+| id | feed | mix seen on 2026-11-14 |
+|----|------|------------------------|
+| `eng_cmu` | https://eng.cmu.ac.th/?feed=rss2 | mostly PR; open house camp, staff selection |
+| `camt_cmu` | https://camt.cmu.ac.th/feed/ | hackathon call + many procurement notices |
+| `law_cmu` | https://www.law.cmu.ac.th/site/feed/ | exchange program (Oita), procurement, executive news (skipped by category) |
+| `finearts_cmu` | https://www.finearts.cmu.ac.th/feed/ | exchange call, staff hiring, scholarship category, procurement |
+
+Not added:
+
+| site | why |
+|------|-----|
+| reg.cmu.ac.th | feed works but the newest post is from 2023 |
+| human.cmu.ac.th | robots.txt disallows bots |
+| agri.cmu.ac.th | no answer from this network (robots.txt and page time out) |
+| www.cmu.ac.th, pharmacy, nurse, ams, vet, edu, soc, agro, dent, med (`.cmu.ac.th`) | no RSS; would need hand-written HTML selectors |
+| econ.cmu.ac.th | no RSS; only `www.econ.cmu.ac.th` has DNS (discovery now retries with `www.`) |
+| ba, grad, arch, polsci, mc, cmuic, scholarship (`.cmu.ac.th`) | no DNS record under that name (wrong guess of the host) |
+
 ## Other details
 - Privacy: `https://sdd.oop.cmu.ac.th/cmuNewsItem/99` (scholarship award list) contains student names and student IDs. It is **not** saved as a fixture. The collector should avoid storing or forwarding such lists verbatim.
 - None of the chosen pages need JavaScript to show their list items. Only the Science full-news list does.

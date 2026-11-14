@@ -17,7 +17,6 @@ const FILTER_KEYS = [
   "q",
   "category",
   "status",
-  "year",
   "major",
   "source",
   "sort",
@@ -177,37 +176,23 @@ export async function Listing({
   const pages = Math.max(1, Math.ceil(data.total / data.page_size));
   const majors = Object.fromEntries(meta.majors.map((m) => [m.id, m.th]));
 
-  const moreFilters = (
-    <>
-      <FilterGroup title="ชั้นปี">
-        <FilterLink href={href({ year: null })} active={!current.year}>
-          ทุกปี
-        </FilterLink>
-        {meta.years.slice(0, 4).map((y) => (
-          <FilterLink
-            key={y}
-            href={href({ year: String(y) })}
-            active={current.year === String(y)}
-          >
-            ปี {y}
-          </FilterLink>
-        ))}
-      </FilterGroup>
-      <FilterGroup title="เรียงตาม">
-        <FilterLink
-          href={href({ sort: null })}
-          active={(current.sort ?? "new") === "new"}
-        >
-          ล่าสุด
-        </FilterLink>
-        <FilterLink
-          href={href({ sort: "deadline" })}
-          active={current.sort === "deadline"}
-        >
-          วันปิดรับใกล้สุด
-        </FilterLink>
-      </FilterGroup>
-    </>
+  // Year is not a web filter: almost no post names one (those that don't match every year),
+  // and half the feed is for teachers. The LINE settings still use year to pick what to send.
+  const sortFilter = (
+    <FilterGroup title="เรียงตาม">
+      <FilterLink
+        href={href({ sort: null })}
+        active={(current.sort ?? "new") === "new"}
+      >
+        ล่าสุด
+      </FilterLink>
+      <FilterLink
+        href={href({ sort: "deadline" })}
+        active={current.sort === "deadline"}
+      >
+        วันปิดรับใกล้สุด
+      </FilterLink>
+    </FilterGroup>
   );
 
   const heading = current.tag
@@ -310,31 +295,7 @@ export async function Listing({
                 ))}
               </FilterGroup>
             )}
-            {!news && (
-              <>
-                {/* Phones: year and sort fold away so the first screen reaches the feed. */}
-                <details
-                  className="group md:hidden"
-                  open={Boolean(current.year || current.sort)}
-                >
-                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-muted [&::-webkit-details-marker]:hidden">
-                    ชั้นปีและการเรียง
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 16 16"
-                      className="size-3.5 transition-transform group-open:rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    >
-                      <path d="M4 6l4 4 4-4" strokeLinecap="round" />
-                    </svg>
-                  </summary>
-                  <div className="mt-2 space-y-2">{moreFilters}</div>
-                </details>
-                <div className="hidden md:contents">{moreFilters}</div>
-              </>
-            )}
+            {!news && sortFilter}
           </div>
         </div>
         {data.items.length === 0 ? (

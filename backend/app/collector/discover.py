@@ -176,7 +176,15 @@ async def discover(url: str, fetcher: PoliteFetcher | None = None) -> Discovery:
     url = url.strip()
     if not re.match(r"^https?://", url, re.I):
         url = "https://" + url
-    await ensure_public(url)
+    try:
+        await ensure_public(url)
+    except DiscoveryError as e:
+        # People type "econ.cmu.ac.th" when only www.econ.cmu.ac.th has a DNS record.
+        host = urlsplit(url).hostname or ""
+        if not isinstance(e.__cause__, socket.gaierror) or host.startswith("www."):
+            raise
+        url = url.replace(f"//{host}", f"//www.{host}", 1)
+        await ensure_public(url)
     own = fetcher is None
     fetcher = fetcher or PoliteFetcher(get_settings().user_agent, delay_seconds=1.0, retries=1)
     try:
