@@ -77,3 +77,17 @@ def test_moe360_carries_the_ministry_news() -> None:
     got = items("moe360")
     assert len(got) == 10 and all(i.image for i in got)
     assert SOURCES["moe360"].enabled and "ต่างประเทศ" in (SOURCES["moe"].note or "")
+
+
+def test_relative_item_links_resolve_against_the_feed() -> None:
+    # eng.cmu.ac.th lists a PDF as "/wp-content/..."; unresolved, it crashed the whole run.
+    from app.collector.parsers import parse_rss
+
+    xml = (
+        '<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>'
+        "<item><title>ประกาศ</title><link>/wp-content/uploads/a.pdf</link></item>"
+        "<item><title>ข่าว</title><link>https://eng.cmu.ac.th/?p=1</link></item>"
+        "</channel></rss>"
+    )
+    got = [i.url for i in parse_rss(xml, "https://eng.cmu.ac.th/?feed=rss2")]
+    assert got == ["https://eng.cmu.ac.th/wp-content/uploads/a.pdf", "https://eng.cmu.ac.th/?p=1"]

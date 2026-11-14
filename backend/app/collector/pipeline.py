@@ -191,7 +191,8 @@ async def collect_source(
         result.status = "http_error"
         run.http_status = e.response.status_code
         result.errors.append(str(e))
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
+        # ValueError: a link the fetcher cannot use. Fail this source, not the whole run.
         result.status = "error"
         result.errors.append(repr(e))
 

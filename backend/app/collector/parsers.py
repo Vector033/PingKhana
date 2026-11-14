@@ -89,7 +89,7 @@ def list_image(node: Node, base_url: str) -> str | None:
 
 def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list[ListItem]:
     if cfg.kind == "rss":
-        return parse_rss(html)
+        return parse_rss(html, base_url)
     assert cfg.listing is not None
     tree = HTMLParser(html)
     items: list[ListItem] = []
@@ -168,13 +168,15 @@ def _https(url: str) -> str:
 LEADING_JUNK = "\ufeff \t\r\n"  # BOM and whitespace
 
 
-def parse_rss(xml: str) -> list[ListItem]:
+def parse_rss(xml: str, base_url: str = "") -> list[ListItem]:
+    """`base_url` (the feed's URL) resolves relative links, e.g. eng.cmu.ac.th lists a PDF
+    as `/wp-content/uploads/...`."""
     # Some WordPress plugins print blank lines before <?xml ...?>, which is not well-formed.
     raw = xml.lstrip(LEADING_JUNK) if isinstance(xml, str) else xml.lstrip()
     root = ET.fromstring(raw.encode() if isinstance(raw, str) else raw)
     items: list[ListItem] = []
     for it in root.iter("item"):
-        link = (it.findtext("link") or "").strip()
+        link = urljoin(base_url, (it.findtext("link") or "").strip())
         title = clean_text(it.findtext("title") or "")
         pub = it.findtext("pubDate")
         published = None
@@ -197,7 +199,7 @@ def parse_rss(xml: str) -> list[ListItem]:
         link_el = entry.find(f"{atom}link")
         title = clean_text(entry.findtext(f"{atom}title") or "")
         if link_el is not None and title:
-            items.append(ListItem(link_el.get("href", ""), title))
+            items.append(ListItem(urljoin(base_url, link_el.get("href", "")), title))
     if not items:
         raise ParseError("feed has no items")
     return items

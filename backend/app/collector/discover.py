@@ -208,7 +208,7 @@ async def discover(url: str, fetcher: PoliteFetcher | None = None) -> Discovery:
         homepage = f"{parts.scheme}://{parts.netloc}/"
 
         if _looks_like_feed(page.text):
-            items = parse_rss(page.text)
+            items = parse_rss(page.text, page.url)
             name = _feed_title(page.text) or parts.netloc
             return Discovery(
                 "rss",
@@ -229,7 +229,7 @@ async def discover(url: str, fetcher: PoliteFetcher | None = None) -> Discovery:
                 feed = await fetcher.get(feed_url)
                 if not _looks_like_feed(feed.text):
                     continue
-                items = parse_rss(feed.text)
+                items = parse_rss(feed.text, feed.url)
             except (httpx.HTTPError, RobotsDisallowed, ParseError, DiscoveryError, ValueError):
                 continue
             if len(items) >= 3:
