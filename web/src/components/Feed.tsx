@@ -345,6 +345,7 @@ function Preview({
               <SourceTrustPill
                 name={a.source_name}
                 publishedOn={a.published_on}
+                platform={a.platform}
               />
             </div>
             <h2

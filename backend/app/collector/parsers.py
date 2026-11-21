@@ -1,4 +1,5 @@
 import hashlib
+import json
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
@@ -90,6 +91,8 @@ def list_image(node: Node, base_url: str) -> str | None:
 def parse_list(html: str, cfg: SourceConfig, base_url: str, today: date) -> list[ListItem]:
     if cfg.kind == "rss":
         return parse_rss(html, base_url)
+    if cfg.kind == "social_feed":
+        return parse_social(html, base_url)
     assert cfg.listing is not None
     tree = HTMLParser(html)
     items: list[ListItem] = []
@@ -241,3 +244,66 @@ def parse_detail(
         if src and not _NOT_A_PHOTO.search(src):
             image = _https(src)
     return Detail(title, text, published, image, attachment)
+
+
+def _caption_title(body: str, limit: int = 90) -> str:
+    """Social posts rarely have a title: use the caption's first line, cut at a space."""
+    first = body.split("\n", 1)[0].strip()
+    if len(first) <= limit:
+        return first
+    cut = first[:limit].rsplit(" ", 1)[0]
+    return (cut if len(cut) > limit // 2 else first[:limit]) + "…"
+
+
+def parse_social(text: str, base_url: str = "") -> list[ListItem]:
+    """Posts from a public social bridge: RSS 2.0 (RSSHub's default) or JSON Feed 1.x.
+    Keeps the caption as the body and the first picture as the poster."""
+    raw = text.lstrip(LEADING_JUNK)
+    found: list[tuple[str, str, str, str | None, date | None]] = []
+    if raw.startswith("{"):
+        for p in json.loads(raw).get("items", []):
+            html = p.get("content_html") or ""
+            body = clean_text(
+                p.get("content_text") or (HTMLParser(html).text(separator="\n") if html else "")
+            )
+            images = [
+                a.get("url")
+                for a in p.get("attachments") or []
+                if str(a.get("mime_type", "")).startswith("image/")
+            ]
+            m = _IMG_SRC.search(html)
+            image = p.get("image") or p.get("banner_image") or next(iter(images), None)
+            image = image or (m.group(1) if m else None)
+            published = None
+            if p.get("date_published"):
+                try:
+                    published = date.fromisoformat(p["date_published"][:10])
+                except ValueError:
+                    pass
+            url = urljoin(base_url, p.get("url") or p.get("external_url") or "")
+            found.append(
+                (url, clean_text(p.get("title") or ""), body, image and _https(image), published)
+            )
+    else:
+        root = ET.fromstring(raw.encode())
+        for it in root.iter("item"):
+            html = (it.findtext(_CONTENT) or "") + (it.findtext("description") or "")
+            body = clean_text(HTMLParser(html).text(separator="\n")) if html else ""
+            published = None
+            if pub := it.findtext("pubDate"):
+                try:
+                    published = parsedate_to_datetime(pub).date()
+                except (TypeError, ValueError):
+                    pass
+            url = urljoin(base_url, (it.findtext("link") or "").strip())
+            title = clean_text(it.findtext("title") or "")
+            found.append((url, title, body, _feed_image(it, html), published))
+    items = []
+    for url, title, body, image, published in found:
+        # Bridges often repeat the caption as the title; a long one reads badly as a heading.
+        title = _caption_title(title or body)
+        if url and title:
+            items.append(ListItem(url, title, published, image, [], body))
+    if not items:
+        raise ParseError("social feed has no posts")
+    return items

@@ -19,7 +19,9 @@ def in_packs(packs: list[str]):
 def visible() -> Select[tuple[Announcement]]:
     """Announcements that are processed and not cross-posted duplicates."""
     return select(Announcement).where(
-        Announcement.duplicate_of_id.is_(None), Announcement.needs_extraction.is_(False)
+        Announcement.duplicate_of_id.is_(None),
+        Announcement.needs_extraction.is_(False),
+        Announcement.moderation_status == "published",
     )
 
 

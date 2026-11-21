@@ -80,7 +80,11 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
         <CategoryChip category={a.category} label={a.category_th} />
-        <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+        <SourceTrustPill
+          name={a.source_name}
+          publishedOn={a.published_on}
+          platform={a.platform}
+        />
         <FollowButton
           id={a.source_id}
           name={a.source_name}

@@ -195,18 +195,31 @@ function VerifiedSourceIcon() {
 }
 
 /** Official faculty / department trust pill paired with optional publish date. */
+const PLATFORM_TH: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+};
+
 export function SourceTrustPill({
   name,
   publishedOn,
+  platform,
 }: {
   name: string;
   publishedOn?: string | null;
+  /** Social feeds get a small label, so readers know the post came from a page. */
+  platform?: string | null;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
       <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md border border-line bg-surface-2/85 px-2 py-0.5 text-[11px] font-medium text-fg/90">
         <VerifiedSourceIcon />
         <span className="truncate">{name}</span>
+        {platform && PLATFORM_TH[platform] && (
+          <span className="shrink-0 font-normal text-muted">
+            · {PLATFORM_TH[platform]}
+          </span>
+        )}
       </span>
       {publishedOn && (
         <span className="whitespace-nowrap tabular-nums">
@@ -253,7 +266,11 @@ const STRETCH =
 
 function Meta({ a, following }: { a: Announcement; following?: boolean }) {
   const pill = (
-    <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+    <SourceTrustPill
+      name={a.source_name}
+      publishedOn={a.published_on}
+      platform={a.platform}
+    />
   );
   if (following === undefined) return pill;
   return (
@@ -420,7 +437,11 @@ export function LeadCard({ a, today, majors, onOpen, following }: CardProps) {
       <div className="relative z-[1] p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
-          <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+          <SourceTrustPill
+            name={a.source_name}
+            publishedOn={a.published_on}
+            platform={a.platform}
+          />
           {following !== undefined && (
             <FollowButton
               id={a.source_id}

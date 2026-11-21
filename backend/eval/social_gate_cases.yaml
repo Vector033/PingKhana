@@ -1,0 +1,140 @@
+# Social gate cases: should a post from a Facebook page / Instagram feed reach the website?
+#
+# Written on 2026-11-22 to mirror real Thai posts seen on job and campus pages (wording, emoji,
+# hashtags, "สนใจทักแชท"). They are not copied posts: Facebook pages need a login to read, so a
+# collected set is future work. Names, companies and numbers are made up.
+#
+# expect: publish (a real announcement / hiring post) or block (seeker, scam, chatter)
+# group: hiring_official | hiring_conversational | seeker | scam | discussion
+
+cases:
+  # ---------- official hiring / announcements (5+)
+  - group: hiring_official
+    expect: publish
+    text: |
+      ประกาศรับสมัครพนักงาน บริษัท สยามดาต้า จำกัด
+      ตำแหน่ง Junior Data Analyst จำนวน 2 อัตรา
+      คุณสมบัติ ปริญญาตรีสาขาสถิติ คอมพิวเตอร์ หรือที่เกี่ยวข้อง ยินดีรับนักศึกษาจบใหม่
+      เงินเดือน 25,000-30,000 บาท ส่งใบสมัครทางอีเมล hr@siamdata.example ภายใน 30 พฤศจิกายน 2569
+  - group: hiring_official
+    expect: publish
+    text: |
+      โรงพยาบาลนครพิงค์ (ตัวอย่าง) เปิดรับสมัครบุคคลเพื่อเลือกสรรเป็นพนักงานราชการ
+      ตำแหน่งนักวิชาการคอมพิวเตอร์ 1 อัตรา รับสมัครตั้งแต่วันที่ 1-15 ธันวาคม 2569
+      รายละเอียดตามประกาศที่แนบ
+  - group: hiring_official
+    expect: publish
+    text: |
+      [ทุนการศึกษา] มูลนิธิเพื่อการศึกษา (ตัวอย่าง) มอบทุนเรียนดี ปีการศึกษา 2570
+      สำหรับนักศึกษาปริญญาตรีชั้นปีที่ 2-4 GPAX ไม่ต่ำกว่า 3.00 ทุนละ 20,000 บาท
+      ยื่นเอกสารได้ถึง 20 ธันวาคม 2569
+  - group: hiring_official
+    expect: publish
+    text: |
+      สำนักงานเขตพื้นที่การศึกษาประถมศึกษาเชียงใหม่ เขต 9 (ตัวอย่าง)
+      ประกาศรับสมัครครูอัตราจ้าง วิชาเอกคณิตศาสตร์ 3 อัตรา
+      สมัครด้วยตนเอง ณ กลุ่มบริหารงานบุคคล 8-12 ธ.ค. 2569
+  - group: hiring_official
+    expect: publish
+    text: |
+      คณะวิศวกรรมศาสตร์ เปิดรับสมัครนักศึกษาเข้าร่วมโครงการสหกิจศึกษาต่างประเทศ ณ ประเทศญี่ปุ่น
+      ภาคการศึกษาที่ 2/2569 จำนวน 5 ทุน ปิดรับสมัคร 5 มกราคม 2570
+  - group: hiring_official
+    expect: publish
+    text: |
+      ขอเชิญร่วมอบรมเชิงปฏิบัติการ "AI สำหรับครูยุคใหม่" ฟรี ไม่มีค่าใช้จ่าย
+      วันเสาร์ที่ 13 ธันวาคม 2569 ณ หอประชุมโรงเรียนตัวอย่างวิทยา
+      ลงทะเบียนผ่านลิงก์ภายในวันที่ 10 ธันวาคม 2569 รับเกียรติบัตร
+
+  # ---------- conversational HR posts, usually with a poster (5+)
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      ใครกำลังหางานอยู่ มาทางนี้เลยค่าาา 🙌 ทีมเรากำลังหา Barista ประจำสาขานิมมาน
+      ไม่มีประสบการณ์ก็สอนให้ค่ะ รายละเอียดตามโปสเตอร์เลย สนใจทักแชทเพจได้เลยน้า
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      We're hiring! 🚀 ทีม Product ของเราอยากได้เพื่อนร่วมงานตำแหน่ง Frontend Developer (React)
+      Hybrid สัปดาห์ละ 2 วัน ส่ง CV มาคุยกันได้ที่ jobs@startup.example #รับสมัครงาน #เชียงใหม่
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      น้องๆ ปี 3-4 คนไหนอยากฝึกงานสาย Marketing ทางร้านเปิดรับ 2 ที่ค่ะ มีเบี้ยเลี้ยงให้
+      ช่วงฝึก มี.ค.-พ.ค. 2570 ดูรายละเอียดในรูป แล้วส่งพอร์ตมาที่อินบ็อกซ์ได้เลยค่ะ
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      📢 ด่วน! หาน้องพาร์ทไทม์เสาร์-อาทิตย์ ร้านหนังสือในมหาวิทยาลัย ชั่วโมงละ 60 บาท
+      เหมาะกับนักศึกษา ทำงานใกล้ที่เรียน สนใจกรอกฟอร์มในคอมเมนต์ค่ะ
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      จบใหม่ก็สมัครได้นะ! บริษัทเราเปิดรับ Junior QA 3 คน สอนงานตั้งแต่ศูนย์
+      สวัสดิการประกันสุขภาพ + ทำงานจากบ้านได้บางวัน รายละเอียดเต็มอยู่ในภาพค่ะ
+  - group: hiring_conversational
+    expect: publish
+    text: |
+      ห้องแล็บเราหา RA (ผู้ช่วยวิจัย) 1 ตำแหน่งครับ งานเก็บข้อมูลภาคสนาม + Python นิดหน่อย
+      ค่าตอบแทนเดือนละ 15,000 ดูรายละเอียดในโปสเตอร์ แล้วส่งอีเมลมาได้เลยครับ
+
+  # ---------- job / internship seekers (5+), including formal self-introductions
+  - group: seeker
+    expect: block
+    text: |
+      หางานครับ จบใหม่วิศวกรรมคอมพิวเตอร์ ถนัด Python, SQL อยู่เชียงใหม่ ทำได้ทุกกะครับ ฝากด้วยครับ
+  - group: seeker
+    expect: block
+    text: |
+      หาที่ฝึกงานด้าน UX/UI ค่ะ ปี 3 ต้องฝึกช่วงมีนาคม-พฤษภาคม มีพอร์ตแนบในคอมเมนต์ค่ะ
+  - group: seeker
+    expect: block
+    text: |
+      ฝากเนื้อฝากตัวด้วยครับ ตอนนี้กำลังหางานสาย Admin/ธุรการ มีประสบการณ์ 2 ปี
+  - group: seeker
+    expect: block
+    text: |
+      แนะนำตัวค่ะ ชื่อมายด์ อายุ 23 ปี
+      การศึกษา: ปริญญาตรี บริหารธุรกิจ เกรดเฉลี่ย 3.25
+      ทักษะ: Excel, Canva, ภาษาอังกฤษสื่อสารได้
+      ตำแหน่งที่สนใจ: ธุรการ / ประสานงาน เงินเดือนที่คาดหวัง 18,000 บาท
+      สะดวกเริ่มงานทันที รบกวนผู้ใหญ่ใจดีพิจารณาด้วยค่ะ
+  - group: seeker
+    expect: block
+    text: |
+      รับงานฟรีแลนซ์ ออกแบบโลโก้ ทำสไลด์ ตัดต่อวิดีโอ ราคาเป็นกันเอง ทักมาคุยได้เลยครับ
+  - group: seeker
+    expect: block
+    text: |
+      Resume - นายภูมิ ใจดี
+      Position wanted: Junior Software Engineer
+      Skills: Java, Spring Boot, Docker | Experience: Internship 4 months
+      Available immediately. ติดต่อ 08x-xxx-xxxx
+
+  # ---------- scams and ads (3)
+  - group: scam
+    expect: block
+    text: |
+      งานออนไลน์ทำที่บ้าน รายได้หลักหมื่นต่อวัน ไม่ต้องมีประสบการณ์ ใช้แค่มือถือเครื่องเดียว ทักไลน์เลย
+  - group: scam
+    expect: block
+    text: |
+      รับสมัครคนกดไลก์ กดไลก์ 1 ครั้งได้เงิน 5 บาท ถอนได้ทุกวัน สนใจทักแชท
+  - group: scam
+    expect: block
+    text: |
+      ฝากร้านค่าา เสื้อผ้ามือสองสภาพดี ราคาเริ่ม 39 บาท ส่งทั่วไทย 🛍️
+
+  # ---------- discussion / reviews (2+)
+  - group: discussion
+    expect: block
+    text: |
+      มีใครเคยฝึกงานที่บริษัทนี้บ้างไหมคะ งานหนักไหม ได้เบี้ยเลี้ยงจริงหรือเปล่า
+  - group: discussion
+    expect: block
+    text: |
+      รีวิวสัมภาษณ์งานธนาคารเมื่อวาน ถามเยอะมาก ใครจะไปสัมภาษณ์เตรียมตัวเรื่อง case study ไว้นะ
+  - group: discussion
+    expect: block
+    text: |
+      สอบถามครับ เงินเดือนเด็กจบใหม่สาย Data ในเชียงใหม่ตอนนี้ประมาณเท่าไหร่กันบ้าง

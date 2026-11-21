@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ModerationQueue } from "./ModerationQueue";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8100";
 const KEY = "pk.adminToken";
@@ -191,6 +192,8 @@ export function Admin() {
           />
         </dl>
       )}
+
+      <ModerationQueue token={token} />
 
       <section aria-labelledby="pending-h">
         <h2 id="pending-h" className="text-xl font-semibold">

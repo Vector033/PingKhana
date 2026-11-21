@@ -14,9 +14,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collector.fetcher import PoliteFetcher, RobotsDisallowed
-from app.collector.parsers import ParseError, content_hash, parse_detail, parse_list
+from app.collector.parsers import Detail, ParseError, content_hash, parse_detail, parse_list
 from app.collector.sources import SourceConfig, load_sources
 from app.config import BANGKOK, get_settings
+from app.extract import gatekeeper
 from app.models import Announcement, FetchRun, Source
 
 log = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ async def sync_sources(session: AsyncSession, configs: list[SourceConfig]) -> No
         src.pack = cfg.pack
         src.note = cfg.note
         src.org = cfg.org
-        src.platform = "rss" if cfg.kind == "rss" else "web"
+        src.platform = cfg.platform or ("rss" if cfg.kind == "rss" else "web")
     await session.commit()
 
 
@@ -122,6 +123,7 @@ async def collect_source(
             ).all()
         }
         fetched_details = 0
+        social = cfg.kind == "social_feed"
         for item in items:
             existing = known.get(item.url)
             if existing is not None:
@@ -133,12 +135,16 @@ async def collect_source(
                 # Title changed on the list (e.g. "ขยายเวลา"): re-read the page.
             if fetched_details >= cfg.max_new_per_run:
                 break
-            try:
-                dpage = await fetcher.get(item.url)
-                detail = parse_detail(dpage.text, cfg, item.title, today, dpage.url)
-            except (httpx.HTTPError, ParseError, RobotsDisallowed) as e:
-                result.errors.append(f"{item.url}: {e}")
-                continue
+            if social:
+                # The bridge already carries the whole caption; never fetch the social site.
+                detail = Detail(item.title, item.body, item.published_on, item.image)
+            else:
+                try:
+                    dpage = await fetcher.get(item.url)
+                    detail = parse_detail(dpage.text, cfg, item.title, today, dpage.url)
+                except (httpx.HTTPError, ParseError, RobotsDisallowed) as e:
+                    result.errors.append(f"{item.url}: {e}")
+                    continue
             fetched_details += 1
             # Feeds sometimes carry the full post; keep whichever text is longer.
             if len(item.body) > len(detail.text):
@@ -160,6 +166,8 @@ async def collect_source(
             dup = await session.scalar(
                 select(Announcement.id).where(Announcement.content_hash == h).limit(1)
             )
+            # Stage 1 of the social gate: obvious scams and job seekers never reach Gemini.
+            gate = gatekeeper.prefilter(f"{item.title}\n{detail.text}") if social else None
             ann = Announcement(
                 source_id=cfg.id,
                 url=item.url,
@@ -173,9 +181,15 @@ async def collect_source(
                 published_on=item.published_on or detail.published_on,
                 first_seen_at=now,
                 last_seen_at=now,
-                needs_extraction=dup is None,
+                needs_extraction=dup is None and gate is None,
                 # On a source's first run everything is old news: store it, don't push it.
-                matched_at=now if first_run or dup is not None else None,
+                matched_at=now if first_run or dup is not None or gate else None,
+                # Social posts wait for Gemini's intent answer (or an admin) before showing.
+                moderation_status=(
+                    ("filtered_out" if gate else "pending_review") if social else "published"
+                ),
+                post_intent=gate[0] if gate else None,
+                rejection_reason=gate[1] if gate else None,
             )
             session.add(ann)
             result.new += 1

@@ -167,7 +167,7 @@ async def handle_postback(
     except ValueError:
         return [msg.text(HELP)]
     ann = await session.get(Announcement, ann_id)
-    if ann is None:
+    if ann is None or ann.moderation_status != "published":
         return [msg.text("ไม่พบประกาศนี้แล้ว")]
     action = params.get("action")
     if action == "remind":

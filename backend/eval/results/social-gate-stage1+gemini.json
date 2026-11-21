@@ -1,0 +1,256 @@
+{
+  "summary": {
+    "mode": "stage1+gemini",
+    "cases": 24,
+    "hiring_recall": 1.0,
+    "block_precision": 1.0,
+    "non_hiring_blocked": 1.0,
+    "published_but_should_block": 0,
+    "pending_review": 0,
+    "by_group": {
+      "hiring_official": {
+        "published": 6,
+        "filtered_out": 0,
+        "pending_review": 0
+      },
+      "hiring_conversational": {
+        "published": 6,
+        "filtered_out": 0,
+        "pending_review": 0
+      },
+      "seeker": {
+        "published": 0,
+        "filtered_out": 6,
+        "pending_review": 0
+      },
+      "scam": {
+        "published": 0,
+        "filtered_out": 3,
+        "pending_review": 0
+      },
+      "discussion": {
+        "published": 0,
+        "filtered_out": 3,
+        "pending_review": 0
+      }
+    }
+  },
+  "rows": [
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "ประกาศรับสมัครพนักงาน บริษัท สยามดาต้า จำกัด\nตำแหน่ง Junior Data Analyst จำนวน 2 อัตรา\nคุณสมบัติ ปริญญาตรีสาขาสถิติ คอมพิวเตอร์ หรือที่เกี่ยวข้อง ยินดีรับนักศึกษาจบใหม่\nเงินเดือน 25,000-30,000 บาท ส่งใบสมัครทางอีเมล hr@siamdata.example ภายใน 30 พฤศจิกายน 2569\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "โรงพยาบาลนครพิงค์ (ตัวอย่าง) เปิดรับสมัครบุคคลเพื่อเลือกสรรเป็นพนักงานราชการ\nตำแหน่งนักวิชาการคอมพิวเตอร์ 1 อัตรา รับสมัครตั้งแต่วันที่ 1-15 ธันวาคม 2569\nรายละเอียดตามประกาศที่แนบ\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "[ทุนการศึกษา] มูลนิธิเพื่อการศึกษา (ตัวอย่าง) มอบทุนเรียนดี ปีการศึกษา 2570\nสำหรับนักศึกษาปริญญาตรีชั้นปีที่ 2-4 GPAX ไม่ต่ำกว่า 3.00 ทุนละ 20,000 บาท\nยื่นเอกสารได้ถึง 20 ธันวาคม 2569\n",
+      "status": "published",
+      "intent": "official_announcement",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "สำนักงานเขตพื้นที่การศึกษาประถมศึกษาเชียงใหม่ เขต 9 (ตัวอย่าง)\nประกาศรับสมัครครูอัตราจ้าง วิชาเอกคณิตศาสตร์ 3 อัตรา\nสมัครด้วยตนเอง ณ กลุ่มบริหารงานบุคคล 8-12 ธ.ค. 2569\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "คณะวิศวกรรมศาสตร์ เปิดรับสมัครนักศึกษาเข้าร่วมโครงการสหกิจศึกษาต่างประเทศ ณ ประเทศญี่ปุ่น\nภาคการศึกษาที่ 2/2569 จำนวน 5 ทุน ปิดรับสมัคร 5 มกราคม 2570\n",
+      "status": "published",
+      "intent": "official_announcement",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_official",
+      "expect": "publish",
+      "text": "ขอเชิญร่วมอบรมเชิงปฏิบัติการ \"AI สำหรับครูยุคใหม่\" ฟรี ไม่มีค่าใช้จ่าย\nวันเสาร์ที่ 13 ธันวาคม 2569 ณ หอประชุมโรงเรียนตัวอย่างวิทยา\nลงทะเบียนผ่านลิงก์ภายในวันที่ 10 ธันวาคม 2569 รับเกียรติบัตร\n",
+      "status": "published",
+      "intent": "official_announcement",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "ใครกำลังหางานอยู่ มาทางนี้เลยค่าาา 🙌 ทีมเรากำลังหา Barista ประจำสาขานิมมาน\nไม่มีประสบการณ์ก็สอนให้ค่ะ รายละเอียดตามโปสเตอร์เลย สนใจทักแชทเพจได้เลยน้า\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "We're hiring! 🚀 ทีม Product ของเราอยากได้เพื่อนร่วมงานตำแหน่ง Frontend Developer (React)\nHybrid สัปดาห์ละ 2 วัน ส่ง CV มาคุยกันได้ที่ jobs@startup.example #รับสมัครงาน #เชียงใหม่\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "น้องๆ ปี 3-4 คนไหนอยากฝึกงานสาย Marketing ทางร้านเปิดรับ 2 ที่ค่ะ มีเบี้ยเลี้ยงให้\nช่วงฝึก มี.ค.-พ.ค. 2570 ดูรายละเอียดในรูป แล้วส่งพอร์ตมาที่อินบ็อกซ์ได้เลยค่ะ\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "📢 ด่วน! หาน้องพาร์ทไทม์เสาร์-อาทิตย์ ร้านหนังสือในมหาวิทยาลัย ชั่วโมงละ 60 บาท\nเหมาะกับนักศึกษา ทำงานใกล้ที่เรียน สนใจกรอกฟอร์มในคอมเมนต์ค่ะ\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "จบใหม่ก็สมัครได้นะ! บริษัทเราเปิดรับ Junior QA 3 คน สอนงานตั้งแต่ศูนย์\nสวัสดิการประกันสุขภาพ + ทำงานจากบ้านได้บางวัน รายละเอียดเต็มอยู่ในภาพค่ะ\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "hiring_conversational",
+      "expect": "publish",
+      "text": "ห้องแล็บเราหา RA (ผู้ช่วยวิจัย) 1 ตำแหน่งครับ งานเก็บข้อมูลภาคสนาม + Python นิดหน่อย\nค่าตอบแทนเดือนละ 15,000 ดูรายละเอียดในโปสเตอร์ แล้วส่งอีเมลมาได้เลยครับ\n",
+      "status": "published",
+      "intent": "hiring_post",
+      "reason": null,
+      "stage": 2
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "หางานครับ จบใหม่วิศวกรรมคอมพิวเตอร์ ถนัด Python, SQL อยู่เชียงใหม่ ทำได้ทุกกะครับ ฝากด้วยครับ\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "ตรงรูปแบบคนหางาน: “หางานครับ”",
+      "stage": 1
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "หาที่ฝึกงานด้าน UX/UI ค่ะ ปี 3 ต้องฝึกช่วงมีนาคม-พฤษภาคม มีพอร์ตแนบในคอมเมนต์ค่ะ\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "ตรงรูปแบบคนหางาน: “หาที่ฝึกงานด้าน UX/UI ค่ะ”",
+      "stage": 1
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "ฝากเนื้อฝากตัวด้วยครับ ตอนนี้กำลังหางานสาย Admin/ธุรการ มีประสบการณ์ 2 ปี\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "ตรงรูปแบบคนหางาน: “ฝากเนื้อฝากตัวด้วยครับ ตอนนี้กำลังหางาน”",
+      "stage": 1
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "แนะนำตัวค่ะ ชื่อมายด์ อายุ 23 ปี\nการศึกษา: ปริญญาตรี บริหารธุรกิจ เกรดเฉลี่ย 3.25\nทักษะ: Excel, Canva, ภาษาอังกฤษสื่อสารได้\nตำแหน่งที่สนใจ: ธุรการ / ประสานงาน เงินเดือนที่คาดหวัง 18,000 บาท\nสะดวกเริ่มงานทันที รบกวนผู้ใหญ่ใจดีพิจารณาด้วยค่ะ\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "เป็นโพสต์แนะนำตัวของคนหางาน ไม่ใช่ประกาศรับสมัครงานหรือประกาศจากหน่วยงาน",
+      "stage": 2
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "รับงานฟรีแลนซ์ ออกแบบโลโก้ ทำสไลด์ ตัดต่อวิดีโอ ราคาเป็นกันเอง ทักมาคุยได้เลยครับ\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "ตรงรูปแบบคนหางาน: “รับงานฟรีแลนซ์”",
+      "stage": 1
+    },
+    {
+      "group": "seeker",
+      "expect": "block",
+      "text": "Resume - นายภูมิ ใจดี\nPosition wanted: Junior Software Engineer\nSkills: Java, Spring Boot, Docker | Experience: Internship 4 months\nAvailable immediately. ติดต่อ 08x-xxx-xxxx\n",
+      "status": "filtered_out",
+      "intent": "job_seeker",
+      "reason": "เป็นโพสต์ของบุคคลทั่วไปที่กำลังหางาน ไม่ใช่ประกาศรับสมัครงานจากองค์กรหรือบริษัท",
+      "stage": 2
+    },
+    {
+      "group": "scam",
+      "expect": "block",
+      "text": "งานออนไลน์ทำที่บ้าน รายได้หลักหมื่นต่อวัน ไม่ต้องมีประสบการณ์ ใช้แค่มือถือเครื่องเดียว ทักไลน์เลย\n",
+      "status": "filtered_out",
+      "intent": "spam_or_scam",
+      "reason": "ตรงรูปแบบโฆษณา/หลอกลวง: “งานออนไลน์ทำที่บ้าน รายได้”",
+      "stage": 1
+    },
+    {
+      "group": "scam",
+      "expect": "block",
+      "text": "รับสมัครคนกดไลก์ กดไลก์ 1 ครั้งได้เงิน 5 บาท ถอนได้ทุกวัน สนใจทักแชท\n",
+      "status": "filtered_out",
+      "intent": "spam_or_scam",
+      "reason": "ตรงรูปแบบโฆษณา/หลอกลวง: “กดไลก์ กดไลก์ 1 ครั้งได้เงิน”",
+      "stage": 1
+    },
+    {
+      "group": "scam",
+      "expect": "block",
+      "text": "ฝากร้านค่าา เสื้อผ้ามือสองสภาพดี ราคาเริ่ม 39 บาท ส่งทั่วไทย 🛍️\n",
+      "status": "filtered_out",
+      "intent": "spam_or_scam",
+      "reason": "ตรงรูปแบบโฆษณา/หลอกลวง: “ฝากร้าน”",
+      "stage": 1
+    },
+    {
+      "group": "discussion",
+      "expect": "block",
+      "text": "มีใครเคยฝึกงานที่บริษัทนี้บ้างไหมคะ งานหนักไหม ได้เบี้ยเลี้ยงจริงหรือเปล่า\n",
+      "status": "filtered_out",
+      "intent": "discussion",
+      "reason": "เป็นโพสต์ถามตอบและรีวิวประสบการณ์ฝึกงาน ไม่ใช่ประกาศรับสมัครงานหรือประชาสัมพันธ์อย่างเป็นทางการ",
+      "stage": 2
+    },
+    {
+      "group": "discussion",
+      "expect": "block",
+      "text": "รีวิวสัมภาษณ์งานธนาคารเมื่อวาน ถามเยอะมาก ใครจะไปสัมภาษณ์เตรียมตัวเรื่อง case study ไว้นะ\n",
+      "status": "filtered_out",
+      "intent": "discussion",
+      "reason": "เป็นโพสต์พูดคุยและรีวิวการสัมภาษณ์งาน ไม่ใช่ประกาศรับสมัครงาน",
+      "stage": 2
+    },
+    {
+      "group": "discussion",
+      "expect": "block",
+      "text": "สอบถามครับ เงินเดือนเด็กจบใหม่สาย Data ในเชียงใหม่ตอนนี้ประมาณเท่าไหร่กันบ้าง\n",
+      "status": "filtered_out",
+      "intent": "discussion",
+      "reason": "เป็นกระทู้ถามตอบพูดคุย ไม่ใช่ประกาศรับสมัครงานหรือประชาสัมพันธ์อย่างเป็นทางการ",
+      "stage": 2
+    }
+  ]
+}

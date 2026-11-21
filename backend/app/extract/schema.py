@@ -52,6 +52,12 @@ class Extracted(BaseModel):
     min_gpax: float | None = None
     tags: list[str] | None = Field(None, description="แท็กสั้นๆ 1-4 อัน")
     details: AnnouncementDetails | None = None
+    # Social posts only (asked with SOCIAL_GATE_SCHEMA): who wrote it and whether to publish.
+    post_intent: str | None = None
+    poster_type: str | None = None
+    is_publishable: bool | None = None
+    confidence: float | None = None
+    rejection_reason: str | None = None
     method: str = "rules"
 
 
@@ -99,4 +105,42 @@ GEMINI_RESPONSE_SCHEMA = {
         },
     },
     "required": ["category", "summary_th"],
+}
+
+# Extra fields for posts from social feeds: Stage 2 of the gate (extract/gatekeeper.py), in the
+# same call as the extraction so it costs no extra request.
+SOCIAL_GATE_PROPERTIES = {
+    "post_intent": {
+        "type": "STRING",
+        "enum": [
+            "official_announcement",
+            "hiring_post",
+            "job_seeker",
+            "spam_or_scam",
+            "discussion",
+            "irrelevant",
+        ],
+        "description": "Is the author an organisation announcing or HIRING, or a person LOOKING for work?",
+    },
+    "poster_type": {
+        "type": "STRING",
+        "enum": ["organization", "company", "recruiter", "individual", "unknown"],
+    },
+    "is_publishable": {
+        "type": "BOOLEAN",
+        "description": "True ONLY for real announcements from companies, schools, universities or recruiters.",
+    },
+    "confidence": {"type": "NUMBER", "description": "0 to 1"},
+    "rejection_reason": {"type": "STRING", "nullable": True},
+}
+
+SOCIAL_RESPONSE_SCHEMA = {
+    **GEMINI_RESPONSE_SCHEMA,
+    "properties": {**GEMINI_RESPONSE_SCHEMA["properties"], **SOCIAL_GATE_PROPERTIES},
+    "required": [
+        *GEMINI_RESPONSE_SCHEMA["required"],
+        "post_intent",
+        "is_publishable",
+        "confidence",
+    ],
 }

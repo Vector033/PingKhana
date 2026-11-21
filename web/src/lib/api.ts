@@ -38,6 +38,8 @@ export type Announcement = {
     compensation?: string;
     fee?: string;
   } | null;
+  /** facebook / instagram when the post came from a social feed. */
+  platform?: string | null;
   /** Other sites that posted the same announcement (detail only). */
   also_on?: { source_name: string; url: string }[] | null;
 };

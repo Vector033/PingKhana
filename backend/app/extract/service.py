@@ -18,7 +18,7 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import BANGKOK, get_settings
-from app.extract import rules
+from app.extract import gatekeeper, rules
 from app.extract.gemini import RETRY_STATUS, GeminiExtractor
 from app.extract.schema import Extracted
 from app.models import Announcement
@@ -123,7 +123,17 @@ async def _gemini(
         # One answer may retry 503/429 across fallback models for minutes; cap it.
         return (
             await asyncio.wait_for(
-                ex.extract(a.title, a.body_text, ref, poster, budget.known_tags, pdf), CALL_TIMEOUT
+                ex.extract(
+                    a.title,
+                    a.body_text,
+                    ref,
+                    poster,
+                    budget.known_tags,
+                    pdf,
+                    # Social posts waiting for the gate also get the intent questions.
+                    social=a.moderation_status == "pending_review",
+                ),
+                CALL_TIMEOUT,
             ),
             False,
         )
@@ -153,6 +163,10 @@ def apply(a: Announcement, r: Extracted) -> None:
     if r.tags is not None or r.method.startswith("gemini"):
         a.tags = r.tags
     a.details = r.details.compact() if r.details else None
+    # Social posts that passed Stage 1 wait as pending_review; Gemini's answer decides them.
+    # Rule results cannot judge intent, so those stay pending until Gemini or an admin.
+    if a.moderation_status == "pending_review" and r.method.startswith("gemini"):
+        a.moderation_status, a.post_intent, a.rejection_reason = gatekeeper.decide(r)
     a.extraction_method = r.method
     a.needs_extraction = False
 

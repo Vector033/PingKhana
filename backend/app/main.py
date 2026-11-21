@@ -111,11 +111,15 @@ class AnnouncementOut(BaseModel):
     tags: list[str] | None = None
     # Category-specific facts (organization, event_date, compensation...); only those set.
     details: dict | None = None
+    # facebook / instagram for posts from social feeds (shown as a small badge); else None.
+    platform: str | None = None
     # Other sites that posted the same announcement (detail endpoint only).
     also_on: list[dict] | None = None
 
 
-def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
+def to_out(
+    a: Announcement, source_names: dict[str, str], social: dict[str, str] | None = None
+) -> AnnouncementOut:
     return AnnouncementOut(
         id=a.id,
         source_id=a.source_id,
@@ -135,11 +139,20 @@ def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
         image_url=a.image_url,
         tags=a.tags or None,
         details=a.details or None,
+        platform=(social or {}).get(a.source_id),
     )
 
 
 async def _source_names(session: AsyncSession) -> dict[str, str]:
     return dict((await session.execute(select(Source.id, Source.name))).all())
+
+
+async def _social_sources(session: AsyncSession) -> dict[str, str]:
+    """Source id -> platform, for sources that are social feeds."""
+    rows = await session.execute(
+        select(Source.id, Source.platform).where(Source.platform.in_(("facebook", "instagram")))
+    )
+    return dict(rows.all())
 
 
 class Page(BaseModel):
@@ -237,7 +250,10 @@ async def list_announcements(
         )
     rows = (await session.scalars(query.offset((page - 1) * page_size).limit(page_size))).all()
     names = await _source_names(session)
-    return Page(items=[to_out(a, names) for a in rows], total=total, page=page, page_size=page_size)
+    social = await _social_sources(session)
+    return Page(
+        items=[to_out(a, names, social) for a in rows], total=total, page=page, page_size=page_size
+    )
 
 
 @app.get("/api/announcements/{ann_id}", response_model=AnnouncementOut)
@@ -246,10 +262,11 @@ async def get_announcement(ann_id: int, session: Session) -> AnnouncementOut:
     if a is not None and a.duplicate_of_id is not None:
         # An old link to a repost shows the announcement it was merged into.
         a = await session.get(Announcement, a.duplicate_of_id)
-    if a is None:
+    # Social posts still waiting for (or refused by) the gate are not public, even by link.
+    if a is None or a.moderation_status != "published":
         raise HTTPException(404)
     names = await _source_names(session)
-    out = to_out(a, names)
+    out = to_out(a, names, await _social_sources(session))
     copies = (
         await session.scalars(select(Announcement).where(Announcement.duplicate_of_id == a.id))
     ).all()
@@ -473,7 +490,12 @@ async def delete_me(line_user_id: LiffUser, session: Session) -> None:
 @app.post("/api/liff/reminders/{ann_id}", status_code=204)
 async def add_reminder(ann_id: int, line_user_id: LiffUser, session: Session) -> None:
     ann = await session.get(Announcement, ann_id)
-    if ann is None or ann.deadline is None or ann.deadline < now_bkk().date():
+    if (
+        ann is None
+        or ann.moderation_status != "published"
+        or ann.deadline is None
+        or ann.deadline < now_bkk().date()
+    ):
         raise HTTPException(409, "announcement has no open deadline")
     user = await get_or_create_user(session, line_user_id)
     exists = await session.scalar(
@@ -699,6 +721,58 @@ async def admin_decide(sid: str, action: str, body: Decision, session: Session) 
     return {"id": s.id, "status": s.status}
 
 
+@app.get("/api/admin/moderation", dependencies=[Depends(check_jobs_token)])
+async def admin_moderation(
+    session: Session,
+    status: str = Query("pending_review", pattern="^(pending_review|filtered_out)$"),
+) -> list[dict]:
+    """Social posts the gate held back (pending_review) or dropped (filtered_out)."""
+    rows = (
+        await session.scalars(
+            select(Announcement)
+            .where(Announcement.moderation_status == status)
+            .order_by(Announcement.first_seen_at.desc())
+            .limit(100)
+        )
+    ).all()
+    names = await _source_names(session)
+    return [
+        {
+            "id": a.id,
+            "title": a.title,
+            "url": a.url,
+            "image_url": a.image_url,
+            "source_name": names.get(a.source_id, a.source_id),
+            "summary_th": a.summary_th,
+            "body": (a.body_text or "")[:500],
+            "post_intent": a.post_intent,
+            "rejection_reason": a.rejection_reason,
+            "first_seen_at": a.first_seen_at,
+        }
+        for a in rows
+    ]
+
+
+@app.post("/api/admin/moderation/{ann_id}/{action}", dependencies=[Depends(check_jobs_token)])
+async def admin_moderate(ann_id: int, action: str, session: Session) -> dict:
+    a = await session.get(Announcement, ann_id)
+    if a is None:
+        raise HTTPException(404)
+    if action == "approve":
+        a.moderation_status = "published"
+        a.rejection_reason = None
+        # Stage 1 drops skip Gemini; an approved one still needs its summary and fields.
+        if a.extraction_method is None:
+            a.needs_extraction = True
+    elif action == "reject":
+        a.moderation_status = "filtered_out"
+        a.rejection_reason = a.rejection_reason or "แอดมินปฏิเสธ"
+    else:
+        raise HTTPException(422, "approve or reject")
+    await session.commit()
+    return {"id": a.id, "moderation_status": a.moderation_status}
+
+
 @app.get("/api/admin/overview", dependencies=[Depends(check_jobs_token)])
 async def admin_overview(session: Session) -> dict:
     from app import notify
@@ -709,6 +783,11 @@ async def admin_overview(session: Session) -> dict:
     )
     return {
         "pending_sources": pending,
+        "pending_posts": await session.scalar(
+            select(func.count())
+            .select_from(Announcement)
+            .where(Announcement.moderation_status == "pending_review")
+        ),
         "announcements": await session.scalar(
             select(func.count()).select_from(visible().subquery())
         ),

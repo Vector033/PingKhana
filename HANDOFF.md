@@ -72,7 +72,7 @@ Web
 ข้อควรรู้หลัง deploy: `org` ของแหล่ง yaml จะเติมในรอบดึงข้อมูลรายชั่วโมงแรก (ก่อนหน้านั้นช่องเลือกสถาบันมีแต่รายชื่อแหล่ง)
 
 ## Phase 2 ของ MASTER_ROADMAP (2026-11-22): รายละเอียดตามหมวด ไม่มีป้ายว่าง
-**สถานะ: เสร็จ ผ่านเทสต์ commit แล้ว ยังไม่ push รอรีวิวก่อนเริ่ม Phase 3**
+**สถานะ: commit แล้ว (`07c78c2`) ยังไม่ push**
 
 Backend
 1. **`Announcement.details` (JSONB)** migration `8c4d1e9f2a17` (ขึ้น-ลง-ขึ้นแล้ว) · เก็บเฉพาะค่าที่มี (`AnnouncementDetails.compact()`) โพสต์เก่าเป็น null
@@ -89,6 +89,29 @@ Web
 ตรวจแล้ว: pytest 134 (+9: details ทุกหมวด, ตัดค่า placeholder, compact เป็น null, prompt, API), ruff, eslint, tsc, build, Playwright 41 ผ่าน + 1 ข้าม (เทสต์ปัดลงรันเฉพาะ mobile) · หน้า `/a/[id]` ทุกอันไม่ล้นจอและไม่มีคำ "ไม่จำกัด/ไม่ระบุ" ที่ 360/375/768/1280
 
 ข้อควรรู้: ประกาศที่มีอยู่แล้วบนเว็บจริงยังไม่มี `details` จนกว่าจะถูกอ่านใหม่ (ตอนนี้ระบบอ่านซ้ำเฉพาะโพสต์ใหม่/เปลี่ยน และที่ยังใช้ rules) ถ้าอยากเติมย้อนหลัง ต้องทำ backfill แยก (ยังไม่ทำ กินงบ Gemini)
+
+## Phase 3 ของ MASTER_ROADMAP (2026-11-22): โพสต์โซเชียล + ด่านคัดกรอง 2 ชั้น
+**สถานะ: เสร็จ ผ่านเทสต์ commit แล้ว ยังไม่ push · Phase 1-3 ครบตาม roadmap**
+
+Backend
+1. **migration `b7e3f0a5c612`**: `Announcement.moderation_status` (published / filtered_out / pending_review, ค่าเริ่ม published), `post_intent`, `rejection_reason` · `visible()`, digest LINE, `/api/announcements/{id}`, ปุ่มเตือนใน LINE/LIFF ใช้เฉพาะ published
+2. **แหล่ง `kind: social_feed`** + `platform: facebook|instagram` ใน `sources.yaml`: อ่าน RSS หรือ JSON Feed จาก bridge สาธารณะ (เช่น RSSHub) ด้วย `parse_social` · ไม่เปิดหน้า Facebook/Instagram เองเลย ใช้ caption จาก feed · ยังไม่มีแหล่งโซเชียลจริงใน yaml (ต้องเลือก bridge ก่อน)
+3. **ด่าน 1** (`extract/gatekeeper.py`, ไม่ใช้ token): regex สแปม/หลอกลวง และคนหางาน (ต้องขึ้นต้นโพสต์ และไม่มีคำของฝั่งรับสมัคร) → `filtered_out` ไม่ส่ง Gemini
+4. **ด่าน 2**: โพสต์ที่ผ่านด่าน 1 เก็บเป็น `pending_review` แล้วตอน Gemini สกัดข้อมูลจะถาม `post_intent`, `poster_type`, `is_publishable`, `confidence`, `rejection_reason` ในคำขอเดียวกัน (`SOCIAL_RESPONSE_SCHEMA`) · ตัดสินใน `apply()`: มั่นใจ >= 0.75 + ประกาศ/รับสมัคร → published, คนหางาน/สแปม/คุย → filtered_out, ไม่แน่ใจหรือขัดกัน → รอแอดมิน · rules fallback ตัดสินไม่ได้ จึงคงรอไว้ · แหล่งเว็บ/RSS เดิมไม่ผ่านด่านนี้
+5. **API แอดมิน**: `GET /api/admin/moderation?status=pending_review|filtered_out`, `POST /api/admin/moderation/{id}/approve|reject` (อนุมัติโพสต์ที่โดนด่าน 1 จะส่งไปสกัดข้อมูลใหม่) · overview มี `pending_posts`
+6. ประกาศมี `platform` (facebook/instagram) ส่งไปหน้าเว็บ
+
+Web
+1. `/admin` มีส่วน "โพสต์จากโซเชียล" แท็บ รอการตรวจสอบ / คัดออกแล้ว พร้อมเหตุผล, ประเภท, อนุมัติขึ้นเว็บ / ปฏิเสธ / กู้คืน (`ModerationQueue.tsx`)
+2. ป้ายเล็ก "· Facebook / Instagram" ใน `SourceTrustPill` ของโพสต์จากโซเชียล
+
+Eval (`eval/social_gate_cases.yaml`, 24 เคส: รับสมัครแบบทางการ 6, HR ภาษากันเอง 6, คนหางาน 6 รวมแนะนำตัวแบบ resume, สแปม 3, คุย/รีวิว 3)
+- เคสเขียนเลียนโพสต์จริง ไม่ได้ดึงจาก Facebook (ต้องล็อกอิน) → ควรเก็บชุดจริงเพิ่มเมื่อมี bridge
+- `python -m eval.run_social_gate_eval` (ด่าน 1 อย่างเดียว): ไม่บล็อกโพสต์รับสมัครผิดเลย, จับคนหางาน 4/6 และสแปม 3/3, ที่เหลือรอด่าน 2
+- `--gemini` รอบแรก (blind): recall รับสมัคร 58% (HR ภาษากันเอง 5/6 ไปรอแอดมินเพราะ AI มั่นใจ 0.60), บล็อกถูก 100%, ไม่มีอะไรขึ้นเว็บผิด
+- ปรับ prompt ("ให้ความมั่นใจตามเจตนา ไม่ใช่ความครบของรายละเอียด เพจคือผู้ประกาศ") แล้วรันซ้ำ: recall 100%, precision 100%, ไม่มีรอแอดมิน (ผลใน `eval/results/social-gate-stage1+gemini.json`) **รอบนี้ไม่ blind** เพราะปรับบนชุดเดียวกัน · หลายคำตอบมาจาก fallback `gemini-flash-lite-latest` เพราะตัวหลักติด 429
+
+ตรวจแล้ว: pytest 150 (+16 ใน `tests/test_social_gate.py`), ruff, eslint, tsc, build, Playwright 41 + 1 ข้าม, migration ขึ้น-ลง-ขึ้น, หน้าแอดมินไม่ล้นจอที่ 375/1280
 
 ## ผู้ใช้ต้องทำเอง
 - ไม่มีค้าง (ดูสรุป session ล่าสุดใน `NEXT_SESSION.md`)

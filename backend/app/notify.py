@@ -71,6 +71,7 @@ async def plan_digests(session: AsyncSession, now: datetime) -> int:
                 Announcement.matched_at.is_(None),
                 Announcement.needs_extraction.is_(False),
                 Announcement.duplicate_of_id.is_(None),
+                Announcement.moderation_status == "published",
             )
         )
     ).all()

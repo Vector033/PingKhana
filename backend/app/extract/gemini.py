@@ -10,7 +10,7 @@ from datetime import date
 import httpx
 
 from app.catalog import MAJORS
-from app.extract.schema import GEMINI_RESPONSE_SCHEMA, Extracted
+from app.extract.schema import GEMINI_RESPONSE_SCHEMA, SOCIAL_RESPONSE_SCHEMA, Extracted
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +59,17 @@ PDF_NOTE = (
     "แนบไฟล์ PDF ประกาศฉบับเต็มมาด้วย ใช้หาวันปิดรับสมัครและคุณสมบัติ (ระวังสับสนกับวันประกาศผล วันสอบ หรือวันสัมภาษณ์)"
 )
 
+SOCIAL_NOTE = """โพสต์นี้มาจากเพจโซเชียล (Facebook/Instagram) ซึ่งมีทั้งประกาศจริงและโพสต์ที่ไม่ควรขึ้นเว็บ ตอบเพิ่ม:
+- post_intent: official_announcement=หน่วยงานประกาศ (ทุน กิจกรรม ข่าว), hiring_post=บริษัท/หน่วยงาน/HR รับสมัครงาน
+  (รวมโพสต์ HR ภาษาเป็นกันเองที่มีรูปโปสเตอร์), job_seeker=คนกำลังหางาน/หาที่ฝึกงาน/แนะนำตัว (แม้จะเขียนเป็นข้อๆ
+  เหมือนประกาศงาน), spam_or_scam=โฆษณา งานออนไลน์รายได้สูง ฝากร้าน, discussion=ถามตอบ รีวิว บ่น, irrelevant=อื่นๆ
+- poster_type: ใครเป็นคนโพสต์
+- is_publishable: true เฉพาะประกาศจริงจากบริษัท โรงเรียน มหาวิทยาลัย หน่วยงาน หรือ recruiter
+- confidence: ความมั่นใจ 0-1 เรื่องเจตนาของผู้โพสต์ ไม่ใช่ความครบของรายละเอียด ถ้าไม่แน่ใจให้ต่ำกว่า 0.75 (แอดมินจะตรวจเอง)
+  โพสต์ที่บอกว่ารับคนทำงานอะไร และบอกวิธีสมัครหรือติดต่อ ให้เป็น hiring_post, is_publishable=true
+  แม้ภาษาจะเป็นกันเอง มีอีโมจิ ไม่บอกชื่อบริษัท หรือให้ดูรายละเอียดในโปสเตอร์ เพราะเพจที่โพสต์คือผู้ประกาศ
+- rejection_reason: ถ้าไม่ควรขึ้นเว็บ บอกเหตุผลสั้นๆ ภาษาไทย"""
+
 RETRY_STATUS = (429, 500, 502, 503, 504)
 
 
@@ -84,6 +95,7 @@ class GeminiExtractor:
         poster: tuple[bytes, str] | None = None,
         known_tags: list[str] | None = None,
         pdf: bytes | None = None,
+        social: bool = False,
     ) -> Extracted:
         """`poster` is (image bytes, mime type): many posts put the closing date only on it."""
         prompt = PROMPT.format(
@@ -95,6 +107,8 @@ class GeminiExtractor:
             known_tags=", ".join(known_tags or []) or "(ยังไม่มี)",
         )
         parts: list[dict] = [{"text": prompt}]
+        if social:
+            parts.append({"text": SOCIAL_NOTE})
         if poster:
             parts.append({"text": POSTER_NOTE})
             parts.append(
@@ -120,7 +134,7 @@ class GeminiExtractor:
             "generationConfig": {
                 "temperature": 0,
                 "responseMimeType": "application/json",
-                "responseSchema": GEMINI_RESPONSE_SCHEMA,
+                "responseSchema": SOCIAL_RESPONSE_SCHEMA if social else GEMINI_RESPONSE_SCHEMA,
             },
         }
         # A PDF or poster takes Gemini longer to read than the per-request default.

@@ -26,7 +26,11 @@ class SourceConfig(BaseModel):
     id: str
     name: str
     url: str
-    kind: Literal["html", "rss"] = "html"
+    # social_feed: a public bridge (e.g. RSSHub) turning a Facebook page or Instagram account
+    # into RSS / JSON Feed. The social site itself is never fetched; posts pass the gate.
+    kind: Literal["html", "rss", "social_feed"] = "html"
+    # facebook | instagram for social feeds; empty means web / rss from `kind`.
+    platform: str | None = None
     enabled: bool = True
     listing: ListSelectors | None = None
     detail: DetailSelectors | None = None

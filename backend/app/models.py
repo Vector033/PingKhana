@@ -113,6 +113,14 @@ class Announcement(Base):
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(48)))
     # Category-specific facts from Gemini (AnnouncementDetails.compact()); null on old posts.
     details: Mapped[dict | None] = mapped_column(JSONB)
+    # Social posts pass a gate (extract/gatekeeper.py): published | filtered_out |
+    # pending_review. Web and RSS posts are always published. Only published ones are shown.
+    moderation_status: Mapped[str] = mapped_column(
+        String(24), default="published", server_default="published", index=True
+    )
+    # official_announcement | hiring_post | job_seeker | spam_or_scam | discussion | irrelevant
+    post_intent: Mapped[str | None] = mapped_column(String(32))
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
     extraction_method: Mapped[str | None] = mapped_column(String(64))
     image_url: Mapped[str | None] = mapped_column(Text)
     attachment_url: Mapped[str | None] = mapped_column(Text)
