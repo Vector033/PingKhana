@@ -8,7 +8,7 @@ import {
   TaggedStrip,
 } from "@/components/Feed";
 import { followOrg } from "@/app/follow/actions";
-import { OrgPicker } from "@/components/OrgPicker";
+import { SearchPicker } from "@/components/SearchPicker";
 import { getAnnouncements, getMeta, getStats, getTags } from "@/lib/api";
 import { getFollowed, getFollowedTags } from "@/lib/follow";
 import { minutesSince, todayBangkok } from "@/lib/format";
@@ -192,23 +192,6 @@ export async function Listing({
 
   // Year is not a web filter: almost no post names one (those that don't match every year),
   // and half the feed is for teachers. The LINE settings still use year to pick what to send.
-  const sortFilter = (
-    <FilterGroup title="เรียงตาม">
-      <FilterLink
-        href={href({ sort: null })}
-        active={(current.sort ?? "new") === "new"}
-      >
-        ล่าสุด
-      </FilterLink>
-      <FilterLink
-        href={href({ sort: "deadline" })}
-        active={current.sort === "deadline"}
-      >
-        วันปิดรับใกล้สุด
-      </FilterLink>
-    </FilterGroup>
-  );
-
   const heading = current.tag
     ? `#${current.tag}`
     : current.q
@@ -231,24 +214,59 @@ export async function Listing({
     following: null,
   };
   const picker = (
-    <OrgPicker
-      orgs={(meta.orgs ?? []).map((o) => ({
-        name: o.name,
-        count: o.count,
-        href: href({ ...scopeOff, org: o.id }),
-        active: current.org === o.id,
-      }))}
-      sources={meta.sources.map((s) => ({
-        name: s.name,
-        org: s.org,
-        href: href({ ...scopeOff, source: s.id }),
-        active: current.source === s.id,
-      }))}
+    <SearchPicker
       label={
         current.org ??
         (current.source ? sourceName(current.source) : "เลือกสถาบัน / แหล่ง")
       }
       active={Boolean(current.org || current.source)}
+      title="เลือกสถาบันหรือแหล่งข่าว"
+      placeholder="พิมพ์ชื่อมหาวิทยาลัย หรือองค์กร..."
+      groups={[
+        {
+          title: "สถาบัน / องค์กร",
+          items: (meta.orgs ?? []).map((o) => ({
+            name: o.name,
+            count: o.count,
+            href: href({ ...scopeOff, org: o.id }),
+            active: current.org === o.id,
+          })),
+        },
+        {
+          title: "แหล่งข่าว",
+          items: meta.sources.map((s) => ({
+            name: s.name,
+            meta: s.org,
+            href: href({ ...scopeOff, source: s.id }),
+            active: current.source === s.id,
+          })),
+        },
+      ]}
+      footer={{
+        href: "/sources/new",
+        label: "+ ไม่พบสถาบันของคุณ? เพิ่มลิงก์แหล่งข่าวใหม่",
+      }}
+    />
+  );
+  // Tags are many: one pill opens a searchable list instead of a long row of chips.
+  const tagPicker = popular.length > 0 && (
+    <SearchPicker
+      icon="tag"
+      label={current.tag ? `#${current.tag}` : "แท็ก"}
+      active={Boolean(current.tag)}
+      title="เลือกแท็ก"
+      placeholder="พิมพ์ชื่อแท็ก เช่น สอบครู, ทุน"
+      groups={[
+        {
+          title: "แท็กยอดนิยม",
+          items: popular.map((t) => ({
+            name: `#${t.tag}`,
+            count: t.count,
+            href: href({ tag: t.tag }),
+            active: current.tag === t.tag,
+          })),
+        },
+      ]}
     />
   );
 
@@ -268,7 +286,7 @@ export async function Listing({
   if (current.q) chips.push([`“${current.q}”`, href({ q: null })]);
 
   const packFilter = (
-    <FilterGroup title="แหล่ง" wrap>
+    <div role="group" aria-label="แหล่ง" className="flex flex-wrap gap-1.5">
       <FilterLink
         href={href({
           ...scopeOff,
@@ -300,7 +318,7 @@ export async function Listing({
         </FilterLink>
       ))}
       {picker}
-    </FilterGroup>
+    </div>
   );
 
   return (
@@ -331,10 +349,46 @@ export async function Listing({
               </p>
             )}
           </div>
-          {/* Category and search live in the header. Here: 1. whose posts (scope, groups,
-              institution), 2. what is filtering now, 3. narrower refinements. */}
-          <div className="mt-3 space-y-2 text-sm">
+          {/* Category and search live in the header. Here: 1. whose posts, 2. refinements
+              (tags behind a search, status and order as two small switches), 3. what is
+              filtering now, each removable. */}
+          <div className="mt-3 space-y-3 text-sm">
             {packFilter}
+            <div className="flex flex-wrap items-center gap-2">
+              {tagPicker}
+              {!news && (
+                <>
+                  <Segmented
+                    label="สถานะ"
+                    // Phones: tags and order share a line, status gets its own.
+                    className="order-2 md:order-none"
+                    options={Object.entries(STATUS_SHORT).map(
+                      ([id, label]) => ({
+                        label,
+                        href: href({ status: id === "open" ? null : id }),
+                        active: status === id,
+                      }),
+                    )}
+                  />
+                  <Segmented
+                    label="เรียงตาม"
+                    className="order-1 md:order-none"
+                    options={[
+                      {
+                        label: "ล่าสุด",
+                        href: href({ sort: null }),
+                        active: (current.sort ?? "new") === "new",
+                      },
+                      {
+                        label: "ใกล้ปิดก่อน",
+                        href: href({ sort: "deadline" }),
+                        active: current.sort === "deadline",
+                      },
+                    ]}
+                  />
+                </>
+              )}
+            </div>
             {chips.length > 0 && (
               <div
                 role="group"
@@ -368,37 +422,6 @@ export async function Listing({
                 >
                   ล้างตัวกรองทั้งหมด
                 </Link>
-              </div>
-            )}
-            {popular.length > 0 && (
-              <FilterGroup title="แท็ก" scroll>
-                {popular.slice(0, 10).map((t) => (
-                  <FilterLink
-                    key={t.tag}
-                    href={href({ tag: t.tag })}
-                    active={current.tag === t.tag}
-                  >
-                    #{t.tag}
-                  </FilterLink>
-                ))}
-              </FilterGroup>
-            )}
-            {!news && (
-              <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-6">
-                <FilterGroup title="สถานะ">
-                  {Object.entries(STATUS_LABEL).map(([id, label]) => (
-                    <FilterLink
-                      key={id}
-                      href={href({
-                        status: id === "open" ? null : id,
-                      })}
-                      active={status === id}
-                    >
-                      {label}
-                    </FilterLink>
-                  ))}
-                </FilterGroup>
-                {sortFilter}
               </div>
             )}
           </div>
@@ -461,43 +484,43 @@ const STATUS_LABEL: Record<string, string> = {
   closing: "ปิดรับใน 14 วัน",
   all: "รวมที่ปิดแล้ว",
 };
+// Shorter labels inside the status switch.
+const STATUS_SHORT: Record<string, string> = {
+  open: "ยังเปิดรับ",
+  closing: "ปิดใน 14 วัน",
+  all: "รวมที่ปิดแล้ว",
+};
 
-function FilterGroup({
-  title,
-  scroll = false,
-  wrap = false,
-  children,
+/** Two or three choices of one setting, joined into a single control. */
+function Segmented({
+  label,
+  options,
+  className = "",
 }: {
-  title: string;
-  /** Wrap on phones too, so the last item (the institution picker) is never off-screen. */
-  wrap?: boolean;
-  /** Stay one line on every screen (tags) instead of wrapping on desktop. */
-  scroll?: boolean;
-  children: React.ReactNode;
+  label: string;
+  options: { label: string; href: string; active: boolean }[];
+  className?: string;
 }) {
   return (
-    // One row per group; scrolls sideways on phones instead of wrapping (unless `wrap`).
     <div
-      className={
-        wrap
-          ? "flex items-start gap-2"
-          : `-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] ${scroll ? "" : "md:mx-0 md:overflow-visible md:px-0"}`
-      }
+      role="group"
+      aria-label={label}
+      className={`inline-flex max-w-full overflow-x-auto rounded-full border border-line bg-surface [scrollbar-width:none] ${className}`}
     >
-      <h3
-        className={`shrink-0 text-xs text-muted md:self-start md:leading-11 ${wrap ? "leading-11" : ""}`}
-      >
-        {title}
-      </h3>
-      <div
-        className={
-          wrap
-            ? "flex min-w-0 flex-wrap gap-1.5 whitespace-nowrap"
-            : `flex shrink-0 gap-1.5 whitespace-nowrap ${scroll ? "" : "md:shrink md:flex-wrap"}`
-        }
-      >
-        {children}
-      </div>
+      {options.map((o) => (
+        <Link
+          key={o.label}
+          href={o.href}
+          aria-current={o.active ? "page" : undefined}
+          className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-3.5 whitespace-nowrap transition-[background-color,color] duration-150 active:scale-95 ${
+            o.active
+              ? "bg-brand-soft font-medium text-brand"
+              : "text-muted hover:text-fg"
+          }`}
+        >
+          {o.label}
+        </Link>
+      ))}
     </div>
   );
 }

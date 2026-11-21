@@ -198,7 +198,8 @@ test("admin page rejects a wrong token", async ({ page }) => {
 
 test("tags: popular chips filter the list, followed tags get their own row", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "#ทุนเรียนดี" }).first().click();
+  await page.getByRole("button", { name: "แท็ก" }).click();
+  await page.getByRole("dialog", { name: "เลือกแท็ก" }).getByRole("link", { name: /#ทุนเรียนดี/ }).click();
   await expect(page).toHaveURL(/tag=/);
   await expect(page.getByRole("heading", { level: 2, name: "#ทุนเรียนดี" })).toBeVisible();
   await expect(list(page).getByRole("link", { name: /Software Engineer Intern/ })).toHaveCount(0);
