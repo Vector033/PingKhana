@@ -158,7 +158,9 @@ async def list_announcements(
     sort: str = Query("new", pattern="^(new|deadline)$"),
     # open = things to apply for (every category except general news); news = general only.
     kind: str = Query("all", pattern="^(all|open|news)$"),
-    pack: str | None = Query(None, pattern="^(student|teacher|general)$"),
+    pack: str | None = Query(None, pattern="^(student|teacher|career|general)$"),
+    # Institution name as stored on Source.org, e.g. "มช.".
+    org: str | None = Query(None, max_length=80),
     # Comma-separated source ids: what a visitor follows on the website.
     sources: str | None = Query(None, max_length=1000),
     tag: str | None = Query(None, max_length=48),
@@ -198,6 +200,8 @@ async def list_announcements(
         query = query.where(
             Announcement.source_id.in_(select(Source.id).where(Source.pack == pack))
         )
+    if org:
+        query = query.where(Announcement.source_id.in_(select(Source.id).where(Source.org == org)))
     if status == "open":
         query = query.where(still_open(today), recent_if_undated(today))
     elif status == "closing":
@@ -254,7 +258,13 @@ async def get_announcement(ann_id: int, session: Session) -> AnnouncementOut:
     return out
 
 
-PACKS = {"student": "นักศึกษา มช.", "teacher": "ครู / ศึกษาธิการ", "general": "ทั่วไป"}
+# Keys are stored in users.packs (LINE settings), so they never change; labels are neutral.
+PACKS = {
+    "student": "มหาวิทยาลัย",
+    "teacher": "ครู / การศึกษา",
+    "career": "งาน / อาชีพ",
+    "general": "ทั่วไป",
+}
 
 
 @app.get("/api/meta")
@@ -266,12 +276,55 @@ async def meta(session: Session) -> dict:
         "categories": [{"id": c.value, "th": CATEGORY_TH[c]} for c in Category],
         "majors": [{"id": k, "th": v["th"]} for k, v in MAJORS.items()],
         "years": YEARS,
-        "sources": [{"id": s.id, "name": s.name, "url": s.url, "pack": s.pack} for s in sources],
+        "sources": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "url": s.url,
+                "pack": s.pack,
+                "org": s.org,
+                "platform": s.platform,
+            }
+            for s in sources
+        ],
+        "orgs": await _orgs(session, sources),
         "packs": [
             {"id": p, "th": th} for p, th in PACKS.items() if any(s.pack == p for s in sources)
         ],
         "liff_id": get_settings().liff_id,
     }
+
+
+async def _orgs(session: AsyncSession, sources: list[Source]) -> list[dict]:
+    """Institutions with their number of visible posts, busiest first. The name is the id."""
+    q = visible().subquery()
+    counts = dict(
+        (
+            await session.execute(
+                select(Source.org, func.count())
+                .join(q, q.c.source_id == Source.id)
+                .where(Source.enabled, Source.org.is_not(None))
+                .group_by(Source.org)
+            )
+        ).all()
+    )
+    names = {s.org for s in sources if s.org}
+    rows = [{"id": n, "name": n, "count": counts.get(n, 0)} for n in names]
+    return sorted(rows, key=lambda o: (-o["count"], o["name"]))
+
+
+async def _guess_org(session: AsyncSession, homepage: str) -> str | None:
+    """A new link on the same site as a known source belongs to the same institution
+    (eng.cmu.ac.th -> มช.)."""
+    from urllib.parse import urlsplit
+
+    from app.collector.discover import site_key
+
+    key = site_key(urlsplit(homepage).hostname or "")
+    for s in (await session.scalars(select(Source).where(Source.org.is_not(None)))).all():
+        if site_key(urlsplit(s.url).hostname or "") == key:
+            return s.org
+    return None
 
 
 async def _extraction_counts(session: AsyncSession) -> dict[str, int]:
@@ -524,7 +577,7 @@ async def discover_source(body: DiscoverIn, request: Request, session: Session) 
     except DiscoveryError as e:
         raise HTTPException(422, str(e)) from e
     existing = await _find_source(session, d.homepage, d.url)
-    return {**asdict(d), "existing": existing}
+    return {**asdict(d), "org": await _guess_org(session, d.homepage), "existing": existing}
 
 
 async def _find_source(session: AsyncSession, homepage: str, url: str) -> dict | None:
@@ -542,6 +595,7 @@ class SubmitIn(BaseModel):
     homepage: str = Field(max_length=500)
     name: str = Field(min_length=2, max_length=120)
     pack: str
+    org: str | None = Field(None, max_length=80)
     listing: dict | None = None
     preview: list[dict] = []
     note: str | None = Field(None, max_length=500)
@@ -575,6 +629,8 @@ async def submit_source(body: SubmitIn, request: Request, session: Session) -> d
             url=body.homepage,
             enabled=False,
             pack=body.pack,
+            org=(body.org or "").strip() or None,
+            platform="rss" if body.kind == "rss" else "web",
             status="pending",
             config=to_config(body.model_dump(), sid),
             submitted_at=now_bkk(),
@@ -598,6 +654,7 @@ async def admin_sources(session: Session) -> list[dict]:
             "name": s.name,
             "url": s.url,
             "pack": s.pack,
+            "org": s.org,
             "enabled": s.enabled,
             "status": s.status,
             "user_added": s.config is not None,
@@ -614,6 +671,7 @@ async def admin_sources(session: Session) -> list[dict]:
 
 class Decision(BaseModel):
     pack: str | None = None
+    org: str | None = Field(None, max_length=80)
     name: str | None = Field(None, min_length=2, max_length=120)
 
 
@@ -630,6 +688,8 @@ async def admin_decide(sid: str, action: str, body: Decision, session: Session) 
         s.pack = body.pack
     if body.name:
         s.name = body.name
+    if body.org is not None:
+        s.org = body.org.strip() or None
     s.status = "approved" if action == "approve" else "rejected"
     s.enabled = action == "approve"
     await session.commit()

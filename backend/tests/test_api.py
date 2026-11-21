@@ -28,7 +28,9 @@ async def test_list_filters_and_search(session, client) -> None:
         session, title="ทุนเปิด Python", deadline=today + timedelta(days=5), years=[3]
     )
     await f.announcement(session, title="ทุนปิดแล้ว", deadline=today - timedelta(days=5))
-    await f.announcement(session, title="สหกิจ", category=Category.INTERNSHIP)
+    internship = await f.announcement(session, title="สหกิจ", category=Category.INTERNSHIP)
+    # Undated posts count as open only while recent; the API compares with the real clock.
+    internship.first_seen_at = datetime.now(tz=BANGKOK)
     await session.commit()
 
     r = (await client.get("/api/announcements")).json()
@@ -130,7 +132,7 @@ async def test_kind_and_pack_filters(session, client) -> None:
     }
     assert titles(await client.get("/api/announcements", params={"pack": "teacher"})) == {"ข่าว ศธ."}
     meta = (await client.get("/api/meta")).json()
-    assert {"id": "teacher", "th": "ครู / ศึกษาธิการ"} in meta["packs"]
+    assert {"id": "teacher", "th": "ครู / การศึกษา"} in meta["packs"]
 
 
 async def test_prefs_packs_roundtrip_and_validation(client, monkeypatch) -> None:
@@ -165,6 +167,7 @@ async def test_submitted_source_waits_for_admin_then_gets_collected(
         "homepage": "https://school.example.org/",
         "name": "โรงเรียนตัวอย่าง",
         "pack": "teacher",
+        "org": "สพป.ตัวอย่าง",
         "preview": [{"title": "ข่าว", "url": "https://school.example.org/1"}],
     }
     r = await client.post("/api/sources", json=body)
@@ -185,6 +188,8 @@ async def test_submitted_source_waits_for_admin_then_gets_collected(
     assert [(c.id, c.kind, c.url, c.pack) for c in cfgs] == [
         (sid, "rss", "https://school.example.org/feed/", "general")
     ]
+    rows = (await client.get("/api/admin/sources", headers=auth)).json()
+    assert {r["id"]: r["org"] for r in rows}[sid] == "สพป.ตัวอย่าง"
     pending = (await client.get("/api/admin/overview", headers=auth)).json()["pending_sources"]
     assert pending == 0
 
@@ -203,3 +208,63 @@ async def test_tags_endpoint_and_filter(session, client) -> None:
     assert r["items"][0]["tags"] == ["ทุนต่างประเทศ", "ญี่ปุ่น"]
     r = (await client.get("/api/announcements", params={"tags": "ญี่ปุ่น,ไม่มีจริง"})).json()
     assert r["total"] == 1
+
+
+async def test_org_filter_and_orgs_in_meta(session, client) -> None:
+    from app.models import Source
+
+    session.add_all(
+        [
+            Source(id="eng", name="วิศวะ", url="https://eng.cmu.ac.th/", org="มช."),
+            Source(id="sci", name="วิทยาศาสตร์", url="https://www.science.cmu.ac.th/", org="มช."),
+            Source(
+                id="obec", name="สพฐ.", url="https://www.obec.go.th/", pack="teacher", org="สพฐ."
+            ),
+            Source(id="blog", name="บล็อกครู", url="https://kru.example.com/", pack="teacher"),
+        ]
+    )
+    await session.flush()
+    for sid, title in [
+        ("eng", "ค่ายวิศวะ"),
+        ("sci", "ทุนวิทย์"),
+        ("sci", "ทุนวิทย์ 2"),
+        ("obec", "อบรมครู"),
+        ("blog", "ข่าวครู"),
+    ]:
+        a = await f.announcement(session, title=title)
+        a.source_id = sid
+    await session.commit()
+
+    titles = lambda r: {a["title"] for a in r.json()["items"]}  # noqa: E731
+    assert titles(await client.get("/api/announcements", params={"org": "มช."})) == {
+        "ค่ายวิศวะ",
+        "ทุนวิทย์",
+        "ทุนวิทย์ 2",
+    }
+    assert titles(await client.get("/api/announcements", params={"org": "สพฐ."})) == {"อบรมครู"}
+    assert (await client.get("/api/announcements", params={"org": "ไม่มี"})).json()["total"] == 0
+
+    meta = (await client.get("/api/meta")).json()
+    # Busiest first; the test-src factory source has no org, so it is not listed.
+    assert meta["orgs"] == [
+        {"id": "มช.", "name": "มช.", "count": 3},
+        {"id": "สพฐ.", "name": "สพฐ.", "count": 1},
+    ]
+    by_id = {s["id"]: s for s in meta["sources"]}
+    assert by_id["eng"]["org"] == "มช." and by_id["blog"]["org"] is None
+    assert by_id["eng"]["platform"] == "web"
+
+
+async def test_career_pack_is_accepted(client) -> None:
+    assert (await client.get("/api/announcements", params={"pack": "career"})).status_code == 200
+    assert (await client.get("/api/announcements", params={"pack": "aliens"})).status_code == 422
+
+
+async def test_new_link_on_a_known_site_gets_its_org(session) -> None:
+    from app.main import _guess_org
+    from app.models import Source
+
+    session.add(Source(id="cs", name="CS", url="https://www.cs.science.cmu.ac.th/", org="มช."))
+    await session.commit()
+    assert await _guess_org(session, "https://eng.cmu.ac.th/") == "มช."
+    assert await _guess_org(session, "https://www.chula.ac.th/") is None

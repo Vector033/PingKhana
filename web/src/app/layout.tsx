@@ -19,11 +19,11 @@ export const metadata: Metadata = {
   ),
   openGraph: { siteName: "PingKhana", locale: "th_TH", images: ["/og.png"] },
   title: {
-    default: "PingKhana — ประกาศทุน สหกิจ งาน มช.",
+    default: "PingKhana — ประกาศทุน สหกิจ งาน และข่าวการศึกษา",
     template: "%s · PingKhana",
   },
   description:
-    "รวมประกาศทุน สหกิจ/ฝึกงาน งาน และกิจกรรมจากเว็บคณะและมหาวิทยาลัยเชียงใหม่ ค้นหา กรอง และให้ LINE เตือนก่อนปิดรับ",
+    "รวมประกาศทุน สหกิจ/ฝึกงาน งาน กิจกรรม และข่าวการศึกษาจากเว็บมหาวิทยาลัยและหน่วยงาน ค้นหา กรองตามสถาบัน และให้ LINE เตือนก่อนปิดรับ",
 };
 
 export const viewport: Viewport = {

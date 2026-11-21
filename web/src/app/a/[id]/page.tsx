@@ -9,11 +9,13 @@ import {
   DeadlineBadge,
   SourceTrustPill,
 } from "@/components/AnnouncementCard";
+import { FollowButton } from "@/components/FollowButton";
 import { remindBlockedReason, RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
 import { TagLinks } from "@/components/TagLinks";
 import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
+import { getFollowed } from "@/lib/follow";
 import { DISCLAIMER, thDate, tidyWrap, todayBangkok } from "@/lib/format";
 
 export async function generateMetadata({
@@ -50,7 +52,11 @@ export default function AnnouncementPage({ params }: PageProps<"/a/[id]">) {
 
 async function Detail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [a, meta] = await Promise.all([getAnnouncement(id), getMeta()]);
+  const [a, meta, followed] = await Promise.all([
+    getAnnouncement(id),
+    getMeta(),
+    getFollowed(),
+  ]);
   if (!a) notFound();
   await connection(); // "today" must be computed per request, not at build time
   const today = todayBangkok();
@@ -73,6 +79,12 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
         <CategoryChip category={a.category} label={a.category_th} />
         <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+        <FollowButton
+          id={a.source_id}
+          name={a.source_name}
+          following={followed.includes(a.source_id)}
+          className="-my-2.5 -ml-1.5"
+        />
       </div>
       <h1 className="mt-3 text-2xl leading-[1.3] font-semibold tracking-[-0.02em] text-balance [overflow-wrap:anywhere]">
         {tidyWrap(a.title)}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { MouseEvent } from "react";
+import { FollowButton } from "@/components/FollowButton";
 import { Highlight, Thumb } from "@/components/Thumb";
 import type { Announcement } from "@/lib/api";
 import {
@@ -225,6 +226,8 @@ type CardProps = {
   onOpen?: (a: Announcement) => void;
   /** First row of a page: load the poster eagerly. */
   eager?: boolean;
+  /** Whether the visitor follows this source; the bookmark shows only when given. */
+  following?: boolean;
 };
 
 /** Plain click opens the quick preview; new-tab / new-window clicks go to the full page. */
@@ -248,8 +251,23 @@ function opener(a: Announcement, onOpen?: (a: Announcement) => void) {
 const STRETCH =
   "outline-none after:absolute after:inset-0 after:z-10 after:rounded-[inherit] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-brand";
 
-function Meta({ a }: { a: Announcement }) {
-  return <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />;
+function Meta({ a, following }: { a: Announcement; following?: boolean }) {
+  const pill = (
+    <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+  );
+  if (following === undefined) return pill;
+  return (
+    <div className="flex items-start gap-1">
+      <div className="min-w-0 flex-1">{pill}</div>
+      {/* Negative margins keep the 44px target without making the row taller. */}
+      <FollowButton
+        id={a.source_id}
+        name={a.source_name}
+        following={following}
+        className="-my-3 -mr-2.5"
+      />
+    </div>
+  );
 }
 
 function EligibilityChips({
@@ -310,6 +328,7 @@ export function AnnouncementCard({
   majors,
   onOpen,
   eager,
+  following,
 }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
   const title = tidyWrap(a.title);
@@ -342,7 +361,7 @@ export function AnnouncementCard({
         />
       </div>
       <div className="relative z-[1] flex flex-1 flex-col p-4">
-        <Meta a={a} />
+        <Meta a={a} following={following} />
         <h3 className="mt-2 line-clamp-3 text-base leading-[1.3] font-semibold tracking-[-0.01em] text-balance [overflow-wrap:anywhere] group-hover:text-brand">
           <Link
             href={`/a/${a.id}`}
@@ -373,7 +392,7 @@ export function AnnouncementCard({
 }
 
 /** Front-page lead: a large poster, then a big title. Posters are mostly text, so no text on top. */
-export function LeadCard({ a, today, majors, onOpen }: CardProps) {
+export function LeadCard({ a, today, majors, onOpen, following }: CardProps) {
   const urgent = isUrgent(a.deadline, today);
   return (
     <article className="animate-card-enter group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:border-brand/55 hover:shadow-card motion-safe:hover:-translate-y-1">
@@ -402,6 +421,14 @@ export function LeadCard({ a, today, majors, onOpen }: CardProps) {
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
           <SourceTrustPill name={a.source_name} publishedOn={a.published_on} />
+          {following !== undefined && (
+            <FollowButton
+              id={a.source_id}
+              name={a.source_name}
+              following={following}
+              className="-my-3 ml-auto"
+            />
+          )}
         </div>
         <h3 className="mt-2.5 line-clamp-3 text-xl leading-[1.3] font-semibold tracking-[-0.02em] text-balance [overflow-wrap:anywhere] group-hover:text-brand sm:text-2xl">
           <Link

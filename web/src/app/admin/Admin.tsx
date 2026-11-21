@@ -20,6 +20,7 @@ type Src = {
   name: string;
   url: string;
   pack: string;
+  org: string | null;
   enabled: boolean;
   status: string;
   user_added: boolean;
@@ -37,8 +38,9 @@ type Src = {
 };
 
 const PACK_TH: Record<string, string> = {
-  student: "นักศึกษา",
+  student: "มหาวิทยาลัย",
   teacher: "ครู",
+  career: "งาน",
   general: "ทั่วไป",
 };
 const fmt = (iso: string | null) =>
@@ -204,7 +206,14 @@ export function Admin() {
               className="rounded-2xl border border-line bg-surface p-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold text-pretty">{s.name}</p>
+                <p className="font-semibold text-pretty">
+                  {s.name}
+                  {s.org && (
+                    <span className="ml-2 text-sm font-normal text-muted">
+                      {s.org}
+                    </span>
+                  )}
+                </p>
                 <span className="text-xs whitespace-nowrap text-muted tabular-nums">
                   ส่งเมื่อ {fmt(s.submitted_at)}
                 </span>
@@ -232,15 +241,17 @@ export function Admin() {
                 ))}
               </ol>
               <div className="mt-3 flex flex-wrap gap-2">
-                {(["student", "teacher", "general"] as const).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => decide(s.id, "approve", p)}
-                    className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-medium ${p === s.pack ? "bg-brand text-brand-fg" : "border border-line-strong hover:border-brand"}`}
-                  >
-                    อนุมัติ · {PACK_TH[p]}
-                  </button>
-                ))}
+                {(["student", "teacher", "career", "general"] as const).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      onClick={() => decide(s.id, "approve", p)}
+                      className={`inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-medium ${p === s.pack ? "bg-brand text-brand-fg" : "border border-line-strong hover:border-brand"}`}
+                    >
+                      อนุมัติ · {PACK_TH[p]}
+                    </button>
+                  ),
+                )}
                 <button
                   onClick={() => decide(s.id, "reject")}
                   className="inline-flex min-h-11 items-center rounded-xl border border-danger/50 px-4 text-sm text-danger"

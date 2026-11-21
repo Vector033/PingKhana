@@ -38,9 +38,19 @@ export type Meta = {
   categories: { id: Category; th: string }[];
   majors: { id: string; th: string }[];
   years: number[];
-  sources: { id: string; name: string; url: string; pack?: string }[];
+  sources: {
+    id: string;
+    name: string;
+    url: string;
+    pack?: string;
+    /** Institution, e.g. "มช."; null for an independent site. */
+    org?: string | null;
+    platform?: string;
+  }[];
   /** Groups of sources people can follow (student, teacher, ...). */
   packs?: { id: string; th: string }[];
+  /** Institutions with their number of posts, busiest first. `id` is the name. */
+  orgs?: { id: string; name: string; count: number }[];
   liff_id: string;
 };
 

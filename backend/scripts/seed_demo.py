@@ -50,7 +50,7 @@ async def main() -> None:
         if src is None:
             src = Source(id="demo", name="แหล่งข้อมูลตัวอย่าง", url="https://example.com/")
             s.add(src)
-        src.enabled, src.pack = True, "student"
+        src.enabled, src.pack, src.org = True, "student", "มหาวิทยาลัยตัวอย่าง"
         await s.flush()
         for i, (title, cat, days, years, majors, gpax) in enumerate(DEMO, start=1):
             s.add(

@@ -48,6 +48,11 @@ class Source(Base):
     url: Mapped[str] = mapped_column(Text)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     pack: Mapped[str] = mapped_column(String(32), default="student", server_default="student")
+    # Institution the source belongs to ("มช.", "สพฐ."), grouped in the website's picker.
+    # None for independent sites, which show up in the picker as sources of their own.
+    org: Mapped[str | None] = mapped_column(String(80), index=True)
+    # web | rss today; facebook / instagram once social feeds are read.
+    platform: Mapped[str] = mapped_column(String(24), default="web", server_default="web")
     # Sources people added on the website live here instead of sources.yaml:
     # config = {kind, url, homepage, listing?, preview}; status pending -> approved / rejected.
     config: Mapped[dict | None] = mapped_column(JSONB)

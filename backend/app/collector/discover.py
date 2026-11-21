@@ -84,6 +84,15 @@ def _items_preview(items: list[ListItem]) -> list[dict]:
     ]
 
 
+def site_key(host: str) -> str:
+    """The registrable part of a host: eng.cmu.ac.th -> cmu.ac.th, www.obec.go.th -> obec.go.th,
+    news.example.com -> example.com. Two-letter country domains with a short second level
+    (.ac.th, .go.th, .co.uk) keep three labels."""
+    parts = host.lower().removeprefix("www.").split(".")
+    n = 3 if len(parts) >= 3 and len(parts[-1]) == 2 and len(parts[-2]) <= 3 else 2
+    return ".".join(parts[-n:])
+
+
 def guess_pack(text: str) -> str:
     t = text.lower()
     if any(w in t for w in TEACHER_WORDS):

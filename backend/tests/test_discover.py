@@ -111,3 +111,11 @@ async def test_internal_addresses_are_refused(monkeypatch) -> None:
             await d.ensure_public(url)
     with pytest.raises(d.DiscoveryError):
         await d.ensure_public("https://example.org:8443/")
+
+
+def test_site_key_groups_hosts_of_one_institution() -> None:
+    assert d.site_key("eng.cmu.ac.th") == "cmu.ac.th"
+    assert d.site_key("www.cs.science.cmu.ac.th") == "cmu.ac.th"
+    assert d.site_key("www.obec.go.th") == "obec.go.th"
+    assert d.site_key("moe360.blog") == "moe360.blog"
+    assert d.site_key("news.example.com") == "example.com"

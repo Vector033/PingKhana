@@ -76,6 +76,8 @@ async def sync_sources(session: AsyncSession, configs: list[SourceConfig]) -> No
         src.name, src.url, src.enabled = cfg.name, cfg.homepage or cfg.url, cfg.enabled
         src.pack = cfg.pack
         src.note = cfg.note
+        src.org = cfg.org
+        src.platform = "rss" if cfg.kind == "rss" else "web"
     await session.commit()
 
 

@@ -91,3 +91,10 @@ def test_relative_item_links_resolve_against_the_feed() -> None:
     )
     got = [i.url for i in parse_rss(xml, "https://eng.cmu.ac.th/?feed=rss2")]
     assert got == ["https://eng.cmu.ac.th/wp-content/uploads/a.pdf", "https://eng.cmu.ac.th/?p=1"]
+
+
+def test_sources_carry_their_institution() -> None:
+    cmu = [s for s in SOURCES.values() if s.url.split("/")[2].endswith("cmu.ac.th")]
+    assert len(cmu) >= 9 and all(s.org == "มช." for s in cmu)
+    assert SOURCES["obec"].org == "สพฐ." and SOURCES["moe360"].org == "ศธ."
+    assert SOURCES["kruachieve"].org is None  # independent site: its own entry in the picker

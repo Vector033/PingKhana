@@ -39,7 +39,9 @@ class SourceConfig(BaseModel):
     force_https: bool = False
     max_new_per_run: int = 15
     # Who the source is for. The site groups sources into packs people can follow.
-    pack: Literal["student", "teacher", "general"] = "student"
+    pack: Literal["student", "teacher", "career", "general"] = "student"
+    # Institution shown in the website's organisation picker; None for independent sites.
+    org: str | None = None
     # Page to show people; for feeds `url` is the XML feed itself.
     homepage: str | None = None
     # RSS items whose <category> contains one of these are skipped (procurement reports etc.)

@@ -16,6 +16,8 @@ type Found = {
   homepage: string;
   name: string;
   pack: string;
+  /** Institution guessed from a known source on the same site, e.g. "มช.". */
+  org: string | null;
   method: string;
   listing: Record<string, string> | null;
   preview: Preview[];
@@ -28,8 +30,9 @@ type Found = {
 };
 
 const PACKS = [
-  { id: "student", th: "นักศึกษา" },
-  { id: "teacher", th: "ครู / ศึกษาธิการ" },
+  { id: "student", th: "มหาวิทยาลัย" },
+  { id: "teacher", th: "ครู / การศึกษา" },
+  { id: "career", th: "งาน / อาชีพ" },
   { id: "general", th: "ทั่วไป" },
 ];
 
@@ -57,6 +60,7 @@ export function AddSource() {
   const [found, setFound] = useState<Found | null>(null);
   const [name, setName] = useState("");
   const [pack, setPack] = useState("general");
+  const [org, setOrg] = useState("");
   const [note, setNote] = useState("");
   const [sent, setSent] = useState<"pending" | "exists" | null>(null);
 
@@ -77,6 +81,7 @@ export function AddSource() {
       setFound(f);
       setName(f.name);
       setPack(f.pack);
+      setOrg(f.org ?? "");
     } catch (err) {
       setError(
         err instanceof TypeError
@@ -97,7 +102,13 @@ export function AddSource() {
     const res = await fetch(`${API}/api/sources`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...found, name, pack, note: note || null }),
+      body: JSON.stringify({
+        ...found,
+        name,
+        pack,
+        org: org.trim() || null,
+        note: note || null,
+      }),
     });
     setBusy(false);
     if (!res.ok) return setError(await readError(res));
@@ -197,6 +208,21 @@ export function AddSource() {
                   </select>
                 </label>
               </div>
+              <label className="block text-sm">
+                <span className="font-medium">
+                  มหาวิทยาลัย / หน่วยงาน (ไม่บังคับ)
+                </span>
+                <input
+                  value={org}
+                  maxLength={80}
+                  onChange={(e) => setOrg(e.target.value)}
+                  placeholder="เช่น มช., จุฬาฯ, สพฐ."
+                  className="mt-1 min-h-11 w-full rounded-lg border border-line-strong bg-bg px-3"
+                />
+                <span className="mt-1 block text-xs text-pretty text-muted">
+                  ใช้จัดกลุ่มในช่อง “เลือกสถาบัน” แหล่งจากที่เดียวกันจะอยู่ด้วยกัน
+                </span>
+              </label>
               <label className="block text-sm">
                 <span className="font-medium">ฝากบอกแอดมิน (ไม่บังคับ)</span>
                 <input

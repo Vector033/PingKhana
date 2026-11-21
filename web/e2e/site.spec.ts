@@ -88,11 +88,47 @@ test("search words are highlighted in results", async ({ page }) => {
 
 test("a guest can follow sources without an account", async ({ page }) => {
   await page.goto("/follow");
-  await page.getByRole("button", { name: "นักศึกษา มช." }).click();
+  await page.getByRole("button", { name: "มหาวิทยาลัย" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: /ที่ติดตาม \(\d+\)/ })).toHaveAttribute("aria-current", "page");
   // "ทั้งหมด" shows every source again without forgetting the choice.
   await page.getByRole("link", { name: "ทั้งหมด", exact: true }).click();
+  await expect(page).toHaveURL(/all=1/);
+});
+
+test("institution picker narrows the list and the tray clears it", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "เลือกสถาบัน / แหล่ง" }).click();
+  const picker = page.getByRole("dialog", { name: "เลือกสถาบันหรือแหล่งข่าว" });
+  await expect(picker.getByRole("searchbox")).toBeFocused();
+  await picker.getByRole("searchbox").fill("ตัวอย่าง");
+  await expect(picker.getByRole("link", { name: /มหาวิทยาลัยตัวอย่าง/ }).first()).toBeVisible();
+  await picker.getByRole("searchbox").press("Enter");
+  await expect(page).toHaveURL(/org=/);
+  const chip = page.getByRole("link", { name: "เอาตัวกรอง มหาวิทยาลัยตัวอย่าง ออก" });
+  await expect(chip).toBeVisible();
+  await expect(list(page).getByRole("link", { name: /Software Engineer Intern/ })).toBeVisible();
+  await chip.click();
+  await expect(page).not.toHaveURL(/org=/);
+});
+
+test("following tab without follows offers one-click institutions", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "ที่ติดตาม", exact: true }).click();
+  await expect(page).toHaveURL(/following=1/);
+  await expect(page.getByRole("heading", { name: "เริ่มสร้างฟีดของคุณ" })).toBeVisible();
+  await page.getByRole("button", { name: /\+ ติดตาม มหาวิทยาลัยตัวอย่าง/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: /ที่ติดตาม \(1\)/ })).toHaveAttribute("aria-current", "page");
+});
+
+test("bookmark on a card follows its source without leaving the page", async ({ page }) => {
+  await page.goto("/?all=1");
+  const card = list(page).locator("article", { hasText: "Software Engineer Intern" });
+  await card.getByRole("button", { name: "ติดตาม แหล่งข้อมูลตัวอย่าง" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "กำลังติดตาม แหล่งข้อมูลตัวอย่าง" }).first()).toBeAttached();
+  await expect(card.getByRole("button", { name: "เลิกติดตาม แหล่งข้อมูลตัวอย่าง" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: /ที่ติดตาม \(1\)/ })).toBeVisible();
   await expect(page).toHaveURL(/all=1/);
 });
 

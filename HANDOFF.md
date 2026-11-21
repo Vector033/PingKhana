@@ -1,4 +1,4 @@
-# PingKhana: สถานะส่งต่อ (2026-11-14)
+# PingKhana: สถานะส่งต่อ (2026-11-22)
 
 ## Live
 - เว็บ: https://pingkhana.vercel.app (Vercel, deploy เองเมื่อ push main) · API: https://pingkhana-api.onrender.com (Render, auto-deploy, migration รันตอนเริ่ม)
@@ -50,6 +50,26 @@
 3. **หา RSS จากชื่อเว็บ**: ใส่แค่ `eng.cmu.ac.th` ก็เจอ feed · แก้ให้ลอง `www.` เมื่อชื่อเว็บไม่มี DNS (เช่น econ.cmu.ac.th) · ใส่ชื่อหน่วยงาน (ไม่ใช่โดเมน) ยังหาไม่ได้
 4. **Source health** (`.github/workflows/source-health.yml` + `backend/scripts/source_health.py`): ทุก 3 ชม. ถ้าแหล่งไหนไม่ได้ดึงสำเร็จเกิน 6 ชม. หรือล้มเหลว 3 รอบติด workflow จะล้ม แล้ว GitHub ส่งอีเมลหาเจ้าของ repo
 5. **เอาตัวกรองชั้นปีออกจากหน้าเว็บ**: ประกาศที่เปิดอยู่ระบุชั้นปีแค่ 1/49 และชุดครูไม่มีชั้นปี · หน้าตั้งค่า LINE ยังใช้ชั้นปีคัดสิ่งที่ส่ง
+
+## Phase 1 ของ MASTER_ROADMAP (2026-11-22): ตัวกรองแหล่งแบบกลาง + เลือกสถาบัน
+**สถานะ: ทำเสร็จและผ่านเทสต์ ยังไม่ commit / push รอผู้ใช้รีวิวก่อนเริ่ม Phase 2** (แผนอยู่ใน `MASTER_ROADMAP.md`, `PROMPT_FOR_CLAUDE.md`)
+
+Backend
+1. **`Source.org` + `Source.platform`** (migration `5b2e7c41a9d0`, ขึ้น-ลง-ขึ้นทดสอบแล้ว) · `org` กำหนดใน `sources.yaml` (มช. 9 แหล่ง, ศธ., สพฐ., คุรุสภา; เว็บอิสระอย่างครูอาชีพไม่มี org) · `sync_sources` เขียนให้ทุกรอบ ส่วน `platform` = `rss`/`web` ตาม kind (เตรียมไว้ให้ Phase 3)
+2. **ชื่อกลุ่มเป็นกลาง** `PACKS`: มหาวิทยาลัย / ครู / การศึกษา / งาน / อาชีพ (ใหม่: `career`) / ทั่วไป · key เดิมไม่เปลี่ยน ผู้ใช้ LINE ที่ตั้งค่าไว้แล้วใช้ต่อได้ · กลุ่มที่ยังไม่มีแหล่งไม่แสดงบนเว็บ (ตอนนี้ `career` ยังว่าง)
+3. **API**: `/api/announcements?org=` · `/api/meta` เพิ่ม `orgs` [{id, name, count}] (id = ชื่อ, เรียงตามจำนวนประกาศ) และ `org`/`platform` ในแต่ละ source
+4. **แหล่งที่ผู้ใช้เพิ่ม**: `/api/sources/discover` เดา `org` จากแหล่งเดิมที่อยู่โดเมนเดียวกัน (`site_key`: eng.cmu.ac.th → cmu.ac.th → มช.) · ฟอร์มมีช่อง "มหาวิทยาลัย / หน่วยงาน" · แอดมินแก้ org ได้ผ่าน API (`Decision.org`; หน้าแอดมินแสดงแต่ยังไม่มีช่องแก้)
+
+Web
+1. **ตัวกรอง 3 ชั้น** (`Listing.tsx`): (1) ที่ติดตาม / ทั้งหมด / กลุ่ม / ปุ่ม "เลือกสถาบัน / แหล่ง" ขึ้นบรรทัดใหม่บนมือถือ (2) ถาดตัวกรองที่ใช้อยู่ ลบทีละตัวหรือ "ล้างตัวกรองทั้งหมด" (3) แท็ก (บรรทัดเดียวเลื่อนข้าง) + สถานะ + เรียงตาม
+2. **`OrgPicker.tsx`**: `<dialog>` แบบ command palette ค้นหาสถาบันและแหล่งข่าวทันที แสดงจำนวนประกาศ, Enter เลือกตัวแรก, ลิงก์ไป `/sources/new`
+3. **`FollowButton.tsx`**: bookmark บนการ์ด, การ์ดใหญ่, drawer และหน้า `/a/[id]` · server action `toggleFollow` เขียน cookie `pk_follow` · toast ผ่าน portal (การ์ดมี transform/overflow)
+4. **หน้าแนะนำ "ที่ติดตาม"** (`?following=1` เมื่อยังไม่ติดตามอะไร): ปุ่มติดตามสถาบันที่มีประกาศมากสุด 3 อัน (`followOrg`) + ปุ่มค้นหา + ลิงก์ `/follow`
+5. metadata ของเว็บเลิกผูกกับ มช.
+
+ตรวจแล้ว: pytest 125 (เพิ่มเทสต์ org/meta/site_key/การเดา org/แหล่งใน yaml และแก้เทสต์ที่ผูกวันที่ `test_list_filters_and_search` ซึ่งล้มตั้งแต่ ~15 พ.ย.), ruff, eslint, tsc, build, Playwright 38/38 (+3 เทสต์: เลือกสถาบัน+ถาด, หน้าแนะนำ, bookmark), ไม่ล้นจอทุก route ที่ 360/375/768/1280 · LIFF prefs ใช้ key เดิม (เทสต์ `test_prefs_packs_roundtrip_and_validation` ผ่าน)
+
+ข้อควรรู้หลัง deploy: `org` ของแหล่ง yaml จะเติมในรอบดึงข้อมูลรายชั่วโมงแรก (ก่อนหน้านั้นช่องเลือกสถาบันมีแต่รายชื่อแหล่ง)
 
 ## ผู้ใช้ต้องทำเอง
 - ไม่มีค้าง (ดูสรุป session ล่าสุดใน `NEXT_SESSION.md`)

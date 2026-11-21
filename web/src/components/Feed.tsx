@@ -19,6 +19,7 @@ import {
   LeadCard,
   SourceTrustPill,
 } from "@/components/AnnouncementCard";
+import { FollowButton } from "@/components/FollowButton";
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
@@ -31,6 +32,8 @@ type Ctx = {
   today: string;
   majors: Record<string, string>;
   q?: string;
+  /** Source ids the visitor follows (cookie), for the bookmark on each card. */
+  followed: string[];
 };
 const PreviewCtx = createContext<Ctx | null>(null);
 
@@ -45,11 +48,13 @@ export function PreviewProvider({
   today,
   majors,
   q,
+  followed,
   children,
 }: {
   today: string;
   majors: Record<string, string>;
   q?: string;
+  followed: string[];
   children: React.ReactNode;
 }) {
   const [current, setCurrent] = useState<Announcement | null>(null);
@@ -70,8 +75,8 @@ export function PreviewProvider({
     setCurrent(a);
   }, []);
   const ctx = useMemo(
-    () => ({ open, today, majors, q }),
-    [open, today, majors, q],
+    () => ({ open, today, majors, q, followed }),
+    [open, today, majors, q, followed],
   );
 
   function close() {
@@ -95,7 +100,13 @@ export function PreviewProvider({
         }}
       >
         {current && (
-          <Preview a={current} today={today} majors={majors} onClose={close} />
+          <Preview
+            a={current}
+            today={today}
+            majors={majors}
+            following={followed.includes(current.source_id)}
+            onClose={close}
+          />
         )}
       </dialog>
     </PreviewCtx.Provider>
@@ -113,7 +124,7 @@ export function Feed({
   items: Announcement[];
   eager?: boolean;
 }) {
-  const { open, today, majors, q } = usePreview();
+  const { open, today, majors, q, followed } = usePreview();
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
       {items.map((a, i) => (
@@ -126,6 +137,7 @@ export function Feed({
           majors={majors}
           onOpen={open}
           eager={eager && i < 3}
+          following={followed.includes(a.source_id)}
         />
       ))}
     </div>
@@ -207,7 +219,7 @@ export function NewsStrip({ items }: { items: Announcement[] }) {
 
 /** Front-page lead: the soonest deadline as a big poster, the next few beside it. */
 export function ClosingHero({ items }: { items: Announcement[] }) {
-  const { open, today, majors } = usePreview();
+  const { open, today, majors, followed } = usePreview();
   const [lead, ...rest] = items;
   if (!lead) return null;
   return (
@@ -237,7 +249,13 @@ export function ClosingHero({ items }: { items: Announcement[] }) {
             : "max-w-3xl"
         }
       >
-        <LeadCard a={lead} today={today} majors={majors} onOpen={open} />
+        <LeadCard
+          a={lead}
+          today={today}
+          majors={majors}
+          onOpen={open}
+          following={followed.includes(lead.source_id)}
+        />
         {rest.length > 0 && (
           <ol className="grid grid-cols-1 content-start gap-3">
             {rest.map((a, i) => (
@@ -256,11 +274,13 @@ function Preview({
   a,
   today,
   majors,
+  following,
   onClose,
 }: {
   a: Announcement;
   today: string;
   majors: Record<string, string>;
+  following: boolean;
   onClose: () => void;
 }) {
   // General news has no deadline, eligibility or reminder to show.
@@ -283,6 +303,12 @@ function Preview({
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <CategoryChip category={a.category} label={a.category_th} />
               <SourceTrustPill name={a.source_name} />
+              <FollowButton
+                id={a.source_id}
+                name={a.source_name}
+                following={following}
+                className="-my-2.5 -ml-2"
+              />
             </div>
             <h2
               id="preview-title"

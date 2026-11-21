@@ -7,6 +7,8 @@ import {
   PreviewProvider,
   TaggedStrip,
 } from "@/components/Feed";
+import { followOrg } from "@/app/follow/actions";
+import { OrgPicker } from "@/components/OrgPicker";
 import { getAnnouncements, getMeta, getStats, getTags } from "@/lib/api";
 import { getFollowed, getFollowedTags } from "@/lib/follow";
 import { minutesSince, todayBangkok } from "@/lib/format";
@@ -19,6 +21,8 @@ const FILTER_KEYS = [
   "status",
   "major",
   "source",
+  "org",
+  "following",
   "sort",
   "pack",
   "tag",
@@ -133,9 +137,19 @@ export async function Listing({
     getFollowedTags(),
   ]);
   const follow =
-    followed.length > 0 && !current.pack && !current.source && !current.all
+    followed.length > 0 &&
+    !current.pack &&
+    !current.source &&
+    !current.org &&
+    !current.all
       ? followed.join(",")
       : null;
+  // "ที่ติดตาม" with nothing followed yet: show how to start instead of an empty list.
+  const onboarding = current.following === "1" && followed.length === 0;
+  // `following` is a page state, not an API filter.
+  const apiParams = Object.fromEntries(
+    Object.entries(current).filter(([k]) => k !== "following"),
+  );
   const withFollow = (qs: string) => (follow ? `${qs}&sources=${follow}` : qs);
   let data, meta, closing, latestNews, popular, tagged;
   try {
@@ -143,7 +157,7 @@ export async function Listing({
       getAnnouncements(
         new URLSearchParams({
           page_size: news ? "21" : "20",
-          ...current,
+          ...apiParams,
           status,
           kind: zone,
           ...(follow ? { sources: follow } : {}),
@@ -206,36 +220,96 @@ export async function Listing({
             "ประกาศ")
           : "เปิดรับสมัครล่าสุด";
 
-  const packFilter = ((meta.packs?.length ?? 0) > 1 || followed.length > 0) && (
-    <FilterGroup title="แหล่ง">
-      {followed.length > 0 && (
-        <FilterLink
-          href={href({ pack: null, all: null })}
-          active={Boolean(follow)}
-        >
-          ที่ติดตาม ({followed.length})
-        </FilterLink>
-      )}
+  const sourceName = (id: string) =>
+    meta.sources.find((s) => s.id === id)?.name ?? id;
+  // Picking a scope replaces the others.
+  const scopeOff = {
+    pack: null,
+    org: null,
+    source: null,
+    all: null,
+    following: null,
+  };
+  const picker = (
+    <OrgPicker
+      orgs={(meta.orgs ?? []).map((o) => ({
+        name: o.name,
+        count: o.count,
+        href: href({ ...scopeOff, org: o.id }),
+        active: current.org === o.id,
+      }))}
+      sources={meta.sources.map((s) => ({
+        name: s.name,
+        org: s.org,
+        href: href({ ...scopeOff, source: s.id }),
+        active: current.source === s.id,
+      }))}
+      label={
+        current.org ??
+        (current.source ? sourceName(current.source) : "เลือกสถาบัน / แหล่ง")
+      }
+      active={Boolean(current.org || current.source)}
+    />
+  );
+
+  // What is narrowing the list right now, each removable on its own.
+  const chips: [string, string][] = [];
+  if (current.pack)
+    chips.push([
+      meta.packs?.find((p) => p.id === current.pack)?.th ?? current.pack,
+      href({ pack: null }),
+    ]);
+  if (current.org) chips.push([current.org, href({ org: null })]);
+  if (current.source)
+    chips.push([sourceName(current.source), href({ source: null })]);
+  if (current.tag) chips.push([`#${current.tag}`, href({ tag: null })]);
+  if (!news && status !== "open")
+    chips.push([STATUS_LABEL[status] ?? status, href({ status: null })]);
+  if (current.q) chips.push([`“${current.q}”`, href({ q: null })]);
+
+  const packFilter = (
+    <FilterGroup title="แหล่ง" wrap>
       <FilterLink
-        href={href({ pack: null, all: followed.length > 0 ? "1" : null })}
-        active={!current.pack && !follow}
+        href={href({
+          ...scopeOff,
+          following: followed.length > 0 ? null : "1",
+        })}
+        active={Boolean(follow) || onboarding}
+      >
+        ที่ติดตาม{followed.length > 0 && ` (${followed.length})`}
+      </FilterLink>
+      <FilterLink
+        href={href({ ...scopeOff, all: followed.length > 0 ? "1" : null })}
+        active={
+          !follow &&
+          !onboarding &&
+          !current.pack &&
+          !current.org &&
+          !current.source
+        }
       >
         ทั้งหมด
       </FilterLink>
       {(meta.packs ?? []).map((p) => (
         <FilterLink
           key={p.id}
-          href={href({ pack: p.id })}
+          href={href({ ...scopeOff, pack: p.id })}
           active={current.pack === p.id}
         >
           {p.th}
         </FilterLink>
       ))}
+      {picker}
     </FilterGroup>
   );
 
   return (
-    <PreviewProvider today={today} majors={majors} q={current.q}>
+    <PreviewProvider
+      today={today}
+      majors={majors}
+      q={current.q}
+      followed={followed}
+    >
       {closing && closing.items.length > 0 && (
         <ClosingHero items={closing.items} />
       )}
@@ -248,23 +322,56 @@ export async function Listing({
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
               {heading}
             </h2>
-            <p className="text-sm text-pretty text-muted [overflow-wrap:anywhere]">
-              <span className="whitespace-nowrap tabular-nums">
-                พบ {data.total} ประกาศ
-              </span>
-              {current.q && <> สำหรับ “{current.q}”</>}
-            </p>
+            {!onboarding && (
+              <p className="text-sm text-pretty text-muted [overflow-wrap:anywhere]">
+                <span className="whitespace-nowrap tabular-nums">
+                  พบ {data.total} ประกาศ
+                </span>
+                {current.q && <> สำหรับ “{current.q}”</>}
+              </p>
+            )}
           </div>
-          {/* Category and search live in the header; these narrow the list further. */}
-          <div className="mt-3 flex flex-col gap-2 text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-6">
+          {/* Category and search live in the header. Here: 1. whose posts (scope, groups,
+              institution), 2. what is filtering now, 3. narrower refinements. */}
+          <div className="mt-3 space-y-2 text-sm">
             {packFilter}
+            {chips.length > 0 && (
+              <div
+                role="group"
+                aria-label="ตัวกรองที่ใช้อยู่"
+                className="flex flex-wrap items-center gap-2"
+              >
+                {chips.map(([label, to]) => (
+                  <Link
+                    key={label}
+                    href={to}
+                    aria-label={`เอาตัวกรอง ${label} ออก`}
+                    className="inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full bg-brand-soft pr-3 pl-3.5 font-medium text-brand transition-transform duration-150 active:scale-95"
+                  >
+                    <span className="truncate">{label}</span>
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 20 20"
+                      className="size-4 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    >
+                      <path d="M6 6l8 8M14 6l-8 8" />
+                    </svg>
+                  </Link>
+                ))}
+                <Link
+                  href={base}
+                  className="inline-flex min-h-11 items-center px-2 font-medium whitespace-nowrap text-muted underline-offset-4 hover:text-fg hover:underline"
+                >
+                  ล้างตัวกรองทั้งหมด
+                </Link>
+              </div>
+            )}
             {popular.length > 0 && (
-              <FilterGroup title="แท็ก">
-                {current.tag && (
-                  <FilterLink href={href({ tag: null })} active={false}>
-                    ล้างแท็ก ×
-                  </FilterLink>
-                )}
+              <FilterGroup title="แท็ก" scroll>
                 {popular.slice(0, 10).map((t) => (
                   <FilterLink
                     key={t.tag}
@@ -277,28 +384,28 @@ export async function Listing({
               </FilterGroup>
             )}
             {!news && (
-              <FilterGroup title="สถานะ">
-                {[
-                  ["open", "ยังเปิดรับ"],
-                  ["closing", "ปิดรับใน 14 วัน"],
-                  ["all", "รวมที่ปิดแล้ว"],
-                ].map(([id, label]) => (
-                  <FilterLink
-                    key={id}
-                    href={href({
-                      status: id === "open" ? null : id,
-                    })}
-                    active={status === id}
-                  >
-                    {label}
-                  </FilterLink>
-                ))}
-              </FilterGroup>
+              <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-6">
+                <FilterGroup title="สถานะ">
+                  {Object.entries(STATUS_LABEL).map(([id, label]) => (
+                    <FilterLink
+                      key={id}
+                      href={href({
+                        status: id === "open" ? null : id,
+                      })}
+                      active={status === id}
+                    >
+                      {label}
+                    </FilterLink>
+                  ))}
+                </FilterGroup>
+                {sortFilter}
+              </div>
             )}
-            {!news && sortFilter}
           </div>
         </div>
-        {data.items.length === 0 ? (
+        {onboarding ? (
+          <EmptyFollowing orgs={meta.orgs ?? []} picker={picker} />
+        ) : data.items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line-strong p-8 text-center text-muted">
             <p className="text-pretty">ไม่พบประกาศที่ตรงกับตัวกรองนี้</p>
             <Link
@@ -314,7 +421,7 @@ export async function Listing({
             eager={!closing?.items.length && !tagged?.items.length}
           />
         )}
-        {pages > 1 && (
+        {pages > 1 && !onboarding && (
           <nav
             className="mt-6 flex items-center justify-between text-sm"
             aria-label="หน้า"
@@ -349,20 +456,46 @@ export async function Listing({
 const PAGER =
   "inline-flex min-h-11 items-center rounded-xl border border-line-strong bg-surface px-4 whitespace-nowrap transition-colors hover:border-brand hover:text-brand";
 
+const STATUS_LABEL: Record<string, string> = {
+  open: "ยังเปิดรับ",
+  closing: "ปิดรับใน 14 วัน",
+  all: "รวมที่ปิดแล้ว",
+};
+
 function FilterGroup({
   title,
+  scroll = false,
+  wrap = false,
   children,
 }: {
   title: string;
+  /** Wrap on phones too, so the last item (the institution picker) is never off-screen. */
+  wrap?: boolean;
+  /** Stay one line on every screen (tags) instead of wrapping on desktop. */
+  scroll?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    // One row per group; scrolls sideways on phones instead of wrapping.
-    <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0">
-      <h3 className="shrink-0 text-xs text-muted md:self-start md:leading-11">
+    // One row per group; scrolls sideways on phones instead of wrapping (unless `wrap`).
+    <div
+      className={
+        wrap
+          ? "flex items-start gap-2"
+          : `-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] ${scroll ? "" : "md:mx-0 md:overflow-visible md:px-0"}`
+      }
+    >
+      <h3
+        className={`shrink-0 text-xs text-muted md:self-start md:leading-11 ${wrap ? "leading-11" : ""}`}
+      >
         {title}
       </h3>
-      <div className="flex shrink-0 gap-1.5 whitespace-nowrap md:shrink md:flex-wrap">
+      <div
+        className={
+          wrap
+            ? "flex min-w-0 flex-wrap gap-1.5 whitespace-nowrap"
+            : `flex shrink-0 gap-1.5 whitespace-nowrap ${scroll ? "" : "md:shrink md:flex-wrap"}`
+        }
+      >
         {children}
       </div>
     </div>
@@ -413,6 +546,73 @@ export function ListSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** "ที่ติดตาม" before anything is followed: busiest institutions as one-click follows. */
+function EmptyFollowing({
+  orgs,
+  picker,
+}: {
+  orgs: { name: string; count: number }[];
+  picker: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          >
+            <path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1Z" />
+          </svg>
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-lg leading-[1.3] font-semibold text-balance">
+            เริ่มสร้างฟีดของคุณ
+          </h3>
+          <p className="mt-1 max-w-[60ch] text-pretty text-muted">
+            ติดตามมหาวิทยาลัยหรือหน่วยงานที่สนใจ แล้วแท็บนี้จะแสดงเฉพาะประกาศจากที่นั่น
+            จำไว้ในเบราว์เซอร์นี้ ไม่ต้องสมัครสมาชิก
+          </p>
+        </div>
+      </div>
+      {orgs.length > 0 && (
+        <form action={followOrg} className="mt-4 flex flex-wrap gap-2">
+          {orgs.slice(0, 3).map((o) => (
+            <button
+              key={o.name}
+              name="org"
+              value={o.name}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-brand bg-brand-soft px-4 text-sm font-medium text-brand transition-transform duration-150 active:scale-95"
+            >
+              + ติดตาม {o.name}
+              <span className="font-normal tabular-nums opacity-80">
+                ({o.count})
+              </span>
+            </button>
+          ))}
+        </form>
+      )}
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted">
+        <span>หรือค้นหาเอง</span>
+        {picker}
+        <Link
+          href="/follow"
+          className="inline-flex min-h-11 items-center font-medium whitespace-nowrap text-brand underline-offset-4 hover:underline"
+        >
+          เลือกทีละแหล่ง
+        </Link>
+      </div>
     </div>
   );
 }
