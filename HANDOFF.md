@@ -52,7 +52,7 @@
 5. **เอาตัวกรองชั้นปีออกจากหน้าเว็บ**: ประกาศที่เปิดอยู่ระบุชั้นปีแค่ 1/49 และชุดครูไม่มีชั้นปี · หน้าตั้งค่า LINE ยังใช้ชั้นปีคัดสิ่งที่ส่ง
 
 ## Phase 1 ของ MASTER_ROADMAP (2026-11-22): ตัวกรองแหล่งแบบกลาง + เลือกสถาบัน
-**สถานะ: ทำเสร็จและผ่านเทสต์ ยังไม่ commit / push รอผู้ใช้รีวิวก่อนเริ่ม Phase 2** (แผนอยู่ใน `MASTER_ROADMAP.md`, `PROMPT_FOR_CLAUDE.md`)
+**สถานะ: commit แล้ว (`38fc199`) ยังไม่ push** (แผนอยู่ใน `MASTER_ROADMAP.md`, `PROMPT_FOR_CLAUDE.md`)
 
 Backend
 1. **`Source.org` + `Source.platform`** (migration `5b2e7c41a9d0`, ขึ้น-ลง-ขึ้นทดสอบแล้ว) · `org` กำหนดใน `sources.yaml` (มช. 9 แหล่ง, ศธ., สพฐ., คุรุสภา; เว็บอิสระอย่างครูอาชีพไม่มี org) · `sync_sources` เขียนให้ทุกรอบ ส่วน `platform` = `rss`/`web` ตาม kind (เตรียมไว้ให้ Phase 3)
@@ -70,6 +70,25 @@ Web
 ตรวจแล้ว: pytest 125 (เพิ่มเทสต์ org/meta/site_key/การเดา org/แหล่งใน yaml และแก้เทสต์ที่ผูกวันที่ `test_list_filters_and_search` ซึ่งล้มตั้งแต่ ~15 พ.ย.), ruff, eslint, tsc, build, Playwright 38/38 (+3 เทสต์: เลือกสถาบัน+ถาด, หน้าแนะนำ, bookmark), ไม่ล้นจอทุก route ที่ 360/375/768/1280 · LIFF prefs ใช้ key เดิม (เทสต์ `test_prefs_packs_roundtrip_and_validation` ผ่าน)
 
 ข้อควรรู้หลัง deploy: `org` ของแหล่ง yaml จะเติมในรอบดึงข้อมูลรายชั่วโมงแรก (ก่อนหน้านั้นช่องเลือกสถาบันมีแต่รายชื่อแหล่ง)
+
+## Phase 2 ของ MASTER_ROADMAP (2026-11-22): รายละเอียดตามหมวด ไม่มีป้ายว่าง
+**สถานะ: เสร็จ ผ่านเทสต์ commit แล้ว ยังไม่ push รอรีวิวก่อนเริ่ม Phase 3**
+
+Backend
+1. **`Announcement.details` (JSONB)** migration `8c4d1e9f2a17` (ขึ้น-ลง-ขึ้นแล้ว) · เก็บเฉพาะค่าที่มี (`AnnouncementDetails.compact()`) โพสต์เก่าเป็น null
+2. **`AnnouncementDetails`** ใน `extract/schema.py`: organization, target_group, event_date (YYYY-MM-DD หรือ a/b), location, work_mode (onsite/hybrid/remote), position, employment_type, education_level, experience, compensation, fee · "ไม่ระบุ", "-", "" กลายเป็น null ก่อนเก็บ
+3. **Prompt Gemini**: แยก `event_date` ออกจาก `deadline` (กิจกรรมที่บอกแค่วันจัด → deadline null), ห้ามเดา, เลิกผูก prompt กับ มช. · responseSchema มี `details`
+4. API ส่ง `details` ทั้งรายการและหน้าเดี่ยว · rules fallback ไม่มี details (Gemini อ่านซ้ำทีหลังได้ตามงบเดิม)
+
+Web
+1. **`AnnouncementDetails.tsx`** ใช้ทั้ง drawer และ `/a/[id]`: หัวข้อและแถวตามหมวด (ทุน/ฝึกงาน/งาน/กิจกรรม/ทั่วไป) · แถวไหนไม่มีค่าไม่แสดง ไม่มีแถวเลยไม่แสดงกล่อง · "ดูที่ประกาศต้นทาง" แทนวันปิดรับเฉพาะ ทุน/ฝึกงาน/งาน · เลิกใช้ "ไม่จำกัด / ไม่ระบุ"
+2. หน้า `/a/[id]` ของข่าวทั่วไปไม่โชว์กล่อง "ตั้งเตือนไม่ได้" แล้ว (เหมือน drawer)
+3. **Bottom sheet มือถือ**: ลากหัว sheet ลง > 90px เพื่อปิด (`data-sheet-handle`, pointer events, เฉพาะ touch และจอ < 768px) · แถบปุ่มล่างติดอยู่แล้วจากเดิม · bookmark ย้ายไปข้างปุ่มปิด
+4. วันที่ประกาศย้ายไปอยู่ข้างชื่อแหล่งในหัว drawer (เดิมเป็นแถวในตาราง)
+
+ตรวจแล้ว: pytest 134 (+9: details ทุกหมวด, ตัดค่า placeholder, compact เป็น null, prompt, API), ruff, eslint, tsc, build, Playwright 41 ผ่าน + 1 ข้าม (เทสต์ปัดลงรันเฉพาะ mobile) · หน้า `/a/[id]` ทุกอันไม่ล้นจอและไม่มีคำ "ไม่จำกัด/ไม่ระบุ" ที่ 360/375/768/1280
+
+ข้อควรรู้: ประกาศที่มีอยู่แล้วบนเว็บจริงยังไม่มี `details` จนกว่าจะถูกอ่านใหม่ (ตอนนี้ระบบอ่านซ้ำเฉพาะโพสต์ใหม่/เปลี่ยน และที่ยังใช้ rules) ถ้าอยากเติมย้อนหลัง ต้องทำ backfill แยก (ยังไม่ทำ กินงบ Gemini)
 
 ## ผู้ใช้ต้องทำเอง
 - ไม่มีค้าง (ดูสรุป session ล่าสุดใน `NEXT_SESSION.md`)

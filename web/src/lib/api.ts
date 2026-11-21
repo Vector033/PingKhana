@@ -23,6 +23,21 @@ export type Announcement = {
   image_url?: string | null;
   /** Short topic tags from Gemini, e.g. "สอบครูผู้ช่วย". */
   tags?: string[] | null;
+  /** Category-specific facts from Gemini; only the ones the post states. */
+  details?: {
+    organization?: string;
+    target_group?: string;
+    /** YYYY-MM-DD, or YYYY-MM-DD/YYYY-MM-DD for a range. */
+    event_date?: string;
+    location?: string;
+    work_mode?: "onsite" | "hybrid" | "remote";
+    position?: string;
+    employment_type?: string;
+    education_level?: string;
+    experience?: string;
+    compensation?: string;
+    fee?: string;
+  } | null;
   /** Other sites that posted the same announcement (detail only). */
   also_on?: { source_name: string; url: string }[] | null;
 };

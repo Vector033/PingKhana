@@ -132,6 +132,41 @@ test("bookmark on a card follows its source without leaving the page", async ({ 
   await expect(page).toHaveURL(/all=1/);
 });
 
+test("details follow the category and never show empty placeholders", async ({ page }) => {
+  await page.goto("/?all=1");
+  await list(page).getByRole("link", { name: /Workshop: เขียน FastAPI/ }).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByText("กำหนดการและรายละเอียดกิจกรรม")).toBeVisible();
+  await expect(drawer.getByText("วันจัดกิจกรรม")).toBeVisible();
+  await expect(drawer.getByText("ฟรี", { exact: true })).toBeVisible();
+  await expect(drawer.getByText(/ไม่จำกัด|ไม่ระบุ/)).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/?status=closing&sort=deadline");
+  await list(page).getByRole("link", { name: /ผู้ช่วยวิจัยโครงการ Data Platform/ }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "หน้าเต็ม" }).click();
+  const article = page.getByRole("article");
+  await expect(article.getByText("รายละเอียดตำแหน่งและคุณสมบัติ")).toBeVisible();
+  await expect(article.getByText("ผู้ช่วยวิจัย", { exact: true })).toBeVisible();
+  await expect(article.getByText(/ไม่จำกัด|ไม่ระบุ/)).toHaveCount(0);
+});
+
+test("phones: dragging the sheet header down closes it", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "bottom sheet is phone-only");
+  await page.goto("/?all=1");
+  await list(page).getByRole("link", { name: /Workshop: เขียน FastAPI/ }).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer).toBeVisible();
+  const handle = drawer.locator("[data-sheet-handle]");
+  const box = (await handle.boundingBox())!;
+  const at = (y: number) => ({ pointerType: "touch", pointerId: 7, isPrimary: true, clientX: box.x + 40, clientY: y, bubbles: true });
+  await handle.dispatchEvent("pointerdown", at(box.y + 10));
+  await handle.dispatchEvent("pointermove", at(box.y + 80));
+  await handle.dispatchEvent("pointermove", at(box.y + 200));
+  await handle.dispatchEvent("pointerup", at(box.y + 200));
+  await expect(drawer).toBeHidden();
+});
+
 test("calendar file and LINE share for an open announcement", async ({ page, request }) => {
   await page.goto("/?status=closing&sort=deadline");
   const link = list(page).getByRole("link", { name: /ผู้ช่วยวิจัยโครงการ Data Platform/ });

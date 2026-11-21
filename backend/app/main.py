@@ -109,6 +109,8 @@ class AnnouncementOut(BaseModel):
     first_seen_at: datetime
     image_url: str | None = None
     tags: list[str] | None = None
+    # Category-specific facts (organization, event_date, compensation...); only those set.
+    details: dict | None = None
     # Other sites that posted the same announcement (detail endpoint only).
     also_on: list[dict] | None = None
 
@@ -132,6 +134,7 @@ def to_out(a: Announcement, source_names: dict[str, str]) -> AnnouncementOut:
         first_seen_at=a.first_seen_at,
         image_url=a.image_url,
         tags=a.tags or None,
+        details=a.details or None,
     )
 
 

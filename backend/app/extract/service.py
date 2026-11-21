@@ -152,6 +152,7 @@ def apply(a: Announcement, r: Extracted) -> None:
     a.min_gpax = Decimal(str(r.min_gpax)) if r.min_gpax is not None else None
     if r.tags is not None or r.method.startswith("gemini"):
         a.tags = r.tags
+    a.details = r.details.compact() if r.details else None
     a.extraction_method = r.method
     a.needs_extraction = False
 

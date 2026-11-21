@@ -15,10 +15,10 @@ import {
   BulletCheckIcon,
   CategoryChip,
   CompactCard,
-  DeadlineBadge,
   LeadCard,
   SourceTrustPill,
 } from "@/components/AnnouncementCard";
+import { AnnouncementDetails } from "@/components/AnnouncementDetails";
 import { FollowButton } from "@/components/FollowButton";
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
@@ -83,6 +83,16 @@ export function PreviewProvider({
     dialog.current?.close();
   }
 
+  // Phones: drag the sheet's header down to dismiss it, like a native bottom sheet.
+  const drag = useRef<{ y: number; dy: number } | null>(null);
+  function endDrag(el: HTMLDialogElement, cancelled = false) {
+    const far = !cancelled && (drag.current?.dy ?? 0) > 90;
+    drag.current = null;
+    el.style.transition = "transform 0.2s ease";
+    if (far) close();
+    else el.style.transform = "";
+  }
+
   return (
     <PreviewCtx.Provider value={ctx}>
       {children}
@@ -90,10 +100,36 @@ export function PreviewProvider({
         ref={dialog}
         className="drawer"
         aria-labelledby="preview-title"
-        onClose={() => {
+        onClose={(e) => {
+          e.currentTarget.style.transform = "";
+          e.currentTarget.style.transition = "";
           setCurrent(null);
           opener.current?.focus();
         }}
+        onPointerDown={(e) => {
+          const t = e.target as HTMLElement;
+          if (
+            e.pointerType === "mouse" ||
+            !t.closest("[data-sheet-handle]") ||
+            t.closest("a, button") ||
+            window.matchMedia("(min-width: 768px)").matches
+          )
+            return;
+          drag.current = { y: e.clientY, dy: 0 };
+          e.currentTarget.style.transition = "none";
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+          } catch {
+            // Synthetic pointers (tests) cannot be captured; moves still arrive here.
+          }
+        }}
+        onPointerMove={(e) => {
+          if (!drag.current) return;
+          drag.current.dy = Math.max(0, e.clientY - drag.current.y);
+          e.currentTarget.style.transform = `translateY(${drag.current.dy}px)`;
+        }}
+        onPointerUp={(e) => drag.current && endDrag(e.currentTarget)}
+        onPointerCancel={(e) => drag.current && endDrag(e.currentTarget, true)}
         // A click on the backdrop lands on the <dialog> itself.
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
@@ -293,7 +329,11 @@ function Preview({
 
   return (
     <>
-      <div className="sticky top-0 z-10 border-b border-line bg-surface/95 px-5 pt-2.5 pb-3 backdrop-blur-md md:pt-4">
+      {/* data-sheet-handle: drag here to dismiss on phones (touch-none stops the page scrolling). */}
+      <div
+        data-sheet-handle
+        className="sticky top-0 z-10 touch-none border-b border-line bg-surface/95 px-5 pt-2.5 pb-3 backdrop-blur-md md:touch-auto md:pt-4"
+      >
         <div
           aria-hidden="true"
           className="mx-auto mb-2 h-1 w-10 rounded-full bg-line-strong md:hidden"
@@ -302,12 +342,9 @@ function Preview({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <CategoryChip category={a.category} label={a.category_th} />
-              <SourceTrustPill name={a.source_name} />
-              <FollowButton
-                id={a.source_id}
+              <SourceTrustPill
                 name={a.source_name}
-                following={following}
-                className="-my-2.5 -ml-2"
+                publishedOn={a.published_on}
               />
             </div>
             <h2
@@ -319,24 +356,31 @@ function Preview({
               {tidyWrap(a.title)}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="ปิด"
-            className="-mt-1 -mr-2 grid size-11 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
-          >
-            <svg
-              aria-hidden
-              viewBox="0 0 20 20"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+          <div className="-mt-1 -mr-2 flex shrink-0">
+            <FollowButton
+              id={a.source_id}
+              name={a.source_name}
+              following={following}
+            />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="ปิด"
+              className="grid size-11 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
             >
-              <path d="M5 5l10 10M15 5L5 15" />
-            </svg>
-          </button>
+              <svg
+                aria-hidden
+                viewBox="0 0 20 20"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              >
+                <path d="M5 5l10 10M15 5L5 15" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -375,53 +419,14 @@ function Preview({
           </div>
         ) : null}
 
-        {!isNews && (
-          <section aria-labelledby="pv-elig" className="mt-5">
-            <h3 id="pv-elig" className="text-sm font-medium text-muted">
-              คุณสมบัติและกำหนดการ
-            </h3>
-            <table className="mt-1.5 w-full text-sm">
-              <tbody className="divide-y divide-line">
-                <Row label="วันปิดรับ">
-                  {a.deadline ? (
-                    <DeadlineBadge deadline={a.deadline} today={today} />
-                  ) : (
-                    "ไม่ระบุ (ดูที่ประกาศต้นทาง)"
-                  )}
-                  {a.deadline_text && (
-                    <div className="mt-1 text-xs text-muted [overflow-wrap:anywhere]">
-                      ต้นฉบับ: “{a.deadline_text}”
-                    </div>
-                  )}
-                </Row>
-                <Row label="ชั้นปี">
-                  <span className="tabular-nums">
-                    {a.eligible_years
-                      ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
-                      : "ไม่จำกัด / ไม่ระบุ"}
-                  </span>
-                </Row>
-                <Row label="สาขา">
-                  {a.eligible_majors
-                    ? a.eligible_majors.map((m) => majors[m] ?? m).join(", ")
-                    : "ไม่จำกัด / ไม่ระบุ"}
-                </Row>
-                <Row label="GPAX ขั้นต่ำ">
-                  <span className="tabular-nums">
-                    {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
-                  </span>
-                </Row>
-                {a.published_on && (
-                  <Row label="ประกาศเมื่อ">
-                    <span className="whitespace-nowrap tabular-nums">
-                      {thDate(a.published_on)}
-                    </span>
-                  </Row>
-                )}
-              </tbody>
-            </table>
-          </section>
-        )}
+        <div className="mt-5">
+          <AnnouncementDetails
+            a={a}
+            today={today}
+            majors={majors}
+            variant="drawer"
+          />
+        </div>
         <div className="mt-5">
           <ShareRow a={a} today={today} />
         </div>
@@ -464,25 +469,5 @@ function Preview({
         </p>
       </div>
     </>
-  );
-}
-
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <tr>
-      <th
-        scope="row"
-        className="w-28 py-2.5 pr-3 text-left align-top font-normal whitespace-nowrap text-muted"
-      >
-        {label}
-      </th>
-      <td className="py-2.5 align-top [overflow-wrap:anywhere]">{children}</td>
-    </tr>
   );
 }

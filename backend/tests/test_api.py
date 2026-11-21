@@ -268,3 +268,18 @@ async def test_new_link_on_a_known_site_gets_its_org(session) -> None:
     await session.commit()
     assert await _guess_org(session, "https://eng.cmu.ac.th/") == "มช."
     assert await _guess_org(session, "https://www.chula.ac.th/") is None
+
+
+async def test_details_are_returned_and_old_posts_have_none(session, client) -> None:
+    new = await f.announcement(session, title="งานผู้ช่วยวิจัย", category=Category.JOB)
+    new.details = {"position": "ผู้ช่วยวิจัย", "compensation": "15,000 บาท"}
+    await f.announcement(session, title="ประกาศเก่า")
+    await session.commit()
+    items = {a["title"]: a for a in (await client.get("/api/announcements")).json()["items"]}
+    assert items["งานผู้ช่วยวิจัย"]["details"] == {
+        "position": "ผู้ช่วยวิจัย",
+        "compensation": "15,000 บาท",
+    }
+    assert items["ประกาศเก่า"]["details"] is None
+    one = (await client.get(f"/api/announcements/{new.id}")).json()
+    assert one["details"]["position"] == "ผู้ช่วยวิจัย"

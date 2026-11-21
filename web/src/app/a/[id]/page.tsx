@@ -6,9 +6,9 @@ import { Suspense } from "react";
 import {
   BulletCheckIcon,
   CategoryChip,
-  DeadlineBadge,
   SourceTrustPill,
 } from "@/components/AnnouncementCard";
+import { AnnouncementDetails } from "@/components/AnnouncementDetails";
 import { FollowButton } from "@/components/FollowButton";
 import { remindBlockedReason, RemindSlot } from "@/components/RemindButton";
 import { ShareRow } from "@/components/ShareRow";
@@ -60,8 +60,10 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   if (!a) notFound();
   await connection(); // "today" must be computed per request, not at build time
   const today = todayBangkok();
-  const majorNames = new Map(meta.majors.map((m) => [m.id, m.th]));
+  const majors = Object.fromEntries(meta.majors.map((m) => [m.id, m.th]));
   const canRemind = remindBlockedReason(a.deadline, today) === null;
+  // General news has no deadline to remind about, so no reminder block (as in the drawer).
+  const isNews = a.category === "general" && !a.deadline;
 
   const points = (a.summary_th ?? "")
     .split(/\n+/)
@@ -126,64 +128,35 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
         </section>
       )}
 
-      <dl className="mt-6 grid gap-x-6 gap-y-4 rounded-xl border border-line bg-surface p-5 text-sm [overflow-wrap:anywhere] sm:grid-cols-2">
-        <div>
-          <dt className="text-muted">วันปิดรับ</dt>
-          <dd className="mt-0.5">
-            {a.deadline ? (
-              <DeadlineBadge deadline={a.deadline} today={today} />
-            ) : (
-              "ไม่ระบุ (ดูที่ประกาศต้นทาง)"
-            )}
-            {a.deadline_text && (
-              <div className="mt-0.5 text-xs text-muted">
-                ต้นฉบับ: “{a.deadline_text}”
-              </div>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted">ชั้นปีที่สมัครได้</dt>
-          <dd className="mt-0.5 tabular-nums">
-            {a.eligible_years
-              ? a.eligible_years.map((y) => `ปี ${y}`).join(", ")
-              : "ไม่จำกัด / ไม่ระบุ"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted">สาขา</dt>
-          <dd className="mt-0.5">
-            {a.eligible_majors
-              ? a.eligible_majors.map((m) => majorNames.get(m) ?? m).join(", ")
-              : "ไม่จำกัด / ไม่ระบุ"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted">GPAX ขั้นต่ำ</dt>
-          <dd className="mt-0.5 tabular-nums">
-            {a.min_gpax != null ? a.min_gpax.toFixed(2) : "ไม่ระบุ"}
-          </dd>
-        </div>
-      </dl>
+      <div className="mt-6">
+        <AnnouncementDetails
+          a={a}
+          today={today}
+          majors={majors}
+          variant="page"
+        />
+      </div>
 
       <div className="contents sm:mt-6 sm:flex sm:flex-row sm:items-start sm:gap-3">
         {/* Phones: the LINE button rides the bottom edge. A "cannot remind" note is not an
             action, so it stays in the flow instead of floating over the text.
             Bar radius = button radius (12px) + padding (12px). */}
-        <div
-          className={
-            canRemind
-              ? "sticky bottom-3 z-10 mt-6 rounded-3xl border border-line bg-surface/95 p-3 shadow-card backdrop-blur-md sm:static sm:mt-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none"
-              : "mt-6 sm:mt-0"
-          }
-        >
-          <RemindSlot
-            id={a.id}
-            deadline={a.deadline}
-            today={today}
-            className="w-full sm:w-auto"
-          />
-        </div>
+        {!isNews && (
+          <div
+            className={
+              canRemind
+                ? "sticky bottom-3 z-10 mt-6 rounded-3xl border border-line bg-surface/95 p-3 shadow-card backdrop-blur-md sm:static sm:mt-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none"
+                : "mt-6 sm:mt-0"
+            }
+          >
+            <RemindSlot
+              id={a.id}
+              deadline={a.deadline}
+              today={today}
+              className="w-full sm:w-auto"
+            />
+          </div>
+        )}
         <a
           href={a.url}
           target="_blank"

@@ -39,6 +39,18 @@ DEMO_TAGS = {
 }
 
 
+# Category-specific facts as Gemini would extract them, so the detail views have rows to show.
+DEMO_DETAILS = {
+    2: {
+        "organization": "บริษัทตัวอย่าง จำกัด",
+        "work_mode": "hybrid",
+        "compensation": "เบี้ยเลี้ยงวันละ 400 บาท",
+    },
+    3: {"organization": "ศูนย์วิจัยตัวอย่าง", "position": "ผู้ช่วยวิจัย", "employment_type": "Part-time"},
+    4: {"event_date": "2026-12-09", "location": "ออนไลน์", "fee": "ฟรี"},
+}
+
+
 async def main() -> None:
     now = datetime.now(tz=BANGKOK)
     today = now.date()
@@ -74,6 +86,7 @@ async def main() -> None:
                     extraction_method="demo",
                     matched_at=now,
                     tags=DEMO_TAGS.get(i),
+                    details=DEMO_DETAILS.get(i),
                 )
             )
         await s.commit()
