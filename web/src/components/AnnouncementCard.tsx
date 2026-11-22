@@ -5,6 +5,7 @@ import { Highlight, Thumb } from "@/components/Thumb";
 import type { Announcement } from "@/lib/api";
 import {
   CATEGORY_STYLE,
+  CATEGORY_TINT,
   daysLeft,
   daysLeftLabel,
   thDate,
@@ -419,21 +420,25 @@ export function LeadCard({ a, today, majors, onOpen, following }: CardProps) {
           className="thermal-urgent pointer-events-none absolute inset-0 z-0"
         />
       )}
-      <div className="relative z-[1]">
-        <Thumb
-          src={a.image_url}
-          category={a.category}
-          label={a.category_th}
-          sizes="(min-width: 1024px) 680px, 100vw"
-          eager
-          className="aspect-[16/9]"
-        />
-        {a.deadline && (
-          <div className="absolute top-3 right-3">
-            <DeadlineBadge deadline={a.deadline} today={today} onImage />
-          </div>
-        )}
-      </div>
+      {!a.image_url && a.deadline ? (
+        <Countdown a={a} deadline={a.deadline} today={today} />
+      ) : (
+        <div className="relative z-[1]">
+          <Thumb
+            src={a.image_url}
+            category={a.category}
+            label={a.category_th}
+            sizes="(min-width: 1024px) 680px, 100vw"
+            eager
+            className="aspect-[16/9]"
+          />
+          {a.deadline && (
+            <div className="absolute top-3 right-3">
+              <DeadlineBadge deadline={a.deadline} today={today} onImage />
+            </div>
+          )}
+        </div>
+      )}
       <div className="relative z-[1] p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <CategoryChip category={a.category} label={a.category_th} />
@@ -470,6 +475,59 @@ export function LeadCard({ a, today, majors, onOpen, following }: CardProps) {
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * A lead with no poster (the source page has none) shows its countdown big instead of an empty
+ * placeholder; it grows to fill the card so the lead still matches the side list's height.
+ */
+function Countdown({
+  a,
+  deadline,
+  today,
+}: {
+  a: Announcement;
+  deadline: string;
+  today: string;
+}) {
+  const n = daysLeft(deadline, today);
+  return (
+    <div
+      className={`relative z-[1] flex min-h-44 flex-1 flex-col justify-end overflow-hidden bg-gradient-to-br px-5 py-5 sm:px-6 sm:py-6 ${CATEGORY_TINT[a.category] ?? CATEGORY_TINT.general}`}
+    >
+      <svg
+        aria-hidden
+        viewBox="0 0 120 120"
+        className="absolute -top-10 -right-10 size-56 opacity-20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <circle cx="60" cy="60" r="12" fill="currentColor" stroke="none" />
+        <circle cx="60" cy="60" r="28" />
+        <circle cx="60" cy="60" r="44" opacity=".7" />
+        <circle cx="60" cy="60" r="58" opacity=".4" />
+      </svg>
+      <p className="relative flex items-baseline gap-2 tabular-nums">
+        {n > 0 ? (
+          <>
+            <span className="text-6xl leading-none font-semibold tracking-[-0.04em] sm:text-7xl">
+              {n}
+            </span>
+            <span className="text-xl font-semibold">วัน</span>
+          </>
+        ) : (
+          <span className="text-5xl leading-none font-semibold tracking-[-0.03em]">
+            {n === 0 ? "วันนี้" : "ปิดแล้ว"}
+          </span>
+        )}
+      </p>
+      <p className="relative mt-2 text-sm font-medium">
+        {n > 0 ? "ก่อนปิดรับ" : n === 0 ? "วันสุดท้าย" : "ปิดรับ"} ·{" "}
+        {thDayDate(deadline)}
+      </p>
+    </div>
   );
 }
 
