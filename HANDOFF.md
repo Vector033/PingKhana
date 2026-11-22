@@ -52,7 +52,7 @@
 5. **เอาตัวกรองชั้นปีออกจากหน้าเว็บ**: ประกาศที่เปิดอยู่ระบุชั้นปีแค่ 1/49 และชุดครูไม่มีชั้นปี · หน้าตั้งค่า LINE ยังใช้ชั้นปีคัดสิ่งที่ส่ง
 
 ## Phase 1 ของ MASTER_ROADMAP (2026-11-22): ตัวกรองแหล่งแบบกลาง + เลือกสถาบัน
-**สถานะ: commit แล้ว (`38fc199`) ยังไม่ push** (แผนอยู่ใน `MASTER_ROADMAP.md`, `PROMPT_FOR_CLAUDE.md`)
+**สถานะ: deploy แล้ว (`38fc199`)** (แผนอยู่ใน `MASTER_ROADMAP.md`, `PROMPT_FOR_CLAUDE.md`)
 
 Backend
 1. **`Source.org` + `Source.platform`** (migration `5b2e7c41a9d0`, ขึ้น-ลง-ขึ้นทดสอบแล้ว) · `org` กำหนดใน `sources.yaml` (มช. 9 แหล่ง, ศธ., สพฐ., คุรุสภา; เว็บอิสระอย่างครูอาชีพไม่มี org) · `sync_sources` เขียนให้ทุกรอบ ส่วน `platform` = `rss`/`web` ตาม kind (เตรียมไว้ให้ Phase 3)
@@ -72,7 +72,7 @@ Web
 ข้อควรรู้หลัง deploy: `org` ของแหล่ง yaml จะเติมในรอบดึงข้อมูลรายชั่วโมงแรก (ก่อนหน้านั้นช่องเลือกสถาบันมีแต่รายชื่อแหล่ง)
 
 ## Phase 2 ของ MASTER_ROADMAP (2026-11-22): รายละเอียดตามหมวด ไม่มีป้ายว่าง
-**สถานะ: commit แล้ว (`07c78c2`) ยังไม่ push**
+**สถานะ: deploy แล้ว (`07c78c2`)**
 
 Backend
 1. **`Announcement.details` (JSONB)** migration `8c4d1e9f2a17` (ขึ้น-ลง-ขึ้นแล้ว) · เก็บเฉพาะค่าที่มี (`AnnouncementDetails.compact()`) โพสต์เก่าเป็น null
@@ -91,7 +91,7 @@ Web
 ข้อควรรู้: ประกาศที่มีอยู่แล้วบนเว็บจริงยังไม่มี `details` จนกว่าจะถูกอ่านใหม่ (ตอนนี้ระบบอ่านซ้ำเฉพาะโพสต์ใหม่/เปลี่ยน และที่ยังใช้ rules) ถ้าอยากเติมย้อนหลัง ต้องทำ backfill แยก (ยังไม่ทำ กินงบ Gemini)
 
 ## Phase 3 ของ MASTER_ROADMAP (2026-11-22): โพสต์โซเชียล + ด่านคัดกรอง 2 ชั้น
-**สถานะ: เสร็จ ผ่านเทสต์ commit แล้ว ยังไม่ push · Phase 1-3 ครบตาม roadmap**
+**สถานะ: deploy แล้ว (`246b779`) · Phase 1-3 ครบตาม roadmap**
 
 Backend
 1. **migration `b7e3f0a5c612`**: `Announcement.moderation_status` (published / filtered_out / pending_review, ค่าเริ่ม published), `post_intent`, `rejection_reason` · `visible()`, digest LINE, `/api/announcements/{id}`, ปุ่มเตือนใน LINE/LIFF ใช้เฉพาะ published
@@ -113,6 +113,15 @@ Eval (`eval/social_gate_cases.yaml`, 24 เคส: รับสมัครแ�
 
 ตรวจแล้ว: pytest 150 (+16 ใน `tests/test_social_gate.py`), ruff, eslint, tsc, build, Playwright 41 + 1 ข้าม, migration ขึ้น-ลง-ขึ้น, หน้าแอดมินไม่ล้นจอที่ 375/1280
 
+## หลัง Phase 3 (2026-11-22, deploy แล้ว)
+1. **ตัวกรองใหม่** (`c84120f`): แถว 1 ขอบเขต/กลุ่ม/เลือกสถาบัน · แถว 2 ปุ่ม `# แท็ก` เปิดหน้าต่างค้นหาแท็กพร้อมจำนวนประกาศ + สถานะและการเรียงเป็น segmented switch · ถาดตัวกรองอยู่ท้าย · มือถือให้แท็กกับการเรียงอยู่บรรทัดเดียว · `OrgPicker` เปลี่ยนเป็น `SearchPicker` ใช้ทั้งสถาบันและแท็ก
+2. **workflow สำรอง Collect เรียก `background=1`** (`5c0978e`): แบบรอผลโดน 502 ราวนาทีที่ 1 ตั้งแต่ 2026-11-19 (ส่งอีเมลล้มทุกรอบ) · ยังไม่รู้ต้นเหตุ (ยังไม่ได้ดู log Render) · cron-job.org ใช้ background อยู่แล้ว ข้อมูลอัปเดตปกติ · ถ้าเห็น 502 ซ้ำ ให้ดู log Render ช่วงที่ล่ม (หา Out of memory)
+3. **ข้อมูล live หลัง deploy**: orgs มช. 250 / สพฐ. 240 / ศธ. 33 (เติมหลังรอบ sync แรก) · ประกาศ 611 · ข้อมูลตามหมวด (Phase 2) มีเฉพาะโพสต์ที่ถูกอ่านใหม่
+4. **กลุ่ม Facebook ใส่ไม่ได้**: robots.txt ของ facebook.com ห้ามทุกบอท และกลุ่มต้องล็อกอิน (ผู้ใช้ขอกลุ่มหางาน 2026-11-22)
+5. **สำรวจแหล่งหางาน** (2026-11-22, ด้วย discovery แบบ RSS เท่านั้น):
+   - ใช้ได้ (RSS + robots อนุญาต): ครูบ้านนอก `kroobannok.com/rss.xml` (ข่าวครู มีข่าวสอบครู), ธรรมศาสตร์ `tu.ac.th/feed/` (มหาวิทยาลัยแรกนอก มช.) · ยังไม่ได้ใส่ รอผู้ใช้ตัดสิน
+   - ไม่ได้: JobsDB, กรมการจัดหางาน, มหิดล (robots ห้าม) · JobThai, jobbkk, smartjob, จุฬา (ไม่มี RSS) · job.ocsc.go.th (หน้าโหลดด้วย JavaScript) · กลุ่ม `career` จึงยังว่างและไม่แสดงบนเว็บ
+
 ## ผู้ใช้ต้องทำเอง
 - ไม่มีค้าง (ดูสรุป session ล่าสุดใน `NEXT_SESSION.md`)
 
@@ -122,6 +131,10 @@ Eval (`eval/social_gate_cases.yaml`, 24 เคส: รับสมัครแ�
 - ตัวดึงข้อมูลที่รันในไทย สำหรับเว็บราชการที่ปิดกั้นต่างประเทศ (moe, ksp, สพป. บางเขต)
 - วัด `RadarShader` บนมือถือจริง (ตัวเลขจาก Chromium headless เป็น software GL ใช้ยืนยันไม่ได้) และตรวจ Safari/iOS
 - ภาพแชท LINE ใน `docs/screenshots/line-demo/` ยังเป็นชุด 2026-11-08 (ต้องแคปจากมือถือ)
+- ภาพหน้าจอใน `docs/screenshots/` ยังเป็นตัวกรองแบบเก่า (ก่อน Phase 1) ควรแคปใหม่ด้วย `web/scripts/screenshots.mjs`
+- แหล่งงานสำหรับกลุ่ม `career`: ยังไม่มีเว็บที่มี RSS และ robots อนุญาต · ถ้าจะทำ ต้องเขียน HTML selector (เช็ก robots/ToS ก่อน) หรือหา bridge ที่ถูกกฎ
+- เติม `details` (Phase 2) ย้อนหลังให้โพสต์เก่า: ต้องทำ backfill แยก กินงบ Gemini
+- ชุด eval ของด่านโซเชียลเป็นเคสเขียนเอง ควรเก็บโพสต์จริงเมื่อมี bridge
 - คณะที่ไม่มี RSS (econ, pharmacy, nurse, ams, vet, edu, soc, agro, dent, med) ต้องเขียน HTML selector เอง
 - 8 ไฟล์ที่ Gemini เขียนยังไม่ผ่าน Prettier (`account/*`, `follow`, `liff/*`, `news`, `sources/*`) CI ไม่ตรวจ ให้ format เมื่อแก้ไฟล์นั้น
 
