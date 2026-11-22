@@ -16,5 +16,7 @@ jobs:
     steps:
       - name: POST /jobs/run
         run: |
-          curl -sS --fail-with-body -X POST "${{ vars.API_URL }}/jobs/run" \
-            -H "Authorization: Bearer ${{ secrets.JOBS_TOKEN }}" --max-time 600
+          # background=1: the API answers at once and runs the job itself. Holding the request
+          # open for the whole run ended in 502 after about a minute (2026-11-19..21).
+          curl -sS --fail-with-body -X POST "${{ vars.API_URL }}/jobs/run?background=1" \
+            -H "Authorization: Bearer ${{ secrets.JOBS_TOKEN }}" --max-time 120
