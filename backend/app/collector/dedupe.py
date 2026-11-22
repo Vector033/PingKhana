@@ -41,16 +41,6 @@ def similarity(a: str, b: str) -> float:
     return len(ga & gb) / len(ga | gb) if ga and gb else 0.0
 
 
-def same_announcement(a: Announcement, b: Announcement) -> bool:
-    if a.source_id == b.source_id:
-        return False
-    if _numbers(a.title) != _numbers(b.title):
-        return False  # "รอบที่ 1" vs "รอบที่ 2", different years
-    if a.deadline and b.deadline and a.deadline != b.deadline:
-        return False
-    return similarity(a.title, b.title) >= THRESHOLD
-
-
 async def merge_duplicates(session: AsyncSession, today: date) -> int:
     rows = list(
         (
@@ -65,17 +55,38 @@ async def merge_duplicates(session: AsyncSession, today: date) -> int:
             )
         ).all()
     )
+    merged = merge_rows(rows)
+    await session.commit()
+    return merged
+
+
+def merge_rows(rows: list[Announcement]) -> int:
+    """Point each repost at its earliest copy; `rows` oldest first. Returns how many merged.
+
+    Each title is normalised once, and a post is compared only with earlier posts carrying the
+    same numbers ("รอบที่ 1" vs "รอบที่ 2", different years never match). The old all-pairs loop
+    redid both per pair: ~4 s for 600 posts on a laptop, long enough on Render's small CPU to
+    miss the 5 s health check every hourly run.
+    """
+    by_numbers: dict[frozenset[str], list[tuple[Announcement, set[str]]]] = {}
     merged = 0
-    for i, later in enumerate(rows):
-        if later.duplicate_of_id is not None:
-            continue
-        for earlier in rows[:i]:
-            if earlier.duplicate_of_id is None and same_announcement(earlier, later):
+    for later in rows:
+        grams = _grams(_norm(later.title))
+        earlier_rows = by_numbers.setdefault(frozenset(_numbers(later.title)), [])
+        for earlier, earlier_grams in earlier_rows:
+            if (
+                earlier.source_id != later.source_id
+                and not (earlier.deadline and later.deadline and earlier.deadline != later.deadline)
+                and grams
+                and earlier_grams
+                and len(grams & earlier_grams) / len(grams | earlier_grams) >= THRESHOLD
+            ):
                 later.duplicate_of_id = earlier.id
                 # Keep what the copy knew that the original did not.
                 earlier.deadline = earlier.deadline or later.deadline
                 earlier.image_url = earlier.image_url or later.image_url
                 merged += 1
                 break
-    await session.commit()
+        else:
+            earlier_rows.append((later, grams))
     return merged
