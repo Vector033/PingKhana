@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { CATEGORIES } from "@/lib/format";
 
 /** Keeps the other filters when the category or search changes; always back to page 1. */
@@ -123,5 +123,104 @@ export function CategoryTabs() {
         ข่าวสาร
       </Link>
     </nav>
+  );
+}
+
+const THEME_STORAGE_KEY = "pingkhana.theme";
+
+function resolveIsDark(): boolean {
+  const root = document.documentElement;
+  if (root.classList.contains("dark")) return true;
+  if (root.classList.contains("light")) return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function subscribeTheme(onChange: () => void): () => void {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const obs = new MutationObserver(onChange);
+  obs.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  mq.addEventListener("change", onChange);
+  return () => {
+    obs.disconnect();
+    mq.removeEventListener("change", onChange);
+  };
+}
+
+/** Sun/Moon theme toggle using zero-flash transition suppression. */
+export function ThemeToggle() {
+  const dark = useSyncExternalStore(
+    subscribeTheme,
+    () => resolveIsDark(),
+    () => null,
+  );
+
+  function toggle() {
+    const root = document.documentElement;
+    const nextDark = !resolveIsDark();
+    const next = nextDark ? "dark" : "light";
+
+    root.classList.add("theme-switching");
+    root.classList.toggle("dark", nextDark);
+    root.classList.toggle("light", !nextDark);
+    void root.offsetHeight;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove("theme-switching");
+      });
+    });
+
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch {
+      // Storage unavailable (private browsing / restricted context).
+    }
+  }
+
+  const label =
+    dark === null
+      ? "สลับธีมสี"
+      : dark
+        ? "สลับเป็นโหมดสว่าง"
+        : "สลับเป็นโหมดมืด";
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+      className="grid size-11 shrink-0 place-items-center rounded-full text-white/75 transition-colors hover:bg-white/10 hover:text-white active:scale-95"
+    >
+      {/* Moon icon shown in light mode -> switch to dark */}
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="size-[18px] dark:hidden"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+      </svg>
+      {/* Sun icon shown in dark mode -> switch to light */}
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="hidden size-[18px] dark:block"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+      </svg>
+    </button>
   );
 }

@@ -67,7 +67,7 @@ test("detail page shows deadline, source link and disclaimer", async ({ page }) 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Data Platform");
   await expect(page.getByText(/เหลือ 2 วัน/).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /เปิดประกาศต้นทาง/ })).toHaveAttribute("href", /example\.com/);
-  await expect(page.getByRole("article").getByText(/ไม่ใช่ช่องทางทางการ/)).toBeVisible();
+  await expect(page.getByRole("contentinfo").getByText(/ไม่ใช่ช่องทางทางการ/)).toBeVisible();
   // The drawer closed on the way out, so the page scrolls normally.
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).not.toBe("hidden");
 });

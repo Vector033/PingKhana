@@ -3,7 +3,7 @@ import { IBM_Plex_Sans_Thai } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AccountLink } from "@/components/AccountSync";
-import { CategoryTabs, HeaderSearch } from "@/components/TopNav";
+import { CategoryTabs, HeaderSearch, ThemeToggle } from "@/components/TopNav";
 import { DISCLAIMER } from "@/lib/format";
 import "./globals.css";
 
@@ -33,9 +33,18 @@ export const viewport: Viewport = {
   ],
 };
 
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("pingkhana.theme");var r=document.documentElement;if(t==="dark"){r.classList.add("dark");r.classList.remove("light");}else if(t==="light"){r.classList.add("light");r.classList.remove("dark");}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="th" className={`${plex.variable} h-full antialiased`}>
+    <html
+      lang="th"
+      suppressHydrationWarning
+      className={`${plex.variable} h-full antialiased`}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <header className="fluted-glass z-20 border-b border-line/75 bg-bg/80 px-3 pt-3 backdrop-blur-md md:sticky md:top-0 md:px-4">
           <div className="mx-auto max-w-6xl">
@@ -92,6 +101,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Suspense fallback={null}>
                   <AccountLink />
                 </Suspense>
+                <ThemeToggle />
               </div>
             </div>
             <div className="mt-1 px-1">

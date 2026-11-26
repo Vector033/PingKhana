@@ -22,10 +22,11 @@ import { AnnouncementDetails } from "@/components/AnnouncementDetails";
 import { FollowButton } from "@/components/FollowButton";
 import { Thumb } from "@/components/Thumb";
 import { RemindSlot } from "@/components/RemindButton";
-import { ShareRow } from "@/components/ShareRow";
+import { CalendarIcon, ShareRow } from "@/components/ShareRow";
 import { TagLinks } from "@/components/TagLinks";
 import type { Announcement } from "@/lib/api";
-import { thDate, tidyWrap } from "@/lib/format";
+import { daysLeft, thDate, tidyWrap } from "@/lib/format";
+import { googleCalendarUrl } from "@/lib/share";
 
 type Ctx = {
   open: (a: Announcement) => void;
@@ -98,13 +99,19 @@ export function PreviewProvider({
       {children}
       <dialog
         ref={dialog}
-        className="drawer"
+        role="dialog"
+        aria-modal="true"
         aria-labelledby="preview-title"
+        className="drawer"
+        onCancel={(e) => {
+          e.preventDefault();
+          close();
+        }}
         onClose={(e) => {
           e.currentTarget.style.transform = "";
           e.currentTarget.style.transition = "";
           setCurrent(null);
-          opener.current?.focus();
+          if (opener.current?.isConnected) opener.current.focus();
         }}
         onPointerDown={(e) => {
           const t = e.target as HTMLElement;
@@ -321,6 +328,8 @@ function Preview({
 }) {
   // General news has no deadline, eligibility or reminder to show.
   const isNews = a.category === "general" && !a.deadline;
+  const calendar =
+    a.deadline && daysLeft(a.deadline, today) >= 0 ? googleCalendarUrl(a) : null;
   // Summaries are 2-3 lines; show up to 3 clean bullets when multiple lines exist.
   const points = (a.summary_th ?? "")
     .split(/\n+/)
@@ -429,7 +438,7 @@ function Preview({
           />
         </div>
         <div className="mt-5">
-          <ShareRow a={a} today={today} />
+          <ShareRow a={a} today={today} includeCalendar={false} />
         </div>
       </div>
 
@@ -448,19 +457,40 @@ function Preview({
             className="w-full"
           />
         )}
+        {calendar && (
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <a
+              href={calendar}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap transition-colors hover:border-brand hover:text-brand"
+            >
+              <CalendarIcon />
+              Google Calendar
+            </a>
+            <a
+              href={`/a/${a.id}/ics`}
+              download
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap transition-colors hover:border-brand hover:text-brand"
+            >
+              <CalendarIcon />
+              ไฟล์ปฏิทิน (.ics)
+            </a>
+          </div>
+        )}
         <div className="flex gap-2 text-sm">
           <a
             href={a.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap hover:border-brand hover:text-brand"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap transition-colors hover:border-brand hover:text-brand"
           >
             ประกาศต้นทาง ↗
           </a>
           <Link
             href={`/a/${a.id}`}
             onClick={onClose}
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap hover:border-brand hover:text-brand"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-line-strong px-3 font-medium whitespace-nowrap transition-colors hover:border-brand hover:text-brand"
           >
             หน้าเต็ม
           </Link>

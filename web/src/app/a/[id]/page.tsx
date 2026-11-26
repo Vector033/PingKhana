@@ -16,7 +16,7 @@ import { TagLinks } from "@/components/TagLinks";
 import { Thumb } from "@/components/Thumb";
 import { getAnnouncement, getMeta } from "@/lib/api";
 import { getFollowed } from "@/lib/follow";
-import { DISCLAIMER, thDate, tidyWrap, todayBangkok } from "@/lib/format";
+import { thDate, tidyWrap, todayBangkok } from "@/lib/format";
 
 export async function generateMetadata({
   params,
@@ -194,9 +194,6 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
           ))}
         </p>
       )}
-      <p className="mt-6 text-xs leading-relaxed text-balance text-muted">
-        {DISCLAIMER}
-      </p>
     </article>
   );
 }

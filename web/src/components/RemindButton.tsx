@@ -1,3 +1,4 @@
+import { RemindTrigger } from "@/components/RemindModal";
 import { daysLeft } from "@/lib/format";
 import { remindHref } from "@/lib/line";
 
@@ -19,7 +20,7 @@ export function BellIcon({ className = "size-5" }: { className?: string }) {
   );
 }
 
-/** Opens LINE with "เตือน <id>" ready to send; the bot then reminds 3 days and 1 day before. */
+/** Opens LINE with "เตือน <id>" ready to send (or QR modal on desktop); reminds 3d and 1d before. */
 export function RemindButton({
   id,
   className = "",
@@ -30,15 +31,13 @@ export function RemindButton({
   const href = remindHref(id);
   if (!href) return null;
   return (
-    <a
+    <RemindTrigger
+      id={id}
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`bell-trigger inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-line-green px-5 font-semibold text-line-green-fg shadow-sm transition-all duration-200 hover:shadow-md motion-safe:hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98] ${className}`}
-    >
-      <BellIcon />
-      ให้ LINE เตือนก่อนปิดรับ
-    </a>
+      className={className}
+      icon={<BellIcon />}
+      timeline={<RemindSafetyTimeline />}
+    />
   );
 }
 

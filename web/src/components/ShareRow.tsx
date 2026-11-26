@@ -6,8 +6,16 @@ const BTN =
   "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line-strong px-3 text-sm font-medium whitespace-nowrap hover:border-brand hover:text-brand";
 
 /** Add the closing date to a calendar, or send the post to friends in LINE. */
-export function ShareRow({ a, today }: { a: Announcement; today: string }) {
-  const calendar = a.deadline && daysLeft(a.deadline, today) >= 0;
+export function ShareRow({
+  a,
+  today,
+  includeCalendar = true,
+}: {
+  a: Announcement;
+  today: string;
+  includeCalendar?: boolean;
+}) {
+  const calendar = includeCalendar && a.deadline && daysLeft(a.deadline, today) >= 0;
   const google = calendar ? googleCalendarUrl(a) : null;
   return (
     <div className="flex flex-wrap gap-2">
@@ -41,7 +49,7 @@ export function ShareRow({ a, today }: { a: Announcement; today: string }) {
   );
 }
 
-function CalendarIcon() {
+export function CalendarIcon() {
   return (
     <svg
       aria-hidden

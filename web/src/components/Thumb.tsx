@@ -5,9 +5,22 @@ import { useState } from "react";
 import { CATEGORY_TINT } from "@/lib/format";
 import { optimizable } from "@/lib/imageHosts";
 
+function isValidImageSrc(src?: string | null): src is string {
+  if (!src) return false;
+  const trimmed = src.trim();
+  return (
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("/")
+  );
+}
+
+const EMERALD_RADAR_COVER =
+  "from-emerald-100 via-teal-50 to-emerald-200 text-emerald-800 dark:from-emerald-950 dark:via-teal-950 dark:to-slate-900 dark:text-emerald-300";
+
 /**
  * The announcement's poster from the source site, or — when there is none or it fails to load —
- * a block in the category's colour with radar rings, so missing images never look broken.
+ * a radar card cover (emerald radar fallback on broken external URLs), so missing images never look broken.
  */
 export function Thumb({
   src,
@@ -25,8 +38,14 @@ export function Thumb({
   eager?: boolean;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
-  const show = Boolean(src) && !failed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const validSrc = isValidImageSrc(src) ? src.trim() : null;
+  const failed = Boolean(validSrc) && failedSrc === validSrc;
+  const show = Boolean(validSrc) && !failed;
+  const fallbackTone = failed
+    ? EMERALD_RADAR_COVER
+    : (CATEGORY_TINT[category] ?? CATEGORY_TINT.general);
+
   return (
     <div
       className={`relative overflow-hidden bg-surface-2 after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-inset after:ring-black/10 dark:after:ring-white/10 ${className}`}
@@ -34,7 +53,8 @@ export function Thumb({
       {show ? (
         <>
           <Image
-            src={src!}
+            key={validSrc}
+            src={validSrc!}
             alt=""
             fill
             sizes={sizes}
@@ -42,8 +62,11 @@ export function Thumb({
             fetchPriority={eager ? "high" : "auto"}
             // A host we have not listed (e.g. a newly added source) loads directly instead of
             // crashing the page on next/image's host check.
-            unoptimized={!optimizable(src!)}
-            onError={() => setFailed(true)}
+            unoptimized={!optimizable(validSrc!)}
+            onError={() => setFailedSrc(validSrc)}
+            onLoad={(e) => {
+              if (e.currentTarget.naturalWidth === 0) setFailedSrc(validSrc);
+            }}
             className="object-cover object-top transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
           />
           <div
@@ -54,7 +77,7 @@ export function Thumb({
       ) : (
         <div
           aria-hidden
-          className={`absolute inset-0 grid place-items-center bg-gradient-to-br ${CATEGORY_TINT[category] ?? CATEGORY_TINT.general}`}
+          className={`absolute inset-0 grid place-items-center bg-gradient-to-br ${fallbackTone}`}
         >
           <svg
             viewBox="0 0 120 120"
@@ -67,8 +90,9 @@ export function Thumb({
             <circle cx="60" cy="60" r="28" />
             <circle cx="60" cy="60" r="44" opacity=".7" />
             <circle cx="60" cy="60" r="58" opacity=".4" />
+            <path d="M48 60h24M60 48v24" strokeWidth="1.5" opacity=".6" />
           </svg>
-          <span className="relative text-lg font-semibold tracking-tight opacity-80">
+          <span className="relative text-lg font-semibold tracking-tight opacity-85">
             {label}
           </span>
         </div>

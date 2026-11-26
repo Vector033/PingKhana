@@ -215,7 +215,14 @@ export function RadarShader({ speed = 0.3, className = "" }: RadarShaderProps) {
     const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    let isDark = darkQuery.matches;
+    const resolveDark = () => {
+      const root = document.documentElement;
+      if (root.classList.contains("dark")) return true;
+      if (root.classList.contains("light")) return false;
+      return darkQuery.matches;
+    };
+
+    let isDark = resolveDark();
     let reducedMotion = motionQuery.matches;
     let isVisible = true;
     let pageVisible = document.visibilityState !== "hidden";
@@ -315,10 +322,15 @@ export function RadarShader({ speed = 0.3, className = "" }: RadarShaderProps) {
     );
     io.observe(container);
 
-    const onDarkChange = (e: MediaQueryListEvent) => {
-      isDark = e.matches;
+    const onDarkChange = () => {
+      isDark = resolveDark();
       drawFrame();
     };
+    const themeObs = new MutationObserver(onDarkChange);
+    themeObs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     const onMotionChange = (e: MediaQueryListEvent) => {
       reducedMotion = e.matches;
       updatePlayback(true);
@@ -345,6 +357,7 @@ export function RadarShader({ speed = 0.3, className = "" }: RadarShaderProps) {
       resizeObs.disconnect();
       io.disconnect();
       darkQuery.removeEventListener("change", onDarkChange);
+      themeObs.disconnect();
       motionQuery.removeEventListener("change", onMotionChange);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       canvas.removeEventListener("webglcontextlost", onContextLost);

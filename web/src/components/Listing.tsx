@@ -20,6 +20,7 @@ const FILTER_KEYS = [
   "category",
   "status",
   "major",
+  "year",
   "source",
   "org",
   "following",
@@ -30,7 +31,7 @@ const FILTER_KEYS = [
   "page",
 ] as const;
 
-function pick(sp: Search): Record<string, string> {
+export function pickFilters(sp: Search): Record<string, string> {
   const out: Record<string, string> = {};
   for (const k of FILTER_KEYS) {
     const v = sp[k];
@@ -53,7 +54,7 @@ function hrefWith(
   return qs ? `${base}?${qs}` : base;
 }
 
-export async function StatsStrip() {
+export async function StatsStrip({ compact = false }: { compact?: boolean }) {
   await connection();
   const s = await getStats().catch(() => null);
   if (!s) return null;
@@ -66,8 +67,12 @@ export async function StatsStrip() {
   // The collector runs hourly; older than 3 hours means it has stalled, so stop pulsing.
   const fresh = minutes != null && minutes <= 180;
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-      <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1.5 whitespace-nowrap tabular-nums">
+    <div
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-muted ${
+        compact ? "text-xs sm:text-sm" : "mt-4 text-sm"
+      }`}
+    >
+      <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3 py-1 whitespace-nowrap tabular-nums">
         <span
           aria-hidden
           className={`relative size-2 shrink-0 rounded-full ${fresh ? "live-dot bg-live" : "bg-line-strong"}`}
@@ -76,7 +81,7 @@ export async function StatsStrip() {
           ? "ยังไม่เคยดึงข้อมูล"
           : `${fresh ? "อัปเดตล่าสุด" : "อัปเดตครั้งสุดท้าย"}\u00A0${agoLabel(minutes)}`}
       </p>
-      <dl className="flex flex-wrap gap-x-5 gap-y-1">
+      <dl className="flex flex-wrap gap-x-4 gap-y-1 sm:gap-x-5">
         <div className="whitespace-nowrap">
           <dt className="inline">ประกาศ </dt>
           <dd className="inline font-semibold text-fg tabular-nums">
@@ -89,13 +94,15 @@ export async function StatsStrip() {
             {s.open_with_deadline}
           </dd>
         </div>
-        <div className="whitespace-nowrap">
-          <dt className="inline">จาก </dt>
-          <dd className="inline font-semibold text-fg tabular-nums">
-            {s.sources.length}
-            {"\u00A0"}เว็บ
-          </dd>
-        </div>
+        {!compact && (
+          <div className="whitespace-nowrap">
+            <dt className="inline">จาก </dt>
+            <dd className="inline font-semibold text-fg tabular-nums">
+              {s.sources.length}
+              {"\u00A0"}เว็บ
+            </dd>
+          </div>
+        )}
       </dl>
     </div>
   );
@@ -119,7 +126,7 @@ export async function Listing({
   searchParams: Promise<Search>;
   zone: "open" | "news";
 }) {
-  const current = pick(await searchParams);
+  const current = pickFilters(await searchParams);
   const news = zone === "news";
   const base = news ? "/news" : "/";
   const href = (change: Record<string, string | null>) =>
@@ -280,10 +287,38 @@ export async function Listing({
   if (current.org) chips.push([current.org, href({ org: null })]);
   if (current.source)
     chips.push([sourceName(current.source), href({ source: null })]);
+  if (current.major)
+    chips.push([
+      majors[current.major] ?? current.major,
+      href({ major: null }),
+    ]);
+  if (current.year)
+    chips.push([`ชั้นปี ${current.year}`, href({ year: null })]);
   if (current.tag) chips.push([`#${current.tag}`, href({ tag: null })]);
   if (!news && status !== "open")
     chips.push([STATUS_LABEL[status] ?? status, href({ status: null })]);
   if (current.q) chips.push([`“${current.q}”`, href({ q: null })]);
+
+  const majorPicker = meta.majors.length > 0 && (
+    <SearchPicker
+      label={current.major ? (majors[current.major] ?? current.major) : "สาขาวิชา"}
+      active={Boolean(current.major)}
+      title="เลือกสาขาวิชา"
+      placeholder="พิมพ์ชื่อสาขา เช่น วิทยาการคอมพิวเตอร์, วิศวกรรม"
+      groups={[
+        {
+          title: "สาขาวิชา",
+          items: meta.majors.map((m) => ({
+            name: m.th,
+            href: href({ major: current.major === m.id ? null : m.id }),
+            active: current.major === m.id,
+          })),
+        },
+      ]}
+    />
+  );
+
+  const quickTags = popular.slice(0, 6);
 
   const packFilter = (
     <div role="group" aria-label="แหล่ง" className="flex flex-wrap gap-1.5">
@@ -356,6 +391,7 @@ export async function Listing({
             {packFilter}
             <div className="flex flex-wrap items-center gap-2">
               {tagPicker}
+              {!news && majorPicker}
               {!news && (
                 <>
                   <Segmented
@@ -389,6 +425,29 @@ export async function Listing({
                 </>
               )}
             </div>
+            {quickTags.length > 0 && (
+              <div
+                role="group"
+                aria-label="แท็กยอดนิยม"
+                className="flex flex-wrap items-center gap-1.5"
+              >
+                {quickTags.map((t) => {
+                  const active = current.tag === t.tag;
+                  return (
+                    <FilterLink
+                      key={t.tag}
+                      href={href({ tag: active ? null : t.tag })}
+                      active={active}
+                    >
+                      <span>#{t.tag}</span>
+                      <span className="ml-1 text-xs tabular-nums opacity-70">
+                        {t.count}
+                      </span>
+                    </FilterLink>
+                  );
+                })}
+              </div>
+            )}
             {chips.length > 0 && (
               <div
                 role="group"
