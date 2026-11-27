@@ -5,7 +5,7 @@
 > PingKhana รวมประกาศทุน สหกิจ งาน และกิจกรรมจากเว็บภาควิชา คณะ และมหาวิทยาลัยเชียงใหม่ อ่านวันปิดรับให้อัตโนมัติ และให้ LINE เตือนก่อนปิดรับ 3 วันและ 1 วัน
 > ไม่ใช่ช่องทางทางการของคณะหรือมหาวิทยาลัย
 
-**Live:** https://pingkhana.vercel.app · LINE bot `@524osura` (website screenshots 2026-11-22, LINE bot screenshots 2026-11-08)
+**Live:** https://pingkhana.vercel.app · LINE bot `@524osura` · **[▶ Watch 16s Feature Showcase (1920×1080)](docs/demo/pingkhana-showcase.mp4)**
 
 ![Front page: closing-soon lead with posters from the source sites](docs/screenshots/home-light.png)
 
